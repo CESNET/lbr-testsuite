@@ -9,7 +9,7 @@ os.environ[
 sys.path.append(
     "C:\\Program Files (x86)\\Spirent Communications\\Spirent TestCenter 4.81\\Spirent TestCenter Application\\API\\Python")
 
-from StcPython import StcPython
+from spirent.stcapi.StcPythonTcl import StcPythonTcl
 import socketserver
 import socket
 import argparse
@@ -32,7 +32,7 @@ class STCManager:
     """ Wrapper around StcPython allowing calls its methods through names """
 
     def __init__(self, logger):
-        self._stc = StcPython()
+        self._stc = StcPythonTcl()
         self._logger = logger.getChild("STC")
         self._logger.debug("Loaded")
 

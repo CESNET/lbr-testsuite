@@ -4,7 +4,7 @@ import struct
 import logging
 
 
-class StcPython:
+class StcPythonTCP:
     """ Class simulating standard StcPython but it sends all commands over the network. """
 
     def __init__(self, host, port):
@@ -20,7 +20,7 @@ class StcPython:
         msg_len, = struct.unpack("<I", buffer[:4])
         del buffer[:4]
         while len(buffer) < msg_len:
-            buffer.append(self._socket.recv(1500))
+            buffer.extend(self._socket.recv(1500))
 
         self._logger.debug("Received message - {}B".format(len(buffer)))
         return pickle.loads(buffer)
