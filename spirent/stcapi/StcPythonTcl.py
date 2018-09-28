@@ -3,6 +3,7 @@ import os
 import logging
 import time
 import re
+import pprint
 
 from tkinter import Tcl
 
@@ -63,12 +64,25 @@ class StcPythonTcl:
 
 		svec_string = ' '.join(svec_dashes)
 		tcl_output = self._tcl.eval("stc::get {} {}".format(handle, svec_string))
-
+		# print('[StcPythonTcl DEBUG] Printing tcl get output:')
+		# pprint.pprint(tcl_output)
+		# print('-------------------------------------------------------------')
+		# print(tcl_output)
 		if len(tcl_output.split(' ')) == 1:
+			print('<Single output>')
 			return tcl_output
 		else:
 			parsed_output = StcPythonTcl._parse_tcl_output(tcl_output)
-			return StcPythonTcl._unpackGetResponseAndReturnKeyVal(parsed_output, svec)
+			# print('[StcPythonTcl DEBUG] Printing parsed output')
+			# pprint.pprint(parsed_output)
+			# print('-------------------------------------------------------------')
+			# print(parsed_output)
+			if type(parsed_output) == str:
+				return parsed_output
+			ret = StcPythonTcl._unpackGetResponseAndReturnKeyVal(parsed_output, svec)
+			# print('[StcPythonTcl DEBUG] Printing unpacked value')
+			# print(ret)
+			return ret
 
 	def help(self, topic=''):
 		if topic == '' or topic.find(' ') != -1:
@@ -100,9 +114,22 @@ class StcPythonTcl:
 		svec_string = ' '.join(svec)
 
 		tcl_output = self._tcl.eval('stc::perform {} {}'.format(_cmd, svec_string))
+		# print('[StcPythonTcl DEBUG] Printing tcl get output:')
+		# pprint.pprint(tcl_output)
+		# print('-------------------------------------------------------------')
+		# print(tcl_output)
+
 		parsed_output = self._parse_tcl_output(tcl_output)
-		
-		return StcPythonTcl._unpackPerformResponseAndReturnKeyVal(parsed_output, kwargs.keys())
+		# print('[StcPythonTcl DEBUG] Printing perform parsed output')
+		# pprint.pprint(parsed_output)
+		# print('-------------------------------------------------------------')
+		# print(parsed_output)
+		if type(parsed_output) == str:
+			return parsed_output
+		ret = StcPythonTcl._unpackPerformResponseAndReturnKeyVal(parsed_output, kwargs.keys())
+		# print('[StcPythonTcl DEBUG] Printing unpacked value')
+		# print(ret)
+		return ret
 
 	def release(self, *csps):
 		svec = StcPythonTcl._unpackArgs(*csps)
@@ -157,18 +184,24 @@ class StcPythonTcl:
 
 	@staticmethod
 	def _parse_tcl_output(tcl_output: str):
-		regex = r"(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w|\s]*)}"
+		# REGEX explaied:
+		# multiword strings | -key value | -key {v a l u e s}
+		# regex = r"(\w+-?\w+ ?\w+-?\w+)|(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w|\s]*)}(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w|\s]*)}"
+
+		regex = r"(^[\w\n\s:\\\/=,._';+<>~!?()\[\]@#$%^&*-]*$)|(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w\n\s:\\\/-=,._';+<>~!?()\[\]@#$%^&*]*)}"
 		matches = re.finditer(regex, tcl_output, re.MULTILINE)
 		parsed_output = []
 
 		for match in matches:
-			# Groups 2 and 3 match key and multi-value
-			if match.group(1) is None:
-				key = match.group(2)
-				value = match.group(3)
+			if match.group(1):
+				return match.group(1)
+			# Groups 3 and 4 match key and multi-value
+			if match.group(2) is None:
+				key = match.group(3)
+				value = match.group(4)
 			# Group 1 matches key and single-value pair
 			else:
-				key_val = match.group(1).split(' ')
+				key_val = match.group(2).split(' ')
 				key = key_val[0]
 				# This is a hack used to prevent XML string configuration from crashing
 				value = ''

@@ -1,6 +1,7 @@
 from spirent.stcapi.StcPythonTCP import StcPythonTCP
 
 import re
+import pprint
 
 
 class StcHandler:
@@ -8,6 +9,11 @@ class StcHandler:
 
 	def __init__(self):
 		self._stc = None
+		self._generator_port_results = None
+		self._analyzer_port_results = None
+		self._filtered_stream_results = None
+		self._rx_stream_block_results = None
+		self._tx_stream_block_results = None
 
 	def stc_api_connect(self, host: str, port: int):
 		self._stc = StcPythonTCP(host, port)
@@ -44,11 +50,11 @@ class StcHandler:
 	def subscribe_to_results(self):
 		project = self._stc.get('system1', 'children-Project')
 
-		self.sub_generator_port_results(project)
-		self.sub_analyzer_port_results(project)
-		self.sub_filtered_stream_results(project)
-		self.sub_rx_stream_block_results(project)
-		self.sub_tx_stream_block_results(project)
+		self._generator_port_results = self.sub_generator_port_results(project)
+		self._analyzer_port_results = self.sub_analyzer_port_results(project)
+		self._filtered_stream_results = self.sub_filtered_stream_results(project)
+		self._rx_stream_block_results = self.sub_rx_stream_block_results(project)
+		self._tx_stream_block_results = self.sub_tx_stream_block_results(project)
 
 	def sub_generator_port_results(self, parent: str):
 		generator_port_results = self._stc.subscribe(
@@ -129,36 +135,50 @@ class StcHandler:
 		handles = []
 
 		for xpath in xpaths:
+			# print('Processing xpath: {}'.format(xpath))
 			heap = []
 			elements = xpath.split('/')
 
 			for element in elements:
+				# print('Processing element: {}'.format(element))
 				# Split parts of the element term
 				parts = re.findall(r"[^\[\]]+", element)
 				# Extract name of the element
 				name = parts.pop(0)
 				# Find children
 				if len(heap) == 0:
+					# print('Heap_len is 0: getting object {}'.format(name))
 					result = self._stc.perform('GetObjects', classname=name)
 					object_list = result['ObjectList']
+					# print('Printing object list')
+					# pprint.pprint(object_list)
 					# Handle string result as a list with 1 member
 					if type(object_list) == list:
 						childheap = object_list
 					else:
 						childheap = object_list.split()
 				else:
+					# print('Processing items in heap ...')
 					childheap = []
 					for item in heap:
+						# print("stc_get item '{}' children-{}".format(item, name))
 						child = self._stc.get(item, 'children-' + name)
-						childheap.append(child)
-
+						# print('Got children: ')
+						# pprint.pprint(child)
+						if len(child.split()) == 1:
+							childheap.append(child)
+						else:
+							childheap.extend(child.split())
 				# Set new population
 				heap = []
 				# Iterate over children
 				for child in childheap:
+					# print("Processing child in childheap")
+					# pprint.pprint(child)
 					filter = False
 					# Iterate over conditions
 					for part in parts:
+						# print("Processing part '{}'".format(part))
 						# Split condition
 						condition = part.split('=')
 						left_val = condition[0]
@@ -170,8 +190,15 @@ class StcHandler:
 							if right_val == "*":
 								continue
 							attribute = left_val[1:]
+							# print('[wildcard test] Getting child')
+							# pprint.pprint(child)
+							# pprint.pprint(attribute)
 							value = self._stc.get(child, attribute)
 							# Compare attribute values
+							# print('right_val:')
+							# pprint.pprint(right_val)
+							# print('value:')
+							# pprint.pprint(value)
 							if right_val != value:
 								filter = True
 								break
@@ -179,14 +206,15 @@ class StcHandler:
 					# Optionally filter child
 					if not filter:
 						heap.append(child)
-
 				# No nodes found: exit
 				if len(heap) == 0:
 					break
 
 			# Add heap to the list of handles
 			handles.append(heap)
-
+		# print('[object_xpath] Returning handles:')
+		# pprint.pprint(handles)
+		# print('--------------')
 		return handles
 
 	def stc_attribute(self, handles, attributes, values=''):
@@ -329,3 +357,102 @@ class StcHandler:
 			self._stc.perform('generatorStop', generatorList=continuous_generators)
 		self._stc.perform('generatorWaitForStop', generatorList=generators)
 		self._stc.perform('wait', waitTime=1)
+
+	def stc_start_analyzers(self):
+		# Get all analyzer handles
+		analyzer_objects = self._stc.perform('getObjects', className='Analyzer')
+		analyzers = analyzer_objects['ObjectList'].split(' ')
+
+		# Start analyzers and wait 1 second
+		self._stc.perform('analyzerStart', analyzerList=analyzers)
+		self._stc.perform('wait', waitTime=1)
+
+	def stc_stop_analyzers(self):
+		# Get all analyzer handles
+		analyzer_objects = self._stc.perform('getObjects', className='Analyzer')
+		analyzers = analyzer_objects['ObjectList'].split(' ')
+
+		# Stop analyzers and wait 1 second
+		self._stc.perform('analyzerStop', analyzerList=analyzers)
+		self._stc.perform('wait', waitTime=1)
+
+	def stc_refresh_results(self):
+		self._stc.perform('RefreshResultView', resultDataSet=self._rx_stream_block_results)
+		self._stc.perform('RefreshResultView', resultDataSet=self._tx_stream_block_results)
+
+	def stc_clear_results(self):
+		ports = self._stc.get('project1', 'children-Port')
+		self._stc.perform('ResultsClearAll', portList=ports)
+
+	def stc_stream_block(self, names='*'):
+		# Handle default input
+		if type(names) == str:
+			names = [x for x in names.split()]
+
+		xpaths = []
+
+		for name in names:
+			xpaths.append("StcSystem/Project/Port/StreamBlock[@Name={}]".format(name))
+
+		return self.stc_object_xpath(xpaths)
+
+	def stc_tx_stream_block_results(self, stream_blocks, names='*'):
+		result_handles = self.stc_attribute(stream_blocks, "children-TxStreamBlockResults")
+		return self.stc_attribute(result_handles, names)
+
+	def stc_rx_stream_block_results(self, stream_blocks, names='*'):
+		result_handles = self.stc_attribute(stream_blocks, "children-RxStreamBlockResults")
+		return self.stc_attribute(result_handles, names)
+
+	def stc_filtered_stream_results(self, names='*'):
+		if type(names) == str:
+			names = [x for x in names.split()]
+		results = []
+		total_page_count = self.stc_attribute([[self._filtered_stream_results]], 'TotalPageCount')
+		for page in range(1, int(total_page_count[0][0]) + 1):
+			# Set page
+			self.stc_attribute([[self._filtered_stream_results]], 'PageNumber', str(page))
+			# Find specific object
+			objects = self._stc.perform('getObjects', className='FilteredStreamResults')
+			filtered_stream_results = objects['ObjectList'].split(' ')
+			results.append(self.stc_attribute([filtered_stream_results], names))
+
+		return results
+
+	def stc_analyzer_filter(self, values=''):
+		objects = self._stc.perform('getObjects', className='AnalyzerFrameConfigFilter')
+		analyzer_frame_config_filters = objects['ObjectList'].split(' ')
+
+		# Get or set
+		if values == '':
+			return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig')
+		else:
+			return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig', values)
+
+	def stc_generator_port_results(self, name: str):
+		results = []
+
+		# Get specific generator object
+		generator_objects = self._stc.perform('getObjects', className='GeneratorPortResults')
+		generator_port_results = generator_objects['ObjectList'].split(' ')
+
+		for result in generator_port_results:
+			results.append(self._stc.get(result, name))
+
+		return results
+
+	def stc_analyzer_port_results(self, name: str):
+		results = []
+
+		# Get specific analyzer object
+		analyzer_objects = self._stc.perform('getObjects', className='AnalyzerPortResults')
+		analyzer_port_results = analyzer_objects['ObjectList'].split(' ')
+
+		for result in analyzer_port_results:
+			results.append(self._stc.get(result, name))
+
+		return results
+
+	@property
+	def stc(self):
+		return self._stc
