@@ -18,6 +18,9 @@ class StcHandler:
 	def stc_api_connect(self, host: str, port: int):
 		self._stc = StcPythonTCP(host, port)
 
+	def stc(self):
+		return self._stc
+
 	def stc_init(self, xml_config_file: str):
 		self.logging_config()
 		self.load_xml(xml_config_file)
