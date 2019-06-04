@@ -320,6 +320,10 @@ class StcHandler:
 		self._stc.perform('chassisDisconnectAll')
 		self._stc.perform('resetConfig')
 
+	def stc_start_arpnd(self):
+		project_ports = self._stc.get('project1', 'children-Port')
+		self._stc.perform('ArpNdStartCommand', handleList=project_ports)
+
 	def stc_start_generators(self):
 		# Set logging
 		self.logging_config()
