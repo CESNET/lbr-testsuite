@@ -12,7 +12,6 @@
 
 import datetime
 import fnmatch
-import json
 import importlib
 import os
 import socket    # hostname
