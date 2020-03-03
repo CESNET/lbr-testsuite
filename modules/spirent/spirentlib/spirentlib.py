@@ -1,3 +1,9 @@
+"""
+    Author(s): Jan Kucera <jan.kucera@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.cz>
+    Copyright: (C) 2019 CESNET
+    Licence: GPL-2.0
+"""
+
 from spirent.stcapi.StcPythonTCP import StcPythonTCP
 
 import re
@@ -15,11 +21,14 @@ class StcHandler:
         self._rx_stream_block_results = None
         self._tx_stream_block_results = None
 
+
     def stc_api_connect(self, host: str, port: int):
         self._stc = StcPythonTCP(host, port)
 
+
     def stc(self):
         return self._stc
+
 
     def stc_init(self, xml_config_file: str):
         self.logging_config()
@@ -34,11 +43,15 @@ class StcHandler:
         # Apply config
         self._stc.apply()
 
+
     def logging_config(self, level='error', file='stdout'):
-        # Possible logLevel values are: DEBUG, INFO, WARN, and ERROR
-        # Possible values for logTo are "stdout" or a file name (can include
-        # the path). Use forward slashes between directory names.
+        """
+        Possible logLevel values are: DEBUG, INFO, WARN, and ERROR
+        Possible values for logTo are "stdout" or a file name (can include
+        the path). Use forward slashes between directory names.
+        """
         self._stc.config('automationoptions', logLevel=level, logTo=file)
+
 
     def load_xml(self, xml_config_file: str):
         """Load XML config using string format"""
@@ -46,9 +59,11 @@ class StcHandler:
             config_string = file.read()
         return self._stc.perform('loadfromxml', FileName='', InputConfigString=config_string)
 
+
     def set_sequencer(self):
         sequencer = self._stc.get('system1', 'children-sequencer')
         self._stc.config(sequencer, errorHandler='stop_on_error')
+
 
     def subscribe_to_results(self):
         project = self._stc.get('system1', 'children-Project')
@@ -58,6 +73,7 @@ class StcHandler:
         self._filtered_stream_results = self.sub_filtered_stream_results(project)
         self._rx_stream_block_results = self.sub_rx_stream_block_results(project)
         self._tx_stream_block_results = self.sub_tx_stream_block_results(project)
+
 
     def sub_generator_port_results(self, parent: str):
         generator_port_results = self._stc.subscribe(
@@ -128,6 +144,7 @@ class StcHandler:
             interval=1
         )
         return tx_stream_block_results
+
 
     def stc_object_xpath(self, xpaths):
         # TODO: split this function to pieces so it's actually readable...
@@ -220,11 +237,13 @@ class StcHandler:
         # print('--------------')
         return handles
 
+
     def stc_attribute(self, handles, attributes, values=''):
         if values == '':
             return self.stc_get_attributes(handles, attributes)
         else:
             self.stc_set_attributes(handles, attributes, values)
+
 
     def stc_get_attributes(self, handles, attributes):
         # Handle single xpath as a list with 1 member
@@ -250,6 +269,7 @@ class StcHandler:
 
         return results
 
+
     def stc_set_attributes(self, handles, attributes, values):
         # Handle single xpath as a list with 1 member
         if type(handles) == str:
@@ -273,6 +293,7 @@ class StcHandler:
         # Apply config
         self._stc.apply()
 
+
     def stc_attribute_xpath(self, xpaths, values=''):
         # Handle single xpath as a list with 1 member
         if type(xpaths) == str:
@@ -291,6 +312,7 @@ class StcHandler:
 
         # Get/Set values
         return self.stc_attribute(handles, attributes, values)
+
 
     def stc_connect(self, host: str, ports: str):
         port_list = ports.split(' ')
@@ -316,13 +338,16 @@ class StcHandler:
         project_ports = self._stc.get('project1', 'children-Port')
         self._stc.perform('attachPorts', autoconnect='true', portlist=project_ports)
 
+
     def stc_disconnect(self):
         self._stc.perform('chassisDisconnectAll')
         self._stc.perform('resetConfig')
 
+
     def stc_start_arpnd(self):
         project_ports = self._stc.get('project1', 'children-Port')
         self._stc.perform('ArpNdStartCommand', handleList=project_ports)
+
 
     def stc_start_generators(self):
         # Set logging
@@ -346,6 +371,7 @@ class StcHandler:
             self._stc.perform('generatorWaitForStart', generatorList=continuous_generators)
         self._stc.perform('wait', waitTime=1)
 
+
     def stc_stop_generators(self):
         # Get all generator handles
         generator_objects = self._stc.perform('getObjects', classname='Generator')
@@ -365,6 +391,7 @@ class StcHandler:
         self._stc.perform('generatorWaitForStop', generatorList=generators)
         self._stc.perform('wait', waitTime=1)
 
+
     def stc_start_analyzers(self):
         # Get all analyzer handles
         analyzer_objects = self._stc.perform('getObjects', className='Analyzer')
@@ -373,6 +400,7 @@ class StcHandler:
         # Start analyzers and wait 1 second
         self._stc.perform('analyzerStart', analyzerList=analyzers)
         self._stc.perform('wait', waitTime=1)
+
 
     def stc_stop_analyzers(self):
         # Get all analyzer handles
@@ -383,13 +411,16 @@ class StcHandler:
         self._stc.perform('analyzerStop', analyzerList=analyzers)
         self._stc.perform('wait', waitTime=1)
 
+
     def stc_refresh_results(self):
         self._stc.perform('RefreshResultView', resultDataSet=self._rx_stream_block_results)
         self._stc.perform('RefreshResultView', resultDataSet=self._tx_stream_block_results)
 
+
     def stc_clear_results(self):
         ports = self._stc.get('project1', 'children-Port')
         self._stc.perform('ResultsClearAll', portList=ports)
+
 
     def stc_stream_block(self, names='*'):
         # Handle default input
@@ -403,13 +434,16 @@ class StcHandler:
 
         return self.stc_object_xpath(xpaths)
 
+
     def stc_tx_stream_block_results(self, stream_blocks, names='*'):
         result_handles = self.stc_attribute(stream_blocks, "children-TxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
 
+
     def stc_rx_stream_block_results(self, stream_blocks, names='*'):
         result_handles = self.stc_attribute(stream_blocks, "children-RxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
+
 
     def stc_filtered_stream_results(self, names='*'):
         if type(names) == str:
@@ -426,6 +460,7 @@ class StcHandler:
 
         return results
 
+
     def stc_analyzer_filter(self, values=''):
         objects = self._stc.perform('getObjects', className='AnalyzerFrameConfigFilter')
         analyzer_frame_config_filters = objects['ObjectList'].split(' ')
@@ -435,6 +470,7 @@ class StcHandler:
             return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig')
         else:
             return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig', values)
+
 
     def stc_generator_port_results(self, name: str):
         results = []
@@ -448,6 +484,7 @@ class StcHandler:
 
         return results
 
+
     def stc_analyzer_port_results(self, name: str):
         results = []
 
@@ -459,6 +496,17 @@ class StcHandler:
             results.append(self._stc.get(result, name))
 
         return results
+
+
+     def stc_set_fec(self, fec=True):
+        """
+        Set FEC (forward error correction) in xml configuration.
+        """
+        xpath = ['StcSystem/Project/Port/Ethernet100GigFiber']
+        fec_handler = self._stc_handler.stc_object_xpath(xpath)
+
+        self._stc_handler.stc_attribute(fec_handler, 'ForwardErrorCorrection', str(fec))
+
 
     @property
     def stc(self):
