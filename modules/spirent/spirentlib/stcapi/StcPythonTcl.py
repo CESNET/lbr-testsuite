@@ -1,16 +1,25 @@
-import sys
-import os
+"""
+    Author(s): Jan Kucera <jan.kucera@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.cz>
+    Copyright: (C) 2019 CESNET
+    Licence: GPL-2.0
+
+    Description: A custom implementation of SpirentTestCenter Python API using
+    wrapped TCL API.
+"""
+
 import logging
-import time
-import re
+import os
 import pprint
+import re
+import sys
+import time
 
 from tkinter import Tcl
 
 
 class StcPythonTcl:
     """
-    This is a custom version of SpirentTestCenter Python API using wrapped TCL API
+    This is a custom version of SpirentTestCenter Python API using wrapped TCL API.
     All public methods remain the same, including their input and output formats.
     Every deviation from the original StcPython is a bug.
     """
@@ -19,12 +28,15 @@ class StcPythonTcl:
         self._tcl = Tcl()
         self._load_library()
 
+
     def _load_library(self):
         command = 'package require SpirentTestCenter'
         self._tcl.eval(command)
 
+
     def apply(self):
         return self._tcl.eval('stc::apply')
+
 
     def config(self, _object, **kwargs):
         svec = []
@@ -32,10 +44,12 @@ class StcPythonTcl:
         svec_string = ' '.join(svec)
         return self._tcl.eval('stc::config {} {}'.format(_object, svec_string))
 
+
     def connect(self, *hosts):
         svec = StcPythonTcl._unpackArgs(*hosts)
         svec_string = ' '.join(svec)
         return self._tcl.eval('stc::connect {}'.format(svec_string))
+
 
     def create(self, _type, **kwargs):
         svec = []
@@ -47,13 +61,16 @@ class StcPythonTcl:
         svec_string = ' '.join(svec)
         return self._tcl.eval('stc::create {} {}'.format(_type, svec_string))
 
+
     def delete(self, handle):
         return self._tcl.eval('stc::delete {}'.format(handle))
+
 
     def disconnect(self, *hosts):
         svec = StcPythonTcl._unpackArgs(*hosts)
         svec_string = ' '.join(svec)
         return self._tcl.eval('stc::disconnect {}'.format(svec_string))
+
 
     def get(self, handle, *args):
         svec = StcPythonTcl._unpackArgs(*args)
@@ -84,6 +101,7 @@ class StcPythonTcl:
             # print(ret)
             return ret
 
+
     def help(self, topic=''):
         if topic == '' or topic.find(' ') != -1:
             return 'Usage: \n' + \
@@ -105,8 +123,10 @@ class StcPythonTcl:
                    'Usage: ' + info['usage'] + '\n' + \
                    'Example: ' + info['example'] + '\n'
 
+
     def log(self, level, msg):
         return self._tcl.eval('stc::log {} {}'.format(level, msg))
+
 
     def perform(self, _cmd, **kwargs):
         svec = []
@@ -131,18 +151,22 @@ class StcPythonTcl:
         # print(ret)
         return ret
 
+
     def release(self, *csps):
         svec = StcPythonTcl._unpackArgs(*csps)
         svec_string = ' '.join(svec)
         return self._tcl.eval('stc::release {}'.format(svec_string))
+
 
     def reserve(self, *csps):
         svec = StcPythonTcl._unpackArgs(*csps)
         svec_string = ' '.join(svec)
         return self._tcl.eval('stc::reserve {}'.format(svec_string))
 
+
     def sleep(self, seconds):
         time.sleep(seconds)
+
 
     def subscribe(self, **kwargs):
         svec = []
@@ -151,8 +175,10 @@ class StcPythonTcl:
 
         return self._tcl.eval('stc::subscribe {}'.format(svec_string))
 
+
     def unsubscribe(self, rdsHandle):
         return self._tcl.eval('stc::unsubscribe {}'.format(rdsHandle))
+
 
     def waitUntilComplete(self, **kwargs):
         timeout = 0
@@ -181,6 +207,7 @@ class StcPythonTcl:
             self.perform('CSSynchronizeFiles')
 
         return self.get(sequencer, 'testState')
+
 
     @staticmethod
     def _parse_tcl_output(tcl_output: str):
@@ -213,6 +240,7 @@ class StcPythonTcl:
 
         return parsed_output
 
+
     @staticmethod
     def _packKeyVal(svec, hash):
         """Modified for empty value and multi-value"""
@@ -229,6 +257,7 @@ class StcPythonTcl:
                     val = '{' + str(val) + '}'
                 svec.append(str(val))
 
+
     @staticmethod
     def _unpackArgs(*args):
         svec = []
@@ -238,6 +267,7 @@ class StcPythonTcl:
             else:
                 svec.append(arg)
         return svec
+
 
     @staticmethod
     def _unpackGetResponseAndReturnKeyVal(svec, origKeys):
@@ -251,6 +281,7 @@ class StcPythonTcl:
                 key = origKeys[i]
             hash[key] = val
         return hash
+
 
     @staticmethod
     def _unpackPerformResponseAndReturnKeyVal(svec, origKeys):
@@ -267,6 +298,7 @@ class StcPythonTcl:
                 key = origKeyHash[key.lower()]
             hash[key] = val
         return hash
+
 
 # internal help info
 class StcIntPythonHelp(object):
