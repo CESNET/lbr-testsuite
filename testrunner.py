@@ -19,10 +19,10 @@ import sys
 
 sys.path.append(os.path.abspath(__file__ + "/.."))
 
-from src.arguments import Arguments
-from src.basetest import TestResult
-from src.logger import Logger
-from src.resultgenerator import generate_html
+from framework.arguments import Arguments
+from framework.basetest import TestResult
+from framework.logger import Logger
+from framework.resultgenerator import generate_html
 
 
 # ----------------------------------------------------------------------

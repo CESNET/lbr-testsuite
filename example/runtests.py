@@ -11,8 +11,8 @@ import sys
 
 # Appends PYTHONPATH to enable tests framework modules access
 sys.path.append(os.path.abspath(__file__ + "/../.."))
-from framework.testrunner import TestRunner
-from framework.src.arguments import Arguments
+from testrunner import TestRunner
+from framework.arguments import Arguments
 
 import testsconf
 

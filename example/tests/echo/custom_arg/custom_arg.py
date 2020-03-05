@@ -13,8 +13,7 @@ import subprocess
 # Appends PYTHONPATH to enable tests framework modules access
 sys.path.append(os.path.abspath(__file__ + "/../../../../.."))
 
-from framework.src.basetest import BaseTest
-from framework.src.arguments import Arguments
+from framework.basetest import BaseTest
 
 
 # ----------------------------------------------------------------------
