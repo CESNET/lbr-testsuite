@@ -4,6 +4,8 @@
     Licence: GPL-2.0
 
     Description: Simple example echo test with custom arguments usage.
+
+    Custom argument has to be set within the test-runner executing this test.
 """
 
 import os
