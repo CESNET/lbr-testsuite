@@ -498,7 +498,7 @@ class StcHandler:
         return results
 
 
-     def stc_set_fec(self, fec=True):
+    def stc_set_fec(self, fec=True):
         """
         Set FEC (forward error correction) in xml configuration.
         """
