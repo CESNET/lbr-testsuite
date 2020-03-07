@@ -4,7 +4,7 @@
     Licence: GPL-2.0
 """
 
-from spirent.stcapi.StcPythonTCP import StcPythonTCP
+from spirentlib.stcapi.StcPythonTCP import StcPythonTCP
 
 import re
 import pprint
@@ -503,9 +503,9 @@ class StcHandler:
         Set FEC (forward error correction) in xml configuration.
         """
         xpath = ['StcSystem/Project/Port/Ethernet100GigFiber']
-        fec_handler = self._stc_handler.stc_object_xpath(xpath)
+        fec_handler = self.stc_object_xpath(xpath)
 
-        self._stc_handler.stc_attribute(fec_handler, 'ForwardErrorCorrection', str(fec))
+        self.stc_attribute(fec_handler, 'ForwardErrorCorrection', str(fec))
 
 
     @property
