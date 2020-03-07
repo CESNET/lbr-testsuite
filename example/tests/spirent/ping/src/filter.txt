@@ -1,0 +1,10 @@
+default send # allow
+
+if cam ttl 0/254 then deny
+
+if cam dmac FF:FF:FF:FF:FF:FF/48 then allow 7
+if cam dmac 01:00:00:00:00:00/01:00:00:00:00:00 then allow 7
+if cam ethType 2054 then allow 7
+if dip ff02::1:ff00:11 then allow 7
+if dip 192.168.0.11 then allow 7
+if dip 2000::11 then allow 7

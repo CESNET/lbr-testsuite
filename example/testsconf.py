@@ -5,4 +5,5 @@ tests_dir = 'tests'
 tests = [
         'echo/hello',
         'echo/custom_arg',
+        'spirent/ping',
 ]

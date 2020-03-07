@@ -30,11 +30,37 @@ class ExampleRunner(TestRunner):
 #    ADDING CUSTOM ARGUMENTS
 # ----------------------------------------------------------------------
 def _add_custom_arguments(self):
+    # For echo/custom_arg test
     self._parser.add_argument(
             '--custom',
             type=str,
             default="default custom string",
             help='Custom string argument.'
+    )
+    # For spirent/*tests
+    self._parser.add_argument(
+        '-s', '--server',
+        type=str,
+        default='terminal.liberouter.org',
+        help='Spirent TestCenter server address'
+    )
+    self._parser.add_argument(
+        '-c', '--chassis',
+        type=str,
+        default='spirent.liberouter.org',
+        help='Spirent TestCenter chassis address'
+    )
+    self._parser.add_argument(
+        '-p', '--port',
+        type=str,
+        default=None,
+        help='Spirent TestCenter chassis port'
+    )
+    self._parser.add_argument(
+        '--dcpro-mode',
+        action='store_true',
+        default=False,
+        help='Run tests in "DCPro" mode (FEC control, ...).'
     )
 
 Arguments._add_arguments = _add_custom_arguments
