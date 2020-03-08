@@ -72,7 +72,10 @@ class Ping(StcTest):
             self._logger.info('Running DCPro FEC control...')
 
             fec_is_set = dcpro_fec_set()
-            self._stc_handler.stc_set_fec(fec_is_set)
+            if not self._manual_debug:
+                self._stc_handler.stc_set_fec(fec_is_set)
+            else:
+                self._logger.info('Skipping FEC setup in spirent config. Make sure that FEC is set properly in spirent interface configuration.')
             self._logger.info('Fec is set to {}'.format(str(fec_is_set)))
         else:
             self._logger.warn('DCPro mode is off, skipping DCPro FEC control.')
