@@ -6,4 +6,5 @@ tests = [
         'echo/hello',
         'echo/custom_arg',
         'spirent/ping',
+        'spirent/packets_forwarding',
 ]
