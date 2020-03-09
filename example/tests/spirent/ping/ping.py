@@ -1,9 +1,9 @@
 """
     Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
-    Copyright: (C) 2019 CESNET
+    Copyright: (C) 2020 CESNET
     Licence: GPL-2.0
 
-    Description: Simple example echo test.
+    Description: Simple spirent example ping test.
 """
 
 import os
