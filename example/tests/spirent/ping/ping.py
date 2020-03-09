@@ -34,13 +34,17 @@ class TestData:
 # ----------------------------------------------------------------------
 class Ping(StcTest):
 
-    SPIRENT_INPUT_FILE = "ping.xml"
+    SPIRENT_INPUT_FILE = 'ping.xml'
+    DCPRO_FILTER_FILE = 'filter.txt'
+    DCPRO_PR_FILTER_FILE = 'prfilter.txt'
 
 
     def _setup(self):
         super()._setup()
 
         self._spirent_config = os.path.join(self._dirs['test'], Ping.TEST_CASE_CONFIG_DIR, Ping.SPIRENT_INPUT_FILE)
+        self._dpcro_filter_file = os.path.join(self._dirs['src'], Ping.DCPRO_FILTER_FILE)
+        self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Ping.DCPRO_PR_FILTER_FILE)
 
 
     def _set_test_cases(self):
@@ -69,6 +73,19 @@ class Ping(StcTest):
         self._log_subprocess_output(result)
 
         if self._args.dcpro_mode:
+            self._logger.info('    Setting up DCPro-spirent forwarding...')
+            result = self.execute_script('nfb-eth -e1')
+            self._log_subprocess_output(result,exit_on_fail=True)
+            result = self.execute_script('dcprofilterctl -f {}'.format(self._dpcro_filter_file))
+            self._log_subprocess_output(result,exit_on_fail=True)
+            result = self.execute_script('dcproprfilterctl -l {}'.format(self._dpcro_pr_filter_file))
+            self._log_subprocess_output(result,exit_on_fail=True)
+            result = self.execute_script('dcprowatchdogctl -e0')
+            self._log_subprocess_output(result,exit_on_fail=True)
+            result = self.execute_script('dcproctl -s 1')
+            self._log_subprocess_output(result,exit_on_fail=True)
+            self._logger.info('    DCPro-spirent forwarding setup is completed.')
+
             self._logger.info('Running DCPro FEC control...')
 
             fec_is_set = dcpro_fec_set()
@@ -76,7 +93,7 @@ class Ping(StcTest):
                 self._stc_handler.stc_set_fec(fec_is_set)
             else:
                 self._logger.info('Skipping FEC setup in spirent config. Make sure that FEC is set properly in spirent interface configuration.')
-            self._logger.info('Fec is set to {}'.format(str(fec_is_set)))
+            self._logger.info('Fec is set to {}.'.format(str(fec_is_set)))
         else:
             self._logger.warn('DCPro mode is off, skipping DCPro FEC control.')
 
@@ -115,11 +132,23 @@ class Ping(StcTest):
         result = self.execute_script('sudo ip link set dev nfb0p0 up')
         self._log_subprocess_output(result)
 
+        # Set carrier (DCPro)
+        if self._args.dcpro_mode:
+            self._logger.info('    Turning off "nocarrier" in /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            result = self.execute_script('echo 0 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            self._log_subprocess_output(result)
+
         self._logger.info('Environment prepared successfully.\n')
 
 
     def _post_test(self, act_test_data):
         self._logger.info('\nCleaning up test environment...')
+
+        # Set carrier (DCPro)
+        if self._args.dcpro_mode:
+            self._logger.info('        Turning on "nocarrier" in /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            result = self.execute_script('echo 1 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            self._log_subprocess_output(result)
 
         # remove interface nfb0p0 configuration
         self._logger.info('    Clear nfb0p0 interface configuration:')
