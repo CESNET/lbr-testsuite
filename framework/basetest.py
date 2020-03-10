@@ -50,10 +50,8 @@ class BaseTest:
 
     Methods
     -------
-    parse(args=None)
-        Parse arguments and set default argument values.
-    add_arguments
-        Method for custom arguments definition.
+    run()
+        Run all test cases.
     """
 
     _TEST_CASE_CONFIG_DIR = 'config'
