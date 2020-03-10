@@ -1,9 +1,16 @@
 """
-    Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz> (+ Matus Burzala)
-    Copyright: (C) 2019 CESNET
-    Licence: GPL-2.0
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, (+ Matus Burzala)
+Copytight: (C) 202O CESNET
+License: GPL-2.0
 
-    Description: This module is used for generating well formatted HTML document with test results.
+This module is used for generating HTML document with test results report.
+
+This module requires shutil and yattag packages.
+
+Functions
+---------
+generate_html(test_results, start_time, duration, output_dir)
+    Generates a test results HTML page.
 """
 
 import os
@@ -12,7 +19,7 @@ import socket
 from shutil import copyfile
 from yattag import Doc
 
-
+""" Name of the test results page """
 HTML_RESULTS_FILENAME = 'testresults.html'
 
 
@@ -21,10 +28,19 @@ HTML_RESULTS_FILENAME = 'testresults.html'
 # ---------------------------------------------------------------------.
 
 def _sum_all_passed(test_results):
+    """ Count all passed test cases.
+
+    Parameters
+    ----------
+    test_results : TestResult
+        TestResult objects containing results from all run tests.
+
+    Returns
+    -------
+    int
+        Count of all passed tests.
     """
-    Counts all passed test cases.
-    :return: Total umber of passed tests.
-    """
+
     sum = 0
     for test_result in test_results:
         sum += test_result[1].passed_cnt
@@ -32,10 +48,19 @@ def _sum_all_passed(test_results):
 
 
 def _sum_all_failed(test_results):
+    """ Count all failed test cases.
+
+    Parameters
+    ----------
+    test_results : TestResult
+        TestResult objects containing results from all run tests.
+
+    Returns
+    -------
+    int
+        Count of all failed tests.
     """
-    Counts all failed test cases.
-    :return: Total number of failed tests.
-    """
+
     sum = 0
     for test_result in test_results:
         sum += test_result[1].failed_cnt
@@ -43,10 +68,19 @@ def _sum_all_failed(test_results):
 
 
 def _sum_all_skipped(test_results):
+    """ Count all skipped test cases.
+
+    Parameters
+    ----------
+    test_results : TestResult
+        TestResult objects containing results from all run tests.
+
+    Returns
+    -------
+    int
+        Count of all skipped tests.
     """
-    Counts all skipped test cases.
-    :return: Total number of skipped tests.
-    """
+
     sum = 0
     for test_result in test_results:
         sum += test_result[1].skipped_cnt
@@ -54,10 +88,19 @@ def _sum_all_skipped(test_results):
 
 
 def _sum_all_executed(test_results):
+    """ Count all executed test cases.
+
+    Parameters
+    ----------
+    test_results : TestResult
+        TestResult objects containing results from all run tests.
+
+    Returns
+    -------
+    int
+        Count of all executed tests.
     """
-    Counts all executed test cases.
-    :return: Total number of executed tests.
-    """
+
     sum = 0
     for test_result in test_results:
         sum += test_result[1].test_cnt
@@ -65,10 +108,16 @@ def _sum_all_executed(test_results):
 
 
 def _get_java_script():
+    """ Create short script used in created HTML document.
+
+    TODO co ten skript dela...
+
+    Returns
+    -------
+    str
+        Created java script.
     """
-    Returns short script used in created HTML document.
-    :return: Created java script.
-    """
+
     java_script = \
             '<script src="script.js"></script>' \
             '<script type="text/javascript">' \
@@ -97,14 +146,24 @@ def _get_java_script():
 # ----------------------------------------------------------------------
 
 def generate_html(test_results, start_time, duration, output_dir):
-    """
-    Generates HTML page using passed test results and prepared formating files (script.js and
-    bootstrap.css). Generated HTML page is stored in passed output directory (together with copy
+    """ Generates HTML page using passed test results and prepared formating files (script.js and
+    bootstrap.css).
+
+    Generated HTML page is stored inside the passed output directory (together with copy
     of script.js and bootstrap.css files).
-    :param test_results: Structure with results from a test run.
-    :param start_time: Start time of a test run.
-    :param duration: Duration of a test run.
-    :param output_dir: Directory where HTML results page should be stored.
+
+    TODO popis stranky
+
+    Parameters
+    ----------
+    test_results : TestResult
+        TestResult objects containing results from all run tests.
+    start_time : str
+        Start time of a test run as a string representation of local date and time.
+    duration :
+        String representation of the test duration.
+    output_dir : str
+        Path to the output directory where HTML results page should be stored.
     """
 
     doc, tag, text = Doc().tagtext()
@@ -173,33 +232,33 @@ def generate_html(test_results, start_time, duration, output_dir):
                                     with tag('td', klass="col-xs-12"):
                                         text(test_result[0])
                                     for test_case in test_result[1].test_results:
-                                        # test_case[0] = test case name
-                                        # test_case[1] = test case result: success/warning/danger)
-                                        # test_case[2] = test case error message (in case of result is danger/warning)
-                                        with tag('tr', klass='{}'.format(test_case[1])):
+                                        # test_case['case_name'] = test case name
+                                        # test_case['result'] = test case result: success/fail/skip)
+                                        # test_case['message'] = test case error message (in case of result is fail/skip)
+                                        with tag('tr', klass='{}'.format(test_case['result'])):
                                             with tag('td', klass="col-xs-12"):
-                                                text(test_case[0])
+                                                text(test_case['case_name'])
                                             with tag('td', klass="col-xs-3 text-center"):
-                                                with tag('span', klass='label label-{}'.format(test_case[1])):
-                                                    if test_case[1] == "success":
+                                                with tag('span', klass='label label-{}'.format(test_case['result'])):
+                                                    if test_case['result'] == "success":
                                                         text("Pass")
-                                                    elif test_case[1] == "warning":
+                                                    elif test_case['result'] == "skip":
                                                         text("Skip")
-                                                    elif test_case[1] == "danger":
+                                                    elif test_case['result'] == "fail":
                                                         text("Fail")
                                                     else:
                                                         text("Error")
                                             with tag('td', klass="col-xs-3 text-center"):
-                                                if test_case[1] != "success":
+                                                if test_case['result'] != "success":
                                                     doc.asis(
                                                         '&nbsp<button class="btn btn-default btn-xs">View</button>')
                                         with tag('tr', style="display:none;"):
                                             with tag('td', klass="col-xs-9"):
                                                 with tag('p'):
-                                                    text(test_case[2])
+                                                    text(test_case['message'])
                                     if len(test_result[1].pdf_files) is not 0:
                                         for file_name in test_result[1].pdf_files:
-                                            status = 'success' if test_result[1].failed_cnt == 0 else "danger"
+                                            status = 'success' if test_result[1].failed_cnt == 0 else "fail"
                                             with tag('tr', klass='{}'.format(status)):
                                                 with tag('td'):
                                                     doc.asis('<embed src="{}#view=FitV" width="100%" height ="550px">'.format(file_name))

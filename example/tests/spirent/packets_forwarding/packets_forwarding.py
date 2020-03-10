@@ -13,6 +13,7 @@ import time
 
 # Appends PYTHONPATH to enable tests framework modules access.
 sys.path.append(os.path.abspath(__file__ + "/../../../../.."))
+from framework import TestCaseData
 from modules.spirent.stctest import StcTest
 
 # Appends PYTHONPATH to enable DCPro FEC control auxiliary module.
@@ -21,13 +22,12 @@ from _dcpro_fec._dcpro_fec import dcpro_fec_set
 
 
 # ----------------------------------------------------------------------
-#    TEST DATA CLASS
+#    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
-class TestData:
+def _init_hello_test_case_data():
+    self.case_stream_blocks = None
 
-    def __init__(self):
-        self.case_name = None
-        self.case_stream_blocks = None
+TestCaseData.init_test_specific_properties = _init_hello_test_case_data
 
 
 # ----------------------------------------------------------------------
@@ -43,30 +43,30 @@ class Packets_forwarding(StcTest):
     def _setup(self):
         super()._setup()
 
-        self._spirent_config = os.path.join(self._dirs['test'], Packets_forwarding.TEST_CASE_CONFIG_DIR, Packets_forwarding.SPIRENT_INPUT_FILE)
+        self._spirent_config = os.path.join(self._dirs['config'], Packets_forwarding.SPIRENT_INPUT_FILE)
         self._dpcro_filter_file = os.path.join(self._dirs['src'], Packets_forwarding.DCPRO_FILTER_FILE)
         self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Packets_forwarding.DCPRO_PR_FILTER_FILE)
 
 
     def _set_test_cases(self):
          # IPv4 packets forwarding
-        test1 = TestData()
+        test1 = TestCaseData()
         test1.case_name = "Packets forwarding, IPv4, single streamblock"
         test1.case_stream_blocks  = ['UDP-dst-192-168-1-0', ]
-        self.add_testcase(test1)
+        self._add_testcase(test1)
 
         # IPv6 packets forwarding
-        test2 = TestData()
+        test2 = TestCaseData()
         test2.case_name = "Packets forwarding, IPv6, single streamblock"
         test2.case_stream_blocks  = ['UDP-IPv6-dst-2001', ]
-        self.add_testcase(test2)
+        self._add_testcase(test2)
 
         # IPv4 and IPv6 packets forwarding
-        test3 = TestData()
+        test3 = TestCaseData()
         test3.case_name = "Packets forwarding, IPv4 + IPv6, all streamblocks"
         test3.case_stream_blocks  = ['UDP-dst-192-168-1-0', 'UDP-dst-192-168-2-0',
                 'UDP-IPv6-dst-2001', 'UDP-IPv6-dst-2002', ]
-        self.add_testcase(test3)
+        self._add_testcase(test3)
 
 
     def _prologue(self):
@@ -74,24 +74,24 @@ class Packets_forwarding(StcTest):
 
         self._logger.info('Enabling IPv6 routing...')
         self._logger.info('    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0')
+        self._check_subprocess_output(result)
         self._logger.info('    sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0')
+        self._check_subprocess_output(result)
 
         if self._args.dcpro_mode:
             self._logger.info('    Setting up DCPro-spirent forwarding...')
-            result = self.execute_script('nfb-eth -e1')
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcprofilterctl -f {}'.format(self._dpcro_filter_file))
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcproprfilterctl -l {}'.format(self._dpcro_pr_filter_file))
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcprowatchdogctl -e0')
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcproctl -s 1')
-            self._log_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('nfb-eth -e1')
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcprofilterctl -f {}'.format(self._dpcro_filter_file))
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcproprfilterctl -l {}'.format(self._dpcro_pr_filter_file))
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcprowatchdogctl -e0')
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcproctl -s 1')
+            self._check_subprocess_output(result,exit_on_fail=True)
             self._logger.info('    DCPro-spirent forwarding setup is completed.')
 
             self._logger.info('Running DCPro FEC control...')
@@ -109,11 +109,11 @@ class Packets_forwarding(StcTest):
     def _epilogue(self):
         self._logger.info('Disabling IPv6 routing...')
         self._logger.info('    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
+        self._check_subprocess_output(result)
         self._logger.info('    sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1')
+        self._check_subprocess_output(result)
 
         super()._epilogue()
 
@@ -122,42 +122,42 @@ class Packets_forwarding(StcTest):
         super()._pre_test(act_test_data)
 
         # test start
-        self.test_start(act_test_data.case_name)
+        self._test_start(act_test_data.case_name)
 
         self._logger.info('Prepairing test environment...')
 
         # configre interface nfb0p0
         self._logger.info('    Configure nfb0p0 interface:')
         self._logger.info('        add IPv4 address 192.168.0.11/24')
-        result = self.execute_script('sudo ip addr add 192.168.0.11/24 dev nfb0p0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip addr add 192.168.0.11/24 dev nfb0p0')
+        self._check_subprocess_output(result)
 
         self._logger.info('        add IPv6 address 2000::11/64')
-        result = self.execute_script('sudo ip -6 address add 2000::11/64 dev nfb0p0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip -6 address add 2000::11/64 dev nfb0p0')
+        self._check_subprocess_output(result)
 
         self._logger.info('        set state of the interface to UP')
-        result = self.execute_script('sudo ip link set dev nfb0p0 up')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip link set dev nfb0p0 up')
+        self._check_subprocess_output(result)
 
         # add routes via spirent device(192.168.0.100 and 2000::100)
         self._logger.info('    Add IP routes to table 10:')
 
         self._logger.info('        192.168.1.0/24 via 192.168.0.100')
-        result = self.execute_script('sudo ip route add 192.168.1.0/24 via 192.168.0.100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip route add 192.168.1.0/24 via 192.168.0.100 table 10')
+        self._check_subprocess_output(result)
 
         self._logger.info('        192.168.2.0/24 via 192.168.0.100')
-        result = self.execute_script('sudo ip route add 192.168.2.0/24 via 192.168.0.100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip route add 192.168.2.0/24 via 192.168.0.100 table 10')
+        self._check_subprocess_output(result)
 
         self._logger.info('        2001::/64 via 2000::100')
-        result = self.execute_script('sudo ip -6 route add 2001::/64 via 2000::100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip -6 route add 2001::/64 via 2000::100 table 10')
+        self._check_subprocess_output(result)
 
         self._logger.info('        2002::/64 via 2000::100')
-        result = self.execute_script('sudo ip -6 route add 2002::/64 via 2000::100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip -6 route add 2002::/64 via 2000::100 table 10')
+        self._check_subprocess_output(result)
 
         if not self._manual_debug:
             # activate streamblocks
@@ -168,8 +168,8 @@ class Packets_forwarding(StcTest):
         # Set carrier (DCPro)
         if self._args.dcpro_mode:
             self._logger.info('    Turning off "nocarrier" in /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            result = self.execute_script('echo 0 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            self._log_subprocess_output(result)
+            result = self._execute_script('echo 0 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            self._check_subprocess_output(result)
 
         self._logger.info('Environment prepared successfully.\n')
 
@@ -180,41 +180,41 @@ class Packets_forwarding(StcTest):
         # Set carrier (DCPro)
         if self._args.dcpro_mode:
             self._logger.info('        Turning on "nocarrier" in /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            result = self.execute_script('echo 1 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            self._log_subprocess_output(result)
+            result = self._execute_script('echo 1 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            self._check_subprocess_output(result)
 
         # remove routes for spirent device(192.168.0.100 and 2000::100)
         self._logger.info('    Delete IP routes from table 10:')
 
         self._logger.info('        192.168.1.0/24 via 192.168.0.100')
-        result = self.execute_script('sudo ip route del 192.168.1.0/24 via 192.168.0.100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip route del 192.168.1.0/24 via 192.168.0.100 table 10')
+        self._check_subprocess_output(result)
 
         self._logger.info('        192.168.2.0/24 via 192.168.0.100')
-        result = self.execute_script('sudo ip route del 192.168.2.0/24 via 192.168.0.100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip route del 192.168.2.0/24 via 192.168.0.100 table 10')
+        self._check_subprocess_output(result)
 
         self._logger.info('        2001::/64 via 2000::100')
-        result = self.execute_script('sudo ip -6 route del 2001::/64 via 2000::100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip -6 route del 2001::/64 via 2000::100 table 10')
+        self._check_subprocess_output(result)
 
         self._logger.info('        2002::/64 via 2000::100')
-        result = self.execute_script('sudo ip -6 route del 2002::/64 via 2000::100 table 10')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip -6 route del 2002::/64 via 2000::100 table 10')
+        self._check_subprocess_output(result)
 
         # remove interface nfb0p0 configuration
         self._logger.info('    Clear nfb0p0 interface configuration:')
 
         self._logger.info('        set state of the interface to DOWN...')
-        result = self.execute_script('sudo ip link set dev nfb0p0 down')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip link set dev nfb0p0 down')
+        self._check_subprocess_output(result)
 
         # Note: IPv6 address is removed automaticaly when interface is brought down
         self._logger.info('        IPv6 should be removed automaticaly ...')
 
         self._logger.info('        delete IPv4 address 192.168.0.11/24 ...')
-        result = self.execute_script('sudo ip addr del 192.168.0.11/24 dev nfb0p0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip addr del 192.168.0.11/24 dev nfb0p0')
+        self._check_subprocess_output(result)
 
         self._logger.info('Environment cleaned up successfully.\n')
 
@@ -268,20 +268,20 @@ class Packets_forwarding(StcTest):
         frame_stats["transmitted (tx)"] = tx_total
         frame_stats["received (rx)"] = rx_total
 
-        self.print_frame_stats(frame_stats, 1)
+        self._print_frame_stats(frame_stats, 1)
 
         if sb_failed:
             err_str =  "Following streamblock(s) frame count is wrong:"
             for sb, reason in sb_failed.items():
                 err_str += "\n    " + sb + ": " + reason
 
-            self.test_result_fail(act_test_data.case_name, err_str)
+            self._test_result_fail(act_test_data.case_name, err_str)
             return
 
-        self.test_result_success(act_test_data.case_name)
+        self._test_result_success(act_test_data.case_name)
 
 
-    def print_frame_stats(self, stc_stats, indentation_level:int):
+    def _print_frame_stats(self, stc_stats, indentation_level:int):
         self._logger.info("{}Printing STC frame statistics:".format(indentation_level*4*" "))
 
         max_key_len = max([len(k) for k in stc_stats.keys()]) +3

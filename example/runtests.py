@@ -11,8 +11,7 @@ import sys
 
 # Appends PYTHONPATH to enable tests framework modules access
 sys.path.append(os.path.abspath(__file__ + "/../.."))
-from testrunner import TestRunner
-from framework.arguments import Arguments
+from framework import TestRunner, Arguments
 
 import testsconf
 
@@ -63,7 +62,7 @@ def _add_custom_arguments(self):
         help='Run tests in "DCPro" mode (FEC control, ...).'
     )
 
-Arguments._add_arguments = _add_custom_arguments
+Arguments.add_arguments = _add_custom_arguments
 
 
 # ----------------------------------------------------------------------

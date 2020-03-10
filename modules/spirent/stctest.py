@@ -20,9 +20,7 @@ from spirentlib.spirentlib import StcHandler
 
 # Appends PYTHONPATH to enable testsuite module access
 sys.path.append(os.path.abspath(__file__ + "/../../../"))
-from framework.basetest import BaseTest
-from framework.logger import Logger
-from framework.testresult import TestResult
+from framework import BaseTest, Logger, TestResult
 
 
 # ----------------------------------------------------------------------
@@ -51,6 +49,13 @@ class StcTest(BaseTest):
         Performs BaseTest setup and sets STC handler.
         """
         super()._setup()
+
+        if not self._args.server:
+            raise ValueError("Spirent test center server address is not configured.")
+        if not self._args.chassis:
+            raise ValueError("Spirent chassis address is not configured.")
+        if not self._args.port:
+            raise ValueError("Spirent port is not configured.")
 
         if not self._manual_debug:
             self._init_stc_handler()

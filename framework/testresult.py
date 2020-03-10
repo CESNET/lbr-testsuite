@@ -1,59 +1,113 @@
 """
-    Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz> (+ Matus Burzala)
-    Copyright: (C) 2019 CESNET
-    Licence: GPL-2.0
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, (+ Matus Burzala)
+Copytight: (C) 202O CESNET
+License: GPL-2.0
 
-    Description: Simple test result class implementation.
-
-    Contains mandatory test result class members for unified test reults reporting.
+Test result module provides simple class for storing results from all test cases
+execution and for final report generation.
 """
 
 
 class TestResult:
+    """Class for unified test results storage and reporting.
+
+    Attributes
+    ----------
+    test_cnt : int
+        Count of total test cases run.
+    passed_cnt : int
+        Count of passed test cases (i.e. test cases finished with success).
+    failed_cnt : int
+        Count of failed test cases.
+    skipped_cnt : int
+        Count of skipped test cases. A test case is skipped when it makes no sense to run the case.
+    test_results : list({'case_name', 'result', 'message'})
+        List of test result dictionaries containing case names succes/fail/skip result
+        keyword and test case result message. Only skipped and failed tests contains a case
+        result message.
+    pdf_files : list(str)
+        List of output pdf files.
+
+    Methods
+    -------
+    increment_cnt()
+        Increment total count of test cases run.
+    add_passed(case_name)
+        Adds passed test case result.
+    add_failed(case_name)
+        Adds passed test case result.
+    add_skipped(case_name)
+        Adds passed test case result.
+    add_output_pdf_file(pdf_file_name)
+        Add an output pdf file.
+    """
 
     def __init__(self):
-        self.test_cnt = 0        # Total test cases count
-        self.passed_cnt = 0      # Passed test cases count
-        self.failed_cnt = 0      # Failed test cases count
-        self.skipped_cnt = 0     # Skipped test cases count
-        self.pdf_files = []      # List of output pdf files
-        self.test_results = []   # Test result messages. Contains case names
-                                 # succes/danger/waring keyword and test case result message
+        self.test_cnt = 0
+        self.passed_cnt = 0
+        self.failed_cnt = 0
+        self.skipped_cnt = 0
+        self.test_results = []
+        self.pdf_files = []
 
 
     def increment_cnt(self):
+        """Increment total count of test cases run.
         """
-        Increment total count of test cases run.
-        """
+
         self.test_cnt += 1
 
 
     def add_passed(self, case_name):
+        """Add passed test case to the test results.
+
+        Parameters
+        ----------
+        case_name : str
+            Name of the passed test case.
         """
-        Increment total count of passed test cases.
-        """
-        self.test_results.append([case_name, 'success', ''])
+
+        self.test_results.append({'case_name': case_name, 'result': 'success', 'message':''})
         self.passed_cnt += 1
 
 
-    def add_failed(self, case_name, case_result):
+    def add_failed(self, case_name, result_message):
+        """Add failed test case to the test results.
+
+        Parameters
+        ----------
+        case_name : str
+            Name of the passed test case.
+        result_message : str
+            Test case result message (i.e reason why test failed).
         """
-        Increment total count of failed test cases.
-        """
-        self.test_results.append([case_name, 'danger', case_result])
+
+        self.test_results.append({'case_name': case_name, 'result': 'fail', 'message': result_message})
         self.failed_cnt += 1
 
 
-    def add_skipped(self, case_name, case_result):
+    def add_skipped(self, case_name, result_message):
+        """Add skipped test case to the test results.
+
+        Parameters
+        ----------
+        case_name : str
+            Name of the passed test case.
+        result_message : str
+            Test case result message (i.e reason why the test has been skipped).
         """
-        Increment total count of skipped test cases.
-        """
-        self.test_results.append([case_name, 'warning', case_result])
+
+        self.test_results.append({'case_name': case_name, 'result': 'skip', 'message': result_message})
         self.skipped_cnt += 1
 
 
-    def add_pdf_file(self, pdf_file_name):
+    def add_output_pdf_file(self, pdf_file_name):
+        """Add an output pdf file to the list of pdf files.
+
+        Parameters
+        ----------
+        pdf_file_name : str
+            Name of the file
         """
-        Add filename to the list of pdf files.
-        """
+
         self.pdf_files.append(pdf_file_name)

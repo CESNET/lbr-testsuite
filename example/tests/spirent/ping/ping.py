@@ -12,6 +12,7 @@ import subprocess
 
 # Appends PYTHONPATH to enable tests framework modules access.
 sys.path.append(os.path.abspath(__file__ + "/../../../../.."))
+from framework import TestCaseData
 from modules.spirent.stctest import StcTest
 
 # Appends PYTHONPATH to enable DCPro FEC control auxiliary module.
@@ -20,13 +21,12 @@ from _dcpro_fec._dcpro_fec import dcpro_fec_set
 
 
 # ----------------------------------------------------------------------
-#    TEST DATA CLASS
+#    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
-class TestData:
+def _init_hello_test_case_data():
+    self.ping_command = None
 
-    def __init__(self):
-        self.case_name = None
-        self.ping_command = None
+TestCaseData.init_test_specific_properties = _init_hello_test_case_data
 
 
 # ----------------------------------------------------------------------
@@ -42,23 +42,23 @@ class Ping(StcTest):
     def _setup(self):
         super()._setup()
 
-        self._spirent_config = os.path.join(self._dirs['test'], Ping.TEST_CASE_CONFIG_DIR, Ping.SPIRENT_INPUT_FILE)
+        self._spirent_config = os.path.join(self._dirs['config'], Ping.SPIRENT_INPUT_FILE)
         self._dpcro_filter_file = os.path.join(self._dirs['src'], Ping.DCPRO_FILTER_FILE)
         self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Ping.DCPRO_PR_FILTER_FILE)
 
 
     def _set_test_cases(self):
         # Test if device respond for ping (IPv4)
-        test_ping_ipv4 = TestData()
+        test_ping_ipv4 = TestCaseData()
         test_ping_ipv4.case_name = "Routing tests - IPv4 ping respond."
         test_ping_ipv4.ping_command = 'sudo ping -c 5 192.168.0.100'
-        self.add_testcase(test_ping_ipv4)
+        self._add_testcase(test_ping_ipv4)
 
         # Test if device respond for ping (IPv6)
-        test_ping_ipv6 = TestData()
+        test_ping_ipv6 = TestCaseData()
         test_ping_ipv6.case_name = "Routing tests - IPv6 ping respond"
         test_ping_ipv6.ping_command = 'sudo ping -6 -c 5 2000::100'
-        self.add_testcase(test_ping_ipv6)
+        self._add_testcase(test_ping_ipv6)
 
 
     def _prologue(self):
@@ -66,24 +66,24 @@ class Ping(StcTest):
 
         self._logger.info('Enabling IPv6 routing...')
         self._logger.info('    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0')
+        self._check_subprocess_output(result)
         self._logger.info('    sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0')
+        self._check_subprocess_output(result)
 
         if self._args.dcpro_mode:
             self._logger.info('    Setting up DCPro-spirent forwarding...')
-            result = self.execute_script('nfb-eth -e1')
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcprofilterctl -f {}'.format(self._dpcro_filter_file))
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcproprfilterctl -l {}'.format(self._dpcro_pr_filter_file))
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcprowatchdogctl -e0')
-            self._log_subprocess_output(result,exit_on_fail=True)
-            result = self.execute_script('dcproctl -s 1')
-            self._log_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('nfb-eth -e1')
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcprofilterctl -f {}'.format(self._dpcro_filter_file))
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcproprfilterctl -l {}'.format(self._dpcro_pr_filter_file))
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcprowatchdogctl -e0')
+            self._check_subprocess_output(result,exit_on_fail=True)
+            result = self._execute_script('dcproctl -s 1')
+            self._check_subprocess_output(result,exit_on_fail=True)
             self._logger.info('    DCPro-spirent forwarding setup is completed.')
 
             self._logger.info('Running DCPro FEC control...')
@@ -101,11 +101,11 @@ class Ping(StcTest):
     def _epilogue(self):
         self._logger.info('Disabling IPv6 routing...')
         self._logger.info('    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
+        self._check_subprocess_output(result)
         self._logger.info('    sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1')
-        result = self.execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1')
+        self._check_subprocess_output(result)
 
         super()._epilogue()
 
@@ -114,29 +114,29 @@ class Ping(StcTest):
         super()._pre_test(act_test_data)
 
         # test start
-        self.test_start(act_test_data.case_name)
+        self._test_start(act_test_data.case_name)
 
         self._logger.info('Prepairing test environment...')
 
         # configre interface nfb0p0
         self._logger.info('    Configure nfb0p0 interface:')
         self._logger.info('        add IPv4 address 192.168.0.11/24')
-        result = self.execute_script('sudo ip addr add 192.168.0.11/24 dev nfb0p0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip addr add 192.168.0.11/24 dev nfb0p0')
+        self._check_subprocess_output(result)
 
         self._logger.info('        add IPv6 address 2000::11/64')
-        result = self.execute_script('sudo ip -6 address add 2000::11/64 dev nfb0p0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip -6 address add 2000::11/64 dev nfb0p0')
+        self._check_subprocess_output(result)
 
         self._logger.info('        set state of the interface to UP')
-        result = self.execute_script('sudo ip link set dev nfb0p0 up')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip link set dev nfb0p0 up')
+        self._check_subprocess_output(result)
 
         # Set carrier (DCPro)
         if self._args.dcpro_mode:
             self._logger.info('    Turning off "nocarrier" in /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            result = self.execute_script('echo 0 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            self._log_subprocess_output(result)
+            result = self._execute_script('echo 0 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            self._check_subprocess_output(result)
 
         self._logger.info('Environment prepared successfully.\n')
 
@@ -147,22 +147,22 @@ class Ping(StcTest):
         # Set carrier (DCPro)
         if self._args.dcpro_mode:
             self._logger.info('        Turning on "nocarrier" in /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            result = self.execute_script('echo 1 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
-            self._log_subprocess_output(result)
+            result = self._execute_script('echo 1 | sudo tee /sys/class/nfb/nfb0/net/nfb0p0/nocarrier')
+            self._check_subprocess_output(result)
 
         # remove interface nfb0p0 configuration
         self._logger.info('    Clear nfb0p0 interface configuration:')
 
         self._logger.info('        set state of the interface to DOWN...')
-        result = self.execute_script('sudo ip link set dev nfb0p0 down')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip link set dev nfb0p0 down')
+        self._check_subprocess_output(result)
 
         # Note: IPv6 address is removed automaticaly when interface is brought down
         self._logger.info('        IPv6 should be removed automaticaly ...')
 
         self._logger.info('        delete IPv4 address 192.168.0.11/24 ...')
-        result = self.execute_script('sudo ip addr del 192.168.0.11/24 dev nfb0p0')
-        self._log_subprocess_output(result)
+        result = self._execute_script('sudo ip addr del 192.168.0.11/24 dev nfb0p0')
+        self._check_subprocess_output(result)
 
         self._logger.info('Environment cleaned up successfully.\n')
 
@@ -185,7 +185,7 @@ class Ping(StcTest):
         output = subprocess.run(act_test_data.ping_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', shell=True)
         self._logger.info(output.stdout)
         if output.returncode == 0:
-            self.test_result_success(act_test_data.case_name)
+            self._test_result_success(act_test_data.case_name)
         else:
-            self.test_result_fail(act_test_data.case_name, 'Device did not respond for the ping.')
+            self._test_result_fail(act_test_data.case_name, 'Device did not respond for the ping.')
             return
