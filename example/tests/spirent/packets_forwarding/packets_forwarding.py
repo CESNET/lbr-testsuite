@@ -34,15 +34,15 @@ from _dcpro_fec._dcpro_fec import dcpro_fec_set
 # ----------------------------------------------------------------------
 #    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
-def _init_hello_test_case_data():
+def _init_pf_test_case_data(self):
     """Initialization of custom test case data properties.
 
-    Overrides TestCaseData._init_hello_test_case_data)) method.
+    For override of TestCaseData.init_test_specific_properties() method.
     """
 
     self.case_stream_blocks = None
 
-TestCaseData.init_test_specific_properties = _init_hello_test_case_data
+TestCaseData.init_test_specific_properties = _init_pf_test_case_data
 
 
 # ----------------------------------------------------------------------
@@ -196,8 +196,6 @@ class Packets_forwarding(StcTest):
 
         super()._pre_test(act_test_data)
 
-        # test start
-        self._test_start(act_test_data.case_name)
 
         self._logger.info('Prepairing test environment...')
 

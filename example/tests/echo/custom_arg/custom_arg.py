@@ -25,15 +25,15 @@ from framework import BaseTest, TestCaseData
 # ----------------------------------------------------------------------
 #    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
-def _init_hello_test_case_data():
+def _init_ca_test_case_data(self):
     """Initialization of custom test case data properties.
 
-    Overrides TestCaseData._init_hello_test_case_data)) method.
+    For override of TestCaseData.init_test_specific_properties() method.
     """
 
     self.hello_msg = None
 
-TestCaseData.init_test_specific_properties = _init_hello_test_case_data
+TestCaseData.init_test_specific_properties = _init_ca_test_case_data
 
 
 # ----------------------------------------------------------------------
@@ -49,7 +49,7 @@ class Custom_arg(BaseTest):
         """
 
         hello1 = TestCaseData()
-        hello1.test_name = "Echo test - custom argument."
+        hello1.case_name = "Echo test - custom argument."
         hello1.hello_msg = '->->->  Your custom string is: {} <-<-<-'.format(self._args.custom)
         self._add_testcase(hello1)
 
@@ -65,7 +65,7 @@ class Custom_arg(BaseTest):
         self._logger.info(output.stdout)
 
         if output.returncode == 0:
-            self._test_result_success(act_test_data.test_name)
+            self._test_result_success(act_test_data.case_name)
         else:
-            self._test_result_fail(act_test_data.test_name, 'echo command failed.')
+            self._test_result_fail(act_test_data.case_name, 'echo command failed.')
             return

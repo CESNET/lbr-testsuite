@@ -206,7 +206,11 @@ class BaseTest:
             Object containing test case set up.
         """
 
-        pass
+        # Log and report start of a test case
+        if self._base_class_logging:
+            self._logger.info("\n====================================================================================")
+            self._logger.info("== {} ==\n".format(test_case_data.case_name))
+        self._results.increment_cnt()
 
 
     def _test(self, test_case_data):
@@ -238,21 +242,6 @@ class BaseTest:
         """
 
         pass
-
-
-    def _test_start(self, test_name):
-        """Log test case start and increment executed test case counter.
-
-        Parameters
-        ----------
-        test_name : str
-            Name of a test case
-        """
-
-        if self._base_class_logging:
-            self._logger.info("\n====================================================================================")
-            self._logger.info("== {} ==\n".format(test_name))
-        self._results.increment_cnt()
 
 
     def _test_result_success(self, test_name):

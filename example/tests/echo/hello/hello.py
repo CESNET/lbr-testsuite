@@ -21,10 +21,10 @@ from framework import BaseTest, TestCaseData
 # ----------------------------------------------------------------------
 #    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
-def _init_hello_test_case_data():
+def _init_hello_test_case_data(self):
     """Initialization of custom test case data properties.
 
-    Overrides TestCaseData._init_hello_test_case_data)) method.
+    For override of TestCaseData.init_test_specific_properties() method.
     """
 
     self.hello_msg = None
@@ -49,7 +49,7 @@ class Hello(BaseTest):
         """
 
         hello1 = TestCaseData()
-        hello1.test_name = "Echo test - hello."
+        hello1.case_name = "Echo test - hello."
         hello1.hello_msg = '->->->  Hello, I am an example test. <-<-<-'
         self._add_testcase(hello1)
 
@@ -66,7 +66,7 @@ class Hello(BaseTest):
         self._logger.info(output.stdout)
 
         if output.returncode == 0:
-            self._test_result_success(act_test_data.test_name)
+            self._test_result_success(act_test_data.case_name)
         else:
-            self._test_result_fail(act_test_data.test_name, 'echo command failed.')
+            self._test_result_fail(act_test_data.case_name, 'echo command failed.')
             return

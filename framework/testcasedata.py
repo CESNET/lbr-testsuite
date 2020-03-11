@@ -29,6 +29,8 @@ class TestCaseData:
         self.case_name = None
         # Other common TestCaseData properties ..
 
+        self.init_test_specific_properties()
+
 
     def init_test_specific_properties(self):
         """Init method for custom test specific properties.

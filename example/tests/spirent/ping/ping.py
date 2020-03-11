@@ -32,15 +32,15 @@ from _dcpro_fec._dcpro_fec import dcpro_fec_set
 # ----------------------------------------------------------------------
 #    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
-def _init_hello_test_case_data():
+def _init_ping_test_case_data(self):
     """Initialization of custom test case data properties.
 
-    Overrides TestCaseData._init_hello_test_case_data)) method.
+    For override of TestCaseData.init_test_specific_properties() method.
     """
 
     self.ping_command = None
 
-TestCaseData.init_test_specific_properties = _init_hello_test_case_data
+TestCaseData.init_test_specific_properties = _init_ping_test_case_data
 
 
 # ----------------------------------------------------------------------
@@ -176,14 +176,12 @@ class Ping(StcTest):
 
         Parameters
         ----------
-        act_test_data : TestCaseSetup
+        act_test_data : TestCaseData
             Setup of the current test case.
         """
 
         super()._pre_test(act_test_data)
 
-        # test start
-        self._test_start(act_test_data.case_name)
 
         self._logger.info('Prepairing test environment...')
 
@@ -219,7 +217,7 @@ class Ping(StcTest):
 
         Parameters
         ----------
-        act_test_data : TestCaseSetup
+        act_test_data : TestCaseData
             Setup of the current test case.
         """
 
@@ -263,6 +261,7 @@ class Ping(StcTest):
         act_test_data : TestCaseSetup
             Setup of the current test case.
         """
+
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Test environment is prepared, test body would start here (but will be skipped).')
             input("Press ENTER to proceed to next test scenario.")
