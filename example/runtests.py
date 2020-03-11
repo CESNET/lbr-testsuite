@@ -1,9 +1,12 @@
 """
-    Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
-    Copyright: (C) 2019 CESNET
-    Licence: GPL-2.0
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, (+ Matus Burzala)
+Copytight: (C) 202O CESNET
+License: GPL-2.0
 
-    Description: Script for example tests execution.
+Script for example tests execution.
+
+This example shows creation of custom test runner from framework TestRunner class,
+addition of custom arguments and custom tests execution.
 """
 
 import os
@@ -17,9 +20,14 @@ import testsconf
 
 
 # ----------------------------------------------------------------------
-#    EXAMPLE TEST RUNNER
+#    EXAMPLE TESTS RUNNER
 # ----------------------------------------------------------------------
 class ExampleRunner(TestRunner):
+    """Class for tests execution.
+
+    This is a very simple TestRunner subclass. It implements no extension
+    and uses TestRunner as is.
+    """
 
     def __init__(self, arguments, output_dir, supported_tests, tests_dir):
         super().__init__(arguments, output_dir, supported_tests, tests_dir)
@@ -29,6 +37,12 @@ class ExampleRunner(TestRunner):
 #    ADDING CUSTOM ARGUMENTS
 # ----------------------------------------------------------------------
 def _add_custom_arguments(self):
+    """Function for custom arguments addition.
+
+    This function servers for overriding of Arguments.add_arguments, thus
+    for adding custom arguments to Arguments component.
+    """
+
     # For echo/custom_arg test
     self._parser.add_argument(
             '--custom',
@@ -73,18 +87,22 @@ def main():
 
     args = Arguments().parse()
 
+    # Prepare absolute path to directory with tests implementation
     tests_dir = testsconf.tests_dir
     if not os.path.isabs(tests_dir):
         this_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
         tests_dir = os.path.abspath(os.path.join(this_dir, tests_dir))
 
+    # Prepare absolute path to directory for test outputs
     output_dir = args.odir
     if not os.path.isabs(output_dir):
         this_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
         output_dir = os.path.abspath(os.path.join(this_dir, output_dir))
 
+    # Create test runner
     tests_runner = ExampleRunner(args, output_dir, testsconf.tests, tests_dir)
 
+    # Run all secelted tests
     if tests_runner.run():
         return 0
     else:
