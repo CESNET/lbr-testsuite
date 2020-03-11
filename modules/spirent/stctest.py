@@ -91,7 +91,7 @@ class StcTest(BaseTest):
     def _prologue(self):
         """Perform environment preparation common for all test cases within a test.
 
-        Extends BaseTest._setup() method:
+        Extends BaseTest._prologue() method:
         Initialize API for sending commands to STC over network, initialize STC environment
         and loads configuration, connects to spirent terminal server (iff manual debugging is
         turned off none of these steps is performed).
@@ -116,7 +116,7 @@ class StcTest(BaseTest):
     def _epilogue(self):
         """Clean up environment set up common for all test cases within a test.
 
-        Extends BaseTest._setup() method:
+        Extends BaseTest._epilogue() method:
         Disconnects from spirent terminal server. (iff manual debugging is turned off).
         """
         if self._manual_debug:
