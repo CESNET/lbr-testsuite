@@ -1,9 +1,19 @@
 """
-    Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
-    Copyright: (C) 2020 CESNET
-    Licence: GPL-2.0
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, (+ Matus Burzala, Ivan Hazucha)
+Copytight: (C) 202O CESNET
+License: GPL-2.0
 
-    Description: Simple spirent example packets forwarding test.
+Simple spirent example packets forwarding test.
+
+This tests establishes connection to the spirent test center and configures it
+for data forwarding. Test is represented by receiving and forwarding generated
+packets back to the spirent. Test cases are peresented by various stream blocks
+setup.
+
+Test passes successfully if all received packets are forwarded back to the spirent.
+
+If dcpro card and firmware is used enable dcpro mode via command line argument.
+Other modes are not currently implemented.
 """
 
 import os
@@ -25,6 +35,11 @@ from _dcpro_fec._dcpro_fec import dcpro_fec_set
 #    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
 def _init_hello_test_case_data():
+    """Initialization of custom test case data properties.
+
+    Overrides TestCaseData._init_hello_test_case_data)) method.
+    """
+
     self.case_stream_blocks = None
 
 TestCaseData.init_test_specific_properties = _init_hello_test_case_data
@@ -34,21 +49,57 @@ TestCaseData.init_test_specific_properties = _init_hello_test_case_data
 #    HELLO TEST CLASS
 # ----------------------------------------------------------------------
 class Packets_forwarding(StcTest):
+    """ Class of the spirent packets forwarding test.
 
-    SPIRENT_INPUT_FILE = 'pkt_fwd.xml'
-    DCPRO_FILTER_FILE = 'filter.txt'
-    DCPRO_PR_FILTER_FILE = 'prfilter.txt'
-    SLEEP_TIME = 10 # seconds
+    Extends StcTest class by extending methods for test environemtn setup, prolog, epilog,
+    pre-test and post-test phases and overriding methods for test cases setup and the test
+    body.
+
+    Attributes
+    ----------
+    _SPIRENT_INPUT_FILE : str
+        Name of a STC configuration file.
+    _DCPRO_FILTER_FILE : str
+        Name of the dcpro filter configuration file.
+    _DCPRO_PR_FILTER_FILE : str
+        Name of the dcpro prfilter configuration file.
+    _SLEEP_TIME : int
+        Time length of a packet generation.
+    _dpcro_filter_file : str
+        Path to the dcpro filter configuration file.
+    _dpcro_pr_filter_file : str
+        Path to the dcpro prfilter configuration file.
+    """
+
+    _SPIRENT_INPUT_FILE = 'pkt_fwd.xml'
+    _DCPRO_FILTER_FILE = 'filter.txt'
+    _DCPRO_PR_FILTER_FILE = 'prfilter.txt'
+    _SLEEP_TIME = 10 # seconds
 
     def _setup(self):
+        """Perform general test environment setup.
+
+        Extends super()._setup() by setting paths to configuration files.
+        """
+
         super()._setup()
 
-        self._spirent_config = os.path.join(self._dirs['config'], Packets_forwarding.SPIRENT_INPUT_FILE)
-        self._dpcro_filter_file = os.path.join(self._dirs['src'], Packets_forwarding.DCPRO_FILTER_FILE)
-        self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Packets_forwarding.DCPRO_PR_FILTER_FILE)
+        self._spirent_config = os.path.join(self._dirs['config'], Packets_forwarding._SPIRENT_INPUT_FILE)
+        self._dpcro_filter_file = os.path.join(self._dirs['src'], Packets_forwarding._DCPRO_FILTER_FILE)
+        self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Packets_forwarding._DCPRO_PR_FILTER_FILE)
 
 
     def _set_test_cases(self):
+        """Set test cases
+
+        Overrides super()._set_test_cases().
+
+        Create set up for packet generation from:
+        - single IPv4 stream block,
+        - single IPv6 stream block,
+        - all IPv4 and IPv6 stream blocks.
+        """
+
          # IPv4 packets forwarding
         test1 = TestCaseData()
         test1.case_name = "Packets forwarding, IPv4, single streamblock"
@@ -70,6 +121,12 @@ class Packets_forwarding(StcTest):
 
 
     def _prologue(self):
+        """Perform environment preparation common for packet forwarding test cases within this test.
+
+        Extends super()._prologue() method:
+        Enables IPv6, if dcpro mode is enabled configure dcpro card for data forwarding.
+        """
+
         super()._prologue()
 
         self._logger.info('Enabling IPv6 routing...')
@@ -107,6 +164,12 @@ class Packets_forwarding(StcTest):
 
 
     def _epilogue(self):
+        """Clean up environment set up common for packet forwarding test cases within this test.
+
+        Extends super()._epilogue() method:
+        Disables IPv6 (DCPro card configuration is not recovered and is left as is).
+        """
+
         self._logger.info('Disabling IPv6 routing...')
         self._logger.info('    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
         result = self._execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
@@ -119,6 +182,18 @@ class Packets_forwarding(StcTest):
 
 
     def _pre_test(self, act_test_data):
+        """Prepare test cases.
+
+        Extends super()._pre_test():
+        Configure IP addresses on the interface used for testing and turns of nocarrier
+        for the interface.
+
+        Parameters
+        ----------
+        act_test_data : TestCaseSetup
+            Setup of the current test case.
+        """
+
         super()._pre_test(act_test_data)
 
         # test start
@@ -175,6 +250,18 @@ class Packets_forwarding(StcTest):
 
 
     def _post_test(self, act_test_data):
+        """Cleanup test case.
+
+        Extends super()._post_test():
+        Turns of nocarrier for the interface used for testing and and delete IP configuration
+        on the interface.
+
+        Parameters
+        ----------
+        act_test_data : TestCaseSetup
+            Setup of the current test case.
+        """
+
         self._logger.info('\nCleaning up test environment...')
 
         # Set carrier (DCPro)
@@ -220,6 +307,21 @@ class Packets_forwarding(StcTest):
 
 
     def _test(self, act_test_data):
+        """Test procedures executed for every test case.
+
+        Overrides super()._test().
+
+        For every configured case ARP/ND is handled first. After that, packet generation
+        using spirent is run for a configured time. When packet generation is completed
+        test evaluation checks whether all received packets has been forwarded back to
+        the spirent. Test succeedes if packet counts macthes, otherwise fails.
+
+        Parameters
+        ----------
+        act_test_data : TestCaseSetup
+            Setup of the current test case.
+        """
+
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Test environment is prepared, test body would start here (but will be skipped).')
             input("Press ENTER to proceed to next test scenario.")
@@ -233,8 +335,8 @@ class Packets_forwarding(StcTest):
         self._logger.info('    Starting generator(s) ...')
         self._stc_handler.stc_start_generators()
 
-        self._logger.info('    Waiting {} seconds ...'.format(Packets_forwarding.SLEEP_TIME))
-        time.sleep(Packets_forwarding.SLEEP_TIME)
+        self._logger.info('    Waiting {} seconds ...'.format(Packets_forwarding._SLEEP_TIME))
+        time.sleep(Packets_forwarding._SLEEP_TIME)
 
         self._logger.info('    Stopping generator(s) ...')
         self._stc_handler.stc_stop_generators()

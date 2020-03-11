@@ -1,9 +1,18 @@
 """
-    Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
-    Copyright: (C) 2020 CESNET
-    Licence: GPL-2.0
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, (+ Matus Burzala, Ivan Hazucha)
+Copytight: (C) 202O CESNET
+License: GPL-2.0
 
-    Description: Simple spirent example ping test.
+Simple spirent example ping test.
+
+This tests establishes connection to the spirent test center and configures it
+for data forwarding. Test is represented by exectuion of ping commands first,
+for IPv4 than for IPv6.
+
+Result of test cases depends on result of ping commands.
+
+If dcpro card and firmware is used enable dcpro mode via command line argument.
+Other modes are not currently implemented.
 """
 
 import os
@@ -24,6 +33,11 @@ from _dcpro_fec._dcpro_fec import dcpro_fec_set
 #    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
 def _init_hello_test_case_data():
+    """Initialization of custom test case data properties.
+
+    Overrides TestCaseData._init_hello_test_case_data)) method.
+    """
+
     self.ping_command = None
 
 TestCaseData.init_test_specific_properties = _init_hello_test_case_data
@@ -33,21 +47,52 @@ TestCaseData.init_test_specific_properties = _init_hello_test_case_data
 #    HELLO TEST CLASS
 # ----------------------------------------------------------------------
 class Ping(StcTest):
+    """ Class of the spirent ping test.
 
-    SPIRENT_INPUT_FILE = 'ping.xml'
-    DCPRO_FILTER_FILE = 'filter.txt'
-    DCPRO_PR_FILTER_FILE = 'prfilter.txt'
+    Extends StcTest class by extending methods for test environemtn setup, prolog, epilog,
+    pre-test and post-test phases and overriding methods for test cases setup and the test
+    body.
+
+    Attributes
+    ----------
+    _SPIRENT_INPUT_FILE : str
+        Name of a STC configuration file.
+    _DCPRO_FILTER_FILE : str
+        Name of the dcpro filter configuration file.
+    _DCPRO_PR_FILTER_FILE : str
+        Name of the dcpro prfilter configuration file.
+    _dpcro_filter_file : str
+        Path to the dcpro filter configuration file.
+    _dpcro_pr_filter_file : str
+        Path to the dcpro prfilter configuration file.
+    """
+
+    _SPIRENT_INPUT_FILE = 'ping.xml'
+    _DCPRO_FILTER_FILE = 'filter.txt'
+    _DCPRO_PR_FILTER_FILE = 'prfilter.txt'
 
 
     def _setup(self):
+        """Perform general test environment setup.
+
+        Extends super()._setup() by setting paths to configuration files.
+        """
+
         super()._setup()
 
-        self._spirent_config = os.path.join(self._dirs['config'], Ping.SPIRENT_INPUT_FILE)
-        self._dpcro_filter_file = os.path.join(self._dirs['src'], Ping.DCPRO_FILTER_FILE)
-        self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Ping.DCPRO_PR_FILTER_FILE)
+        self._spirent_config = os.path.join(self._dirs['config'], Ping._SPIRENT_INPUT_FILE)
+        self._dpcro_filter_file = os.path.join(self._dirs['src'], Ping._DCPRO_FILTER_FILE)
+        self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Ping._DCPRO_PR_FILTER_FILE)
 
 
     def _set_test_cases(self):
+        """Set test cases
+
+        Overrides super()._set_test_cases().
+
+        Create set up for IPv4 and IPv6 ping test cases.
+        """
+
         # Test if device respond for ping (IPv4)
         test_ping_ipv4 = TestCaseData()
         test_ping_ipv4.case_name = "Routing tests - IPv4 ping respond."
@@ -62,6 +107,12 @@ class Ping(StcTest):
 
 
     def _prologue(self):
+        """Perform environment preparation common for ping test cases within this test.
+
+        Extends super()._prologue() method:
+        Enables IPv6, if dcpro mode is enabled configure dcpro card for data forwarding.
+        """
+
         super()._prologue()
 
         self._logger.info('Enabling IPv6 routing...')
@@ -95,10 +146,16 @@ class Ping(StcTest):
                 self._logger.info('Skipping FEC setup in spirent config. Make sure that FEC is set properly in spirent interface configuration.')
             self._logger.info('Fec is set to {}.'.format(str(fec_is_set)))
         else:
-            self._logger.warn('DCPro mode is off, skipping DCPro FEC control.')
+            self._logger.warn('DCPro mode is off, skipping DCPro configuration.')
 
 
     def _epilogue(self):
+        """Clean up environment set up common for ping test cases within this test.
+
+        Extends super()._epilogue() method:
+        Disables IPv6 (DCPro card configuration is not recovered and is left as is).
+        """
+
         self._logger.info('Disabling IPv6 routing...')
         self._logger.info('    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
         result = self._execute_script('sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1')
@@ -111,6 +168,18 @@ class Ping(StcTest):
 
 
     def _pre_test(self, act_test_data):
+        """Prepare test cases.
+
+        Extends super()._pre_test():
+        Configure IP addresses on the interface used for testing and turns of nocarrier
+        for the interface.
+
+        Parameters
+        ----------
+        act_test_data : TestCaseSetup
+            Setup of the current test case.
+        """
+
         super()._pre_test(act_test_data)
 
         # test start
@@ -142,6 +211,18 @@ class Ping(StcTest):
 
 
     def _post_test(self, act_test_data):
+        """Cleanup test case.
+
+        Extends super()._post_test():
+        Turns of nocarrier for the interface used for testing and and delete IP configuration
+        on the interface.
+
+        Parameters
+        ----------
+        act_test_data : TestCaseSetup
+            Setup of the current test case.
+        """
+
         self._logger.info('\nCleaning up test environment...')
 
         # Set carrier (DCPro)
@@ -166,8 +247,22 @@ class Ping(StcTest):
 
         self._logger.info('Environment cleaned up successfully.\n')
 
+        super()._post_test(act_test_data)
+
 
     def _test(self, act_test_data):
+        """Test procedures executed for every test case.
+
+        Overrides super()._test().
+
+        For every ping command case (IPv4 and IPv6) ARP/ND is handled first, than ping
+        commands are executed. Result depends on result of ping command.
+
+        Parameters
+        ----------
+        act_test_data : TestCaseSetup
+            Setup of the current test case.
+        """
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Test environment is prepared, test body would start here (but will be skipped).')
             input("Press ENTER to proceed to next test scenario.")

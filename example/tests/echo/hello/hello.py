@@ -1,9 +1,12 @@
 """
-    Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
-    Copyright: (C) 2019 CESNET
-    Licence: GPL-2.0
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, (+ Matus Burzala, Ivan Hazucha)
+Copytight: (C) 202O CESNET
+License: GPL-2.0
 
-    Description: Simple example echo test.
+Simple example echo test.
+
+This test only prints a configured text using echo command. If echo command
+finishes successfully the test passes, otherwise it failes.
 """
 
 import os
@@ -19,6 +22,11 @@ from framework import BaseTest, TestCaseData
 #    TEST CASE DATA CLASS PREPARATION
 # ----------------------------------------------------------------------
 def _init_hello_test_case_data():
+    """Initialization of custom test case data properties.
+
+    Overrides TestCaseData._init_hello_test_case_data)) method.
+    """
+
     self.hello_msg = None
 
 TestCaseData.init_test_specific_properties = _init_hello_test_case_data
@@ -28,9 +36,18 @@ TestCaseData.init_test_specific_properties = _init_hello_test_case_data
 #    HELLO TEST CLASS
 # ----------------------------------------------------------------------
 class Hello(BaseTest):
+    """ Class of the Hello test.
+
+    Extends BaseTest class by overriding methods for test cases setup and
+    test body.
+    """
 
     def _set_test_cases(self):
-        # Print a hello message
+        """Set test cases
+
+        Method prepares single test case with an example test text.
+        """
+
         hello1 = TestCaseData()
         hello1.test_name = "Echo test - hello."
         hello1.hello_msg = '->->->  Hello, I am an example test. <-<-<-'
@@ -38,6 +55,11 @@ class Hello(BaseTest):
 
 
     def _test(self, act_test_data):
+        """Execute the test for every configured test case.
+
+        For every configured test case run "echo" command and check its return value.
+        """
+
         self._logger.info('    Running an echo command...')
         output = subprocess.run('echo "' + act_test_data.hello_msg + '"', stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE, encoding='utf-8', shell=True)

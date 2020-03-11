@@ -1,9 +1,13 @@
 """
-    Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz> (+ Matus Burzala, Ivan Hazucha)
-    Copyright: (C) 2019 CESNET
-    Licence: GPL-2.0
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
+Copytight: (C) 202O CESNET
+License: GPL-2.0
 
-    Description: Base class for tests using Spirent TestCenter.
+Base spirent test module. Provides a common frame for tests using spirent. This frame,
+implemented thorugh StcTest class, extends parent BaseTest class:
+- provides initialization of Spirent Test Center (STC) handler for STC control,
+- handles connection to STC terminal server and spirent chassis on given port,
+- provides STC control methods.
 """
 
 import csv
@@ -23,31 +27,54 @@ sys.path.append(os.path.abspath(__file__ + "/../../../"))
 from framework import BaseTest, Logger, TestResult
 
 
-# ----------------------------------------------------------------------
-#    SPIRENT TEST CENTER TEST CLASS
-# ----------------------------------------------------------------------
-
 class StcTest(BaseTest):
+    """Base spirent test class extending BaseTest class.
 
-    SERVER_PORT = 42000  # server part of StcHandler listens on this port number
+    Attributes
+    ----------
+    _manual_debug : bool
+        Manual debug flag. If it is set to True spirent connection related steps are skipped
+        and expected to be handled manually.
+    _stc_handler : StcHandler
+        Handler for communication with Spirent Test Center (STC).
+    _spirent_config : str
+        Path to STC configuration.
+    """
 
-    def __init__(self, args, output_dir, logger=None, use_fec=False):
+    """ Server part of StcHandler listens on this port number """
+    SERVER_PORT = 42000
+
+    def __init__(self, args, output_dir, logger=None):
+        """
+        Parameters
+        ----------
+        args : ArgumentParser.parseargs() populated namespace
+            Set of parsed arguments.
+        output_dir : str
+            Path to the output directory where test outputs will be stored.
+        logger : logging.Logger, optional
+            Initialized logging facility object. If a logger is not passed, it is
+            created later in the _setup() method.
+        """
+
         super().__init__(args, output_dir, logger)
 
         self._manual_debug = args.manual_debug
 
         self._stc_handler = None
-        self._ndp_read_process = None
-        self._ndp_generate_process = None
 
         # Set path to spirent xml configuration within a test
         self._spirent_config = None
 
 
     def _setup(self):
+        """Perform general test environment setup.
+
+        Extends BaseTest._setup() method:
+        Checks spirent connection arguments and creates STC handler (iff manual debugging is
+        turned off).
         """
-        Performs BaseTest setup and sets STC handler.
-        """
+
         super()._setup()
 
         if not self._args.server:
@@ -58,14 +85,18 @@ class StcTest(BaseTest):
             raise ValueError("Spirent port is not configured.")
 
         if not self._manual_debug:
-            self._init_stc_handler()
+            self._create_stc_handler()
 
 
     def _prologue(self):
+        """Perform environment preparation common for all test cases within a test.
+
+        Extends BaseTest._setup() method:
+        Initialize API for sending commands to STC over network, initialize STC environment
+        and loads configuration, connects to spirent terminal server (iff manual debugging is
+        turned off none of these steps is performed).
         """
-        Connects to Spirent TestCenter terminal server, loads STC configuration from XML file,
-        connects to STC chassis and reserves STC port.
-        """
+
         super()._prologue()
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Skipping STC reservation and preparation.')
@@ -83,8 +114,10 @@ class StcTest(BaseTest):
 
 
     def _epilogue(self):
-        """
-        Disconnects from Spirent TestCenter terminal server.
+        """Clean up environment set up common for all test cases within a test.
+
+        Extends BaseTest._setup() method:
+        Disconnects from spirent terminal server. (iff manual debugging is turned off).
         """
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Skipping STC disconnecting.')
@@ -92,30 +125,37 @@ class StcTest(BaseTest):
             self._logger.info('Disconnecting from Spirent Test Center ...')
             self._stc_handler.stc_disconnect()
 
-    # -----------------------------------------------------------------------
-    # AUX METHODS
-    # -----------------------------------------------------------------------
-
-    def _init_stc_handler(self):
-        """
-        Create Stc API handler and establish connection
-        """
-        self._stc_handler = StcHandler()
-
-
 
     # -----------------------------------------------------------------------
     # SPIRENT TESTCENTER METHODS
     # -----------------------------------------------------------------------
 
-    def _activate_stream_blocks_by_name(self, stream_block_names: list):
+    def _create_stc_handler(self):
+        """Create Stc API handler.
         """
-        Activate stream blocks defined in a list of stream block names, sets
-        property 'Active' to 'FALSE' for others..
-        Rise exception if passed argument is not of type list, or if any of
-        stream blocks form the list is not defined in used STC configuration.
-        :param stream_block_names: list of string names of stream block from STC
-        configuration.
+
+        self._stc_handler = StcHandler()
+
+
+    def _activate_stream_blocks_by_name(self, stream_block_names: list):
+        """Activate stream blocks by names.
+
+        Stream blocks are defined in a list of stream block names. Method first
+        disables all stream block by setting its property 'Active' to 'FALSE'. Then,
+        all selected stream blocks are activated.
+
+        Parameters
+        ----------
+        stream_block_names : list(str)
+            List of stream block names from STC configuration.
+
+        Raises
+        ------
+        TypeError
+            If passed argument is not of type list.
+        ValueError
+            If any of stream blocks from the list is not defined in used STC
+            configuration.
         """
 
         if not isinstance(stream_block_names, list):
@@ -143,12 +183,23 @@ class StcTest(BaseTest):
 
 
     @staticmethod
-    def get_flat_stream_results(results):
+    def _get_flat_stream_results(results):
+        """Make flat list from results.
+
+        Results come in a structure [[['values1']], [['values2']]]. This method
+        makes a flat list from this nested lists.
+
+        Parameters
+        ----------
+        results : list(list(list))
+            Data in a structure: [[['values1']], [['values2']]]
+
+        Returns
+        -------
+        list
+            List of extracted values ['values1', 'values2']
         """
-        Make flat list from results of structure [[['values1']], [['values2']]]
-        :param results: data in structure [[['values1']], [['values2']]]
-        :return: list of extracted values ['values1', 'values2']
-        """
+
         flat_results = []
         for result_l1 in results:
             for result_l2 in result_l1:
@@ -158,37 +209,37 @@ class StcTest(BaseTest):
         return flat_results
 
 
-    def filter_ipv4_destination_address(self):
+    def _filter_ipv4_destination_address(self):
+        """Configure STC analyzer to filter destination IPv4 addresses.
         """
-        Configure STC analyzer to filter destination IPv4 addresses.
-        """
+
         self._logger.info("Configure STC analyzer to filter destination IPv4 addresses...")
         IPV4_DEST_ADDR_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"ip_1\" pdu=\"ipv4:IPv4\"><destAddr filterMinValue=\"000.000.000.000\" filterMaxValue=\"255.255.255.255\">255.255.255.255</destAddr></pdu></pdus></config></frame>"
         self._stc_handler.stc_analyzer_filter([IPV4_DEST_ADDR_FILTER])
 
 
-    def filter_ipv6_destination_address(self):
+    def _filter_ipv6_destination_address(self):
+        """Configure STC analyzer to filter destination IPv6 addresses.
         """
-        Configure STC analyzer to filter destination IPv6 addresses.
-        """
+
         self._logger.info("Configure STC analyzer to filter destination IPv6 addresses...")
         IPV6_DEST_ADDR_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"proto1\" pdu=\"ipv6:IPv6\"><destAddr filterMinValue=\"::0\" filterMaxValue=\"::FFFF:FFFF:FFFF:FFFF:FFFF:FFFF\">::FFFF:FFFF:FFFF:FFFF</destAddr></pdu></pdus></config></frame>"
         self._stc_handler.stc_analyzer_filter([IPV6_DEST_ADDR_FILTER])
 
 
-    def filter_ttl_in_ipv4_packets(self):
+    def _filter_ttl_in_ipv4_packets(self):
+        """Configure STC analyzer to filter TTL values in IPv4 packets.
         """
-        Configure STC analyzer to filter TTL values is IPv4 packets.
-        """
+
         self._logger.info("Configure STC analyzer to filter TTL values is IPv4 packets...")
         IPV4_TTL_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"ip_1\" pdu=\"ipv4:IPv4\"><ttl filterMinValue=\"0\" filterMaxValue=\"255\">255</ttl></pdu></pdus></config></frame>"
         self._stc_handler.stc_analyzer_filter([IPV4_TTL_FILTER])
 
 
-    def filter_ttl_in_ipv6_packets(self):
+    def _filter_ttl_in_ipv6_packets(self):
+        """Configure STC analyzer to filter TTL (hopLimit) values in IPv6 packets.
         """
-        Configure STC analyzer to filter TTL (hopLimit) values is IPv6 packets.
-        """
+
         self._logger.info("Configure STC analyzer to filter TTL (hopLimit) values is IPv6 packets...")
         IPV6_TTL_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"proto1\" pdu=\"ipv6:IPv6\"><hopLimit filterMinValue=\"0\" filterMaxValue=\"255\">255</hopLimit></pdu></pdus></config></frame>"
         self._stc_handler.stc_analyzer_filter([IPV6_TTL_FILTER])
