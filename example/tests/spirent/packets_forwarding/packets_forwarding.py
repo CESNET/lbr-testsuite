@@ -46,7 +46,7 @@ TestCaseData.init_test_specific_properties = _init_pf_test_case_data
 
 
 # ----------------------------------------------------------------------
-#    HELLO TEST CLASS
+#    PACKETS FORWARDING TEST CLASS
 # ----------------------------------------------------------------------
 class Packets_forwarding(StcTest):
     """ Class of the spirent packets forwarding test.

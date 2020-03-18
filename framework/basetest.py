@@ -429,7 +429,7 @@ class BaseTest:
                 csvfile, delimiter=CSV_COLUMN_DELIMITER,
                 quotechar='|', quoting=csv.QUOTE_MINIMAL
             )
-            writer.writerow(data)
+            writer.writerow(data_row)
 
 
     @staticmethod
