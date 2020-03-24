@@ -214,7 +214,17 @@ class StcTest(BaseTest):
         """
 
         self._logger.info("Configure STC analyzer to filter destination IPv4 addresses...")
-        IPV4_DEST_ADDR_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"ip_1\" pdu=\"ipv4:IPv4\"><destAddr filterMinValue=\"000.000.000.000\" filterMaxValue=\"255.255.255.255\">255.255.255.255</destAddr></pdu></pdus></config></frame>"
+        IPV4_DEST_ADDR_FILTER = \
+                '<frame>' \
+                    '<config>' \
+                        '<pdus>' \
+                            '<pdu name="eth1" pdu="ethernet:EthernetII"></pdu>' \
+                                '<pdu name="ip_1" pdu="ipv4:IPv4">' \
+                                    '<destAddr filterMinValue="000.000.000.000" filterMaxValue="255.255.255.255">255.255.255.255</destAddr>' \
+                                '</pdu>' \
+                            '</pdus>' \
+                    '</config>' \
+                '</frame>'
         self._stc_handler.stc_analyzer_filter([IPV4_DEST_ADDR_FILTER])
 
 
@@ -223,7 +233,17 @@ class StcTest(BaseTest):
         """
 
         self._logger.info("Configure STC analyzer to filter destination IPv6 addresses...")
-        IPV6_DEST_ADDR_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"proto1\" pdu=\"ipv6:IPv6\"><destAddr filterMinValue=\"::0\" filterMaxValue=\"::FFFF:FFFF:FFFF:FFFF:FFFF:FFFF\">::FFFF:FFFF:FFFF:FFFF</destAddr></pdu></pdus></config></frame>"
+        IPV6_DEST_ADDR_FILTER = \
+                '<frame>' \
+                    '<config>' \
+                        '<pdus>' \
+                            '<pdu name="eth1" pdu="ethernet:EthernetII"></pdu>' \
+                            '<pdu name="proto1" pdu="ipv6:IPv6">' \
+                                '<destAddr filterMinValue="::0" filterMaxValue="::FFFF:FFFF:FFFF:FFFF:FFFF:FFFF">::FFFF:FFFF:FFFF:FFFF</destAddr>' \
+                            '</pdu>' \
+                        '</pdus>' \
+                    '</config>' \
+                '</frame>'
         self._stc_handler.stc_analyzer_filter([IPV6_DEST_ADDR_FILTER])
 
 
@@ -232,7 +252,17 @@ class StcTest(BaseTest):
         """
 
         self._logger.info("Configure STC analyzer to filter TTL values is IPv4 packets...")
-        IPV4_TTL_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"ip_1\" pdu=\"ipv4:IPv4\"><ttl filterMinValue=\"0\" filterMaxValue=\"255\">255</ttl></pdu></pdus></config></frame>"
+        IPV4_TTL_FILTER = \
+                '<frame>' \
+                    '<config>' \
+                        '<pdus>' \
+                            '<pdu name="eth1" pdu="ethernet:EthernetII"></pdu>' \
+                            '<pdu name="ip_1" pdu="ipv4:IPv4">' \
+                                '<ttl filterMinValue="0" filterMaxValue="255">255</ttl>' \
+                            '</pdu>' \
+                        '</pdus>' \
+                    '</config>' \
+                '</frame>'
         self._stc_handler.stc_analyzer_filter([IPV4_TTL_FILTER])
 
 
@@ -241,6 +271,64 @@ class StcTest(BaseTest):
         """
 
         self._logger.info("Configure STC analyzer to filter TTL (hopLimit) values is IPv6 packets...")
-        IPV6_TTL_FILTER = "<frame><config><pdus><pdu name=\"eth1\" pdu=\"ethernet:EthernetII\"></pdu><pdu name=\"proto1\" pdu=\"ipv6:IPv6\"><hopLimit filterMinValue=\"0\" filterMaxValue=\"255\">255</hopLimit></pdu></pdus></config></frame>"
+        IPV6_TTL_FILTER = \
+                '<frame>' \
+                    '<config>' \
+                        '<pdus>' \
+                            '<pdu name="eth1" pdu="ethernet:EthernetII"></pdu>' \
+                            '<pdu name="proto1" pdu="ipv6:IPv6">' \
+                                '<hopLimit filterMinValue="0" filterMaxValue="255">255</hopLimit>' \
+                            '</pdu>' \
+                        '</pdus>' \
+                    '</config>' \
+                '</frame>'
         self._stc_handler.stc_analyzer_filter([IPV6_TTL_FILTER])
 
+
+    def _filter_vlan(self):
+        """Configure STC analyzer to filter VLANs.
+        """
+
+        self._logger.info("Configure STC analyzer to filter VLANs...")
+        VLAN_FILTER = \
+                '<frame>' \
+                    '<config>' \
+                        '<pdus>' \
+                            '<pdu name="eth1" pdu="ethernet:EthernetII">' \
+                                '<vlans>' \
+                                    '<Vlan name="Vlan">' \
+                                        '<id filterMinValue="0" filterMaxValue="4095">4095</id>' \
+                                    '</Vlan>' \
+                                '</vlans>' \
+                            '</pdu>' \
+                        '</pdus>' \
+                    '</config>' \
+                '</frame>'
+        self._stc_handler.stc_analyzer_filter([VLAN_FILTER])
+
+
+    def _filter_mac_address(self, direction):
+        """Configure STC analyzer to filter MAC addresses.
+
+        Parameters
+        ----------
+        direction : str
+            MAC address direction. Allowed values are "src" or "dst".
+        """
+
+        assert direction == "src" or direction == "dst"
+
+        direction_tag = "srcMac" if direction == "src" else "dstMac"
+
+        self._logger.info("Configure STC analyzer to filter {} MAC addresses...".format(direction))
+        MAC_ADDRESS_FILTER = \
+                '<frame>' \
+                    '<config>' \
+                        '<pdus>' \
+                            '<pdu name="proto1" pdu="ethernet:EthernetII">' \
+                                '<{} filterMinValue="00:00:00:00:00:00" filterMaxValue="FF:FF:FF:FF:FF:FF">FF:FF:FF:FF:FF:FF</{}>' \
+                            '</pdu>' \
+                        '</pdus>' \
+                    '</config>' \
+                '</frame>'.format(direction_tag, direction_tag)
+        self._stc_handler.stc_analyzer_filter([MAC_ADDRESS_FILTER])
