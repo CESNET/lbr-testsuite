@@ -20,6 +20,11 @@ class StcHandler:
         self._filtered_stream_results = None
         self._rx_stream_block_results = None
         self._tx_stream_block_results = None
+        self._overflow_results = None
+        self._rx_port_pair_results = None
+        self._tx_port_pair_results = None
+        self._arpnd_results = None
+
 
 
     def stc_api_connect(self, host: str, port: int):
@@ -68,11 +73,22 @@ class StcHandler:
     def subscribe_to_results(self):
         project = self._stc.get('system1', 'children-Project')
 
+        # Port Traffic -> Basic Traffic Results
         self._generator_port_results = self.sub_generator_port_results(project)
         self._analyzer_port_results = self.sub_analyzer_port_results(project)
+        # Stream Results -> Filtered Stream Results
         self._filtered_stream_results = self.sub_filtered_stream_results(project)
+        # Stream Resilts -> Stream Block Results
         self._rx_stream_block_results = self.sub_rx_stream_block_results(project)
         self._tx_stream_block_results = self.sub_tx_stream_block_results(project)
+        # Port Traffic -> Overflow Results
+        self._overflow_results = self.sub_overflow_results(project)
+        # Port Traffic -> Port Pair Results
+        # Note: Requires RefreshResultView command (stc_refresh_results)
+        self._rx_port_pair_results = self.sub_rx_port_pair_results(project)
+        self._tx_port_pair_results = self.sub_tx_port_pair_results(project)
+        # # Port Protocols -> ARPND Results
+        self._arpnd_results = self.sub_arpnd_results(project)
 
 
     def sub_generator_port_results(self, parent: str):
@@ -144,6 +160,62 @@ class StcHandler:
             interval=1
         )
         return tx_stream_block_results
+
+    def sub_overflow_results(self, parent: str):
+        port = self._stc.get('system1.Project(1)', 'children-Port')
+        overflow_results = self._stc.subscribe(
+            parent=parent,
+            resultParent=port,
+            configType='analyzer',
+            resultType='OverflowResults',
+            filterList='',
+            disablePaging='true',
+            recordsPerPage=256,
+            interval=1
+        )
+        return overflow_results
+
+    def sub_tx_port_pair_results(self, parent: str):
+        port = self._stc.get('system1.Project(1)', 'children-Port')
+        tx_port_pair_results = self._stc.subscribe(
+            parent=parent,
+            resultParent=port,
+            configType='port',
+            resultType='TxPortPairResults',
+            filterList='',
+            disablePaging='true',
+            recordsPerPage=256,
+            interval=1
+        )
+        return tx_port_pair_results
+
+    def sub_rx_port_pair_results(self, parent: str):
+        port = self._stc.get('system1.Project(1)', 'children-Port')
+        rx_port_pair_results = self._stc.subscribe(
+            parent=parent,
+            resultParent=port,
+            configType='port',
+            resultType='RxPortPairResults',
+            filterList='',
+            disablePaging='true',
+            recordsPerPage=256,
+            interval=1
+        )
+        return rx_port_pair_results
+
+    def sub_arpnd_results(self, parent: str):
+        port = self._stc.get('system1.Project(1)', 'children-Port')
+        arpnd_results = self._stc.subscribe(
+            parent=parent,
+            resultParent=port,
+            configType='port',
+            resultType='ArpNdResults',
+            filterList='',
+            disablePaging='true',
+            recordsPerPage=256,
+            interval=1
+        )
+        return arpnd_results
 
 
     def stc_object_xpath(self, xpaths):
@@ -444,7 +516,6 @@ class StcHandler:
         result_handles = self.stc_attribute(stream_blocks, "children-RxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
 
-
     def stc_filtered_stream_results(self, names='*'):
         if type(names) == str:
             names = [x for x in names.split()]
@@ -460,7 +531,6 @@ class StcHandler:
 
         return results
 
-
     def stc_analyzer_filter(self, values=''):
         objects = self._stc.perform('getObjects', className='AnalyzerFrameConfigFilter')
         analyzer_frame_config_filters = objects['ObjectList'].split(' ')
@@ -470,7 +540,6 @@ class StcHandler:
             return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig')
         else:
             return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig', values)
-
 
     def stc_generator_port_results(self, name: str):
         results = []
@@ -484,7 +553,6 @@ class StcHandler:
 
         return results
 
-
     def stc_analyzer_port_results(self, name: str):
         results = []
 
@@ -493,6 +561,54 @@ class StcHandler:
         analyzer_port_results = analyzer_objects['ObjectList'].split(' ')
 
         for result in analyzer_port_results:
+            results.append(self._stc.get(result, name))
+
+        return results
+
+    def stc_overflow_results(self, name: str):
+        results = []
+
+        # Get specific analyzer object
+        overflow_objects = self._stc.perform('getObjects', className='OverflowResults')
+        overflow_results = overflow_objects['ObjectList'].split(' ')
+
+        for result in overflow_results:
+            results.append(self._stc.get(result, name))
+
+        return results
+
+    def stc_tx_port_pair_results(self, name: str):
+        results = []
+
+        # Get specific analyzer object
+        txpp_objects = self._stc.perform('getObjects', className='TxPortPairResults')
+        txpp_results = txpp_objects['ObjectList'].split(' ')
+
+        for result in txpp_results:
+            results.append(self._stc.get(result, name))
+
+        return results
+
+    def stc_rx_port_pair_results(self, name: str):
+        results = []
+
+        # Get specific analyzer object
+        rxpp_objects = self._stc.perform('getObjects', className='RxPortPairResults')
+        rxpp_results = rxpp_objects['ObjectList'].split(' ')
+
+        for result in rxpp_results:
+            results.append(self._stc.get(result, name))
+
+        return results
+
+    def stc_arpnd_results(self, name: str):
+        results = []
+
+        # Get specific analyzer object
+        arpnd_objects = self._stc.perform('getObjects', className='ArpNdResults')
+        arpnd_results = arpnd_objects['ObjectList'].split(' ')
+
+        for result in arpnd_results:
             results.append(self._stc.get(result, name))
 
         return results
