@@ -98,6 +98,7 @@ class StcTest(BaseTest):
         """
 
         super()._prologue()
+
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Skipping STC reservation and preparation.')
         else:
@@ -125,6 +126,7 @@ class StcTest(BaseTest):
             self._logger.info('Disconnecting from Spirent Test Center ...')
             self._stc_handler.stc_disconnect()
 
+        super()._epilogue()
 
     # -----------------------------------------------------------------------
     # SPIRENT TESTCENTER METHODS
