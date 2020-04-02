@@ -508,6 +508,55 @@ class StcHandler:
         return self.stc_object_xpath(xpaths)
 
 
+    def stc_set_port_load(self, port_load_type, port_load_value):
+        """Set port load.
+
+        Method allows caller to set fixed port load for port based
+        scheduling mode. Allowed port load types are percentage, frames
+        per second or bits per second.
+
+        Parameters
+        ----------
+        port_load_type : str
+            Selected port load type, one of 'perc' (for percentage),
+            'fps' (for frames per second) or 'bps' bits per second.
+
+        Raises
+        ------
+        RuntimeError
+            If method is called on STC configuration with scheduling
+            mode different than port based.
+        ValueError
+            If invalid port load type is used in argument.
+        """
+
+        # Check whether port load in STC configuration is set to port-based
+        xpath = ['StcSystem/Project/Port/Generator/GeneratorConfig']
+        gen_config_handler = self.stc_object_xpath(xpath)
+
+        scheduling_mode = self.stc_attribute(gen_config_handler, 'SchedulingMode')[0][0]
+        if scheduling_mode != "PORT_BASED":
+            raise RuntimeError("Invalid port load mode in the STC configuration. Port-based mode is requested.")
+
+        # Set port load unit according to requested port load type
+        if port_load_type == 'perc':
+            self.stc_attribute(gen_config_handler, 'LoadUnit', 'PERCENT_LINE_RATE', call_apply=False)
+        elif port_load_type == 'fps':
+            self.stc_attribute(gen_config_handler, 'LoadUnit', 'FRAMES_PER_SECOND', call_apply=False)
+        elif port_load_type == 'bps':
+            self.stc_attribute(gen_config_handler, 'LoadUnit', 'BITS_PER_SECOND', call_apply=False)
+        else:
+            raise ValueError("Invalid port load type argument '{}'. Allowed port load types are " \
+                    "'perc', 'fps' or 'bps'.".format(port_load_type))
+
+        # Set port load mode to fixed
+        self.stc_attribute(gen_config_handler, 'LoadMode', 'FIXED', call_apply=False)
+        # Set port load value
+        self.stc_attribute(gen_config_handler, 'FixedLoad', str(port_load_value), call_apply=False)
+
+        self._stc.apply()
+
+
     def stc_tx_stream_block_results(self, stream_blocks, names='*'):
         result_handles = self.stc_attribute(stream_blocks, "children-TxStreamBlockResults")
         return self.stc_attribute(result_handles, names)

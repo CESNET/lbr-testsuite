@@ -182,6 +182,55 @@ class StcTest(BaseTest):
         self._stc_handler.stc_attribute(requsted_streamblocks, 'Active', 'TRUE')
 
 
+    def _set_port_load(self, port_load_type, port_load_value):
+        """Activate stream blocks by names.
+
+        Stream blocks are defined in a list of stream block names. Method first
+        disables all stream block by setting its property 'Active' to 'FALSE'. Then,
+        all selected stream blocks are activated.
+
+        Parameters
+        ----------
+        stream_block_names : list(str)
+            List of stream block names from STC configuration.
+
+        Raises
+        ------
+        TypeError
+            If passed argument is not of type list.
+        ValueError
+            If any of stream blocks from the list is not defined in used STC
+            configuration.
+        """
+
+        supported_port_types = ['perc', 'pps', 'fps', 'bps', 'kbps', 'mbps', 'gbps']
+
+        pl_type = port_load_type.lower()
+
+        if not pl_type in supported_port_types:
+            raise ValueError("Invalid port load type '{}'.".format(pl_type))
+
+        pl_value = port_load_value
+        if pl_type == 'kbps':
+            pl_value *= 1000
+            pl_type = 'bps'
+        elif pl_type == 'mbps':
+            pl_value *= 1000*1000
+            pl_type = 'bps'
+        elif pl_type == 'gbps':
+            pl_value *= 1000*1000*1000
+            pl_type = 'bps'
+
+        if pl_type == 'perc':
+            self._stc_handler.stc_set_port_load('perc', pl_value)
+        elif pl_type == 'pps' or pl_type == 'fps':
+            self._stc_handler.stc_set_port_load('fps', pl_value)
+        elif pl_type == 'bps':
+            self._stc_handler.stc_set_port_load('bps', pl_value)
+        else:
+            assert False and "Invalid pl_type."
+
+
     @staticmethod
     def _get_flat_stream_results(results):
         """Make flat list from results.
