@@ -310,11 +310,11 @@ class StcHandler:
         return handles
 
 
-    def stc_attribute(self, handles, attributes, values=''):
+    def stc_attribute(self, handles, attributes, values='', call_apply=False):
         if values == '':
             return self.stc_get_attributes(handles, attributes)
         else:
-            self.stc_set_attributes(handles, attributes, values)
+            self.stc_set_attributes(handles, attributes, values, call_apply)
 
 
     def stc_get_attributes(self, handles, attributes):
@@ -342,7 +342,7 @@ class StcHandler:
         return results
 
 
-    def stc_set_attributes(self, handles, attributes, values):
+    def stc_set_attributes(self, handles, attributes, values, call_apply=True):
         # Handle single xpath as a list with 1 member
         if type(handles) == str:
             handles = handles.split()
@@ -362,8 +362,9 @@ class StcHandler:
             for subhandle in handle:
                 self._stc.config(subhandle, **{name: value})
 
-        # Apply config
-        self._stc.apply()
+        if call_apply:
+            # Apply config
+            self._stc.apply()
 
 
     def stc_attribute_xpath(self, xpaths, values=''):
