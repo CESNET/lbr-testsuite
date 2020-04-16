@@ -21,6 +21,12 @@ class Arguments:
         Set of parsed arguments.
     _parser : ArgumentParser
         Argument parser object.
+    _custom_properties_description : dict()
+        Dictionary with description of supported custom properties. Key
+        is the name of a property, value is pair where first item is
+        the description and second is a default value.
+    _custom_properties_defaults : dict()
+        Dictionary with default values for selected custom properties.
 
     Methods
     -------
@@ -39,13 +45,26 @@ class Arguments:
     )
 
 
-    def __init__(self):
+    def __init__(self, custom_properties_desc=dict()):
+        """
+        Parameters
+        ----------
+        custom_properties_desc : dict(), optional
+            Dictionary with description of supported custom properties
+            and default values. Key is the name of a property, value is
+            pair where first item is the description and second is
+            a default value. Defaults to empty dictionary.
+        """
         self.args = None
         self._parser = ArgumentParser(
             formatter_class=ArgumentDefaultsHelpFormatter,
             description=Arguments._DESCRIPTION,
             epilog=Arguments._EXAMPLE
         )
+        self._custom_properties_description = custom_properties_desc
+        self._custom_properties_defaults = dict()
+        for prop, desc in custom_properties_desc.items():
+            self._custom_properties_defaults[prop] = desc[1]
 
 
     def parse(self, args=None):
@@ -66,6 +85,7 @@ class Arguments:
         self.add_arguments()
 
         self.args = self._parser.parse_args(args)
+        self.args.custom_properties = self._custom_properties_defaults
 
         if not self.args.include:
             # Handle default value for "include" list (as standard argparse default cannot be used
@@ -81,6 +101,14 @@ class Arguments:
             _aux = self.args.exclude.copy()
             self.args.exclude = [it for sublist in _aux for it in sublist]
 
+        if any(isinstance(it, list) for it in self.args.D):
+            _aux = self.args.D.copy()
+            # Flatten the "D" list
+            self.args.D = [it for sublist in _aux for it in sublist]
+        for custom_property in self.args.D:
+            cp_name, cp_val = custom_property.split('=',1)
+            self.args.custom_properties[cp_name] = cp_val
+
         return self.args
 
 
@@ -89,6 +117,11 @@ class Arguments:
 
         These arguments are common for all tests and servers for general setup.
         """
+        custom_properties_desc = ""
+        if self._custom_properties_description:
+            custom_properties_desc = " Supported custom properties:"
+            for prop, desc in self._custom_properties_description.items():
+                custom_properties_desc += "{}: {} (default: {}); ".format(prop, desc[0], desc[1])
 
         self._parser.add_argument(
                 '-i', '--include',
@@ -111,6 +144,15 @@ class Arguments:
                 type=str,
                 default="output",
                 help='Testing outputs directory.'
+        )
+        self._parser.add_argument(
+                '-D',
+                type=str,
+                default=[],
+                nargs='*',
+                action='append',
+                help='Custom test property setup. Use as -D<property-name>=<value>.{}'.format(
+                    custom_properties_desc)
         )
         self._parser.add_argument(
                 '-M', '--manual-debug',
