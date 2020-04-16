@@ -41,8 +41,8 @@ class TRexTest(BaseTest):
 
     Attributes
     ----------
-    _trex_client : list(CTRexClient)
-        List of objects for communication with TRex daemons.
+    _trex_daemon_handler : list(CTRexClient)
+        List of handlers for communication with TRex daemons.
     _trex_handler : list(Union[ASTFClient, STLClient])
         List of handlers for communication with TRex instances.
     _manual_debug : bool
@@ -67,7 +67,7 @@ class TRexTest(BaseTest):
 
         self._manual_debug = args.manual_debug
 
-        self._trex_client = []
+        self._trex_daemon_handler = []
         self._trex_handler = []
 
 
@@ -85,7 +85,7 @@ class TRexTest(BaseTest):
             self._logger.info('Manual debugging mode is ON. Skipping TRex reservations and preparation.')
         else:
             for hnd in self._trex_handler:
-                self._logger.info('Connecting to TRex ({}:{}) ...'.format(hnd.ctx.server, hnd.ctx.async_port))
+                self._logger.info('Connecting to TRex ({}:[{},{}]) ...'.format(hnd.ctx.server, hnd.ctx.async_port, hnd.ctx.sync_port))
 
                 hnd.connect()
                 self._logger.info('Acquiring all available physical ports ...')
@@ -111,14 +111,14 @@ class TRexTest(BaseTest):
             self._logger.info('Manual debugging mode is ON. Skipping disconnecting from and stopping TRexes.')
         else:
             for hnd in self._trex_handler:
-                self._logger.info('Disconnecting from TRex ({}:{}) ...'.format(hnd.ctx.server, hnd.ctx.async_port))
+                self._logger.info('Disconnecting from TRex ({}:[{},{}]) ...'.format(hnd.ctx.server, hnd.ctx.async_port, hnd.ctx.sync_port))
                 hnd.disconnect()
             self._trex_handler = None
 
-            for client in self._trex_client:
-                self._logger.info('Stopping TRex ({}:{}) ...'.format(client.trex_host, client.trex_daemon_port))
-                client.stop_trex()
-            self._trex_client = None
+            for daemon in self._trex_daemon_handler:
+                self._logger.info('Stopping TRex (via its daemon {}:{}) ...'.format(daemon.trex_host, daemon.trex_daemon_port))
+                daemon.stop_trex()
+            self._trex_daemon_handler = None
 
 
     # -----------------------------------------------------------------------
@@ -128,13 +128,49 @@ class TRexTest(BaseTest):
     def _setup_trex_instance(self, server, daemon_port, sync_port, async_port, config_file, statefulness):
         """Creates new TRex instance.
 
-        This method should be called in _setup() method of test to create TRex instances. For example
+        This method should be called during _setup() method of test to create TRex instances. For example to create
         first instance for generation of legitimate traffic and second instance for generation of (D)DoS attack.
+
+        Method first connects to TRex daemon and commands him to start TRex instance. Once TRex is started, handler
+        to this TRex instance is created and returned to the user. TRex methods need this handler as an argument.
+        Connection the TRex via handler is done automatically during _prologue() method. Here's an example of simple
+        use case flow with one TRex instance:
+
+        TEST                        DAEMON                       TREX
+        _setup_trex_instance()
+        Connect-------------------------->
+        <-------------------------------OK
+        Start TRex----------------------->
+                                    Start--------------------------->
+                                                                START
+                                    <------------------------------OK
+        <-------------------------------OK
+
+        _prologue()
+        Connect----------------------------------------------------->
+        <----------------------------------------------------------OK
+
+        _add_stl_stream()
+        Add stateless stream of packets----------------------------->
+        <----------------------------------------------------------OK
+
+        _stl_start()
+        Start generating packets for 30 seconds -------------------->
+        <----------------------------------------------------------OK
+
+        _epilogue()
+        Disconnect-------------------------------------------------->
+        <----------------------------------------------------------OK
+        Stop TRex------------------------>
+                                    Stop---------------------------->
+                                    <------------------------------OK
+                                                                 STOP
+        <-------------------------------OK
 
         Parameters
         ----------
         server : str
-            IP address or hostname.
+            IP address or hostname of TRex machine.
         daemon_port : int
             Port on which TRex daemon listens. Each daemon can manage only one TRex instance.
         sync_port : int
@@ -142,9 +178,9 @@ class TRexTest(BaseTest):
         async_port : int
             TRex ASYNC port (subscriber port).
         config_file : str
-            TRex configuration file. This file must exist on TRex server. Can be set as relative or absolute path.
+            TRex configuration file. This file must exist on TRex machine. Can be set as relative or absolute path.
         statefulness : str
-            TRex instance will generate stateteful ('astf', for TCP+UDP) or stateless ('stl', for UDP) traffic.
+            TRex will generate either stateteful ('astf', for TCP+UDP) or stateless ('stl', for UDP) traffic.
 
         Raises
         ------
@@ -162,19 +198,19 @@ class TRexTest(BaseTest):
 
         handler = None
         if not self._manual_debug:
-            self._start_trex_server(server, daemon_port, config_file, statefulness)
+            self._start_trex(server, daemon_port, config_file, statefulness)
             handler = self._create_trex_handler(server, sync_port, async_port, statefulness)
 
         return handler
 
 
-    def _start_trex_server(self, server, daemon_port, config_file, statefulness):
-        """Create TRex client object and start TRex.
+    def _start_trex(self, server, daemon_port, config_file, statefulness):
+        """Connect to the TRex daemon and issue him a command to start TRex.
 
         Parameters
         ----------
         server : str
-            IP address or hostname.
+            IP address or hostname of TRex machine.
         daemon_port : int
             Port on which TRex daemon listens. Each daemon can manage only one TRex instance.
         config_file : str
@@ -183,27 +219,30 @@ class TRexTest(BaseTest):
             Stateteful ('astf', for TCP+UDP) or stateless ('stl', for UDP).
         """
 
-        # Create TRex client object for communication with TRex daemon
+        # Create handler for communication with TRex daemon
         self._logger.info('Connecting to TRex daemon ({}:{}) ...'.format(server, daemon_port))
-        trex_client = CTRexClient(trex_host=server, trex_daemon_port=daemon_port)
+        trex_daemon = CTRexClient(trex_host=server, trex_daemon_port=daemon_port)
 
-        # Start TRex instance
+        # Command TRex daemon to start TRex instance
         self._logger.info('Starting {} TRex ...'.format(statefulness))
         if statefulness == "stl":
-            trex_client.start_stateless(cfg=config_file, no_scapy_server=True)
+            trex_daemon.start_stateless(cfg=config_file, no_scapy_server=True)
         else:
-            trex_client.start_astf(cfg=config_file)
+            trex_daemon.start_astf(cfg=config_file)
 
-        self._trex_client.append(trex_client)
+        self._trex_daemon_handler.append(trex_daemon)
 
 
     def _create_trex_handler(self, server, sync_port, async_port, statefulness):
         """Create TRex API handler.
 
+        This method only creates handler but does not connect to TRex. Connection to TRex via
+        created handler is done in _prologue() method.
+
         Parameters
         ----------
         server : str
-            IP address or hostname.
+            IP address or hostname of TRex machine.
         sync_port : int
             RPC port.
         async_port : int
