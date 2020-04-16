@@ -41,9 +41,9 @@ class TRexTest(BaseTest):
 
     Attributes
     ----------
-    _trex_daemon_handler : list(CTRexClient)
+    _trex_daemon_handlers : list(CTRexClient)
         List of handlers for communication with TRex daemons.
-    _trex_handler : list(Union[ASTFClient, STLClient])
+    _trex_handlers : list(Union[ASTFClient, STLClient])
         List of handlers for communication with TRex instances.
     _manual_debug : bool
         Manual debug flag. If it is set to True TRex connection related steps are skipped
@@ -67,8 +67,8 @@ class TRexTest(BaseTest):
 
         self._manual_debug = args.manual_debug
 
-        self._trex_daemon_handler = []
-        self._trex_handler = []
+        self._trex_daemon_handlers = []
+        self._trex_handlers = []
 
 
     def _prologue(self):
@@ -84,7 +84,7 @@ class TRexTest(BaseTest):
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Skipping TRex reservations and preparation.')
         else:
-            for hnd in self._trex_handler:
+            for hnd in self._trex_handlers:
                 self._logger.info('Connecting to TRex ({}:[{},{}]) ...'.format(hnd.ctx.server, hnd.ctx.async_port, hnd.ctx.sync_port))
 
                 hnd.connect()
@@ -110,15 +110,15 @@ class TRexTest(BaseTest):
         if self._manual_debug:
             self._logger.info('Manual debugging mode is ON. Skipping disconnecting from and stopping TRexes.')
         else:
-            for hnd in self._trex_handler:
+            for hnd in self._trex_handlers:
                 self._logger.info('Disconnecting from TRex ({}:[{},{}]) ...'.format(hnd.ctx.server, hnd.ctx.async_port, hnd.ctx.sync_port))
                 hnd.disconnect()
-            self._trex_handler = None
+            self._trex_handlers = None
 
-            for daemon in self._trex_daemon_handler:
+            for daemon in self._trex_daemon_handlers:
                 self._logger.info('Stopping TRex (via its daemon {}:{}) ...'.format(daemon.trex_host, daemon.trex_daemon_port))
                 daemon.stop_trex()
-            self._trex_daemon_handler = None
+            self._trex_daemon_handlers = None
 
 
     # -----------------------------------------------------------------------
@@ -199,7 +199,7 @@ class TRexTest(BaseTest):
         handler = None
         if not self._manual_debug:
             self._start_trex(server, daemon_port, config_file, statefulness)
-            handler = self._create_trex_handler(server, sync_port, async_port, statefulness)
+            handler = self._create_trex_handlers(server, sync_port, async_port, statefulness)
 
         return handler
 
@@ -230,10 +230,10 @@ class TRexTest(BaseTest):
         else:
             trex_daemon.start_astf(cfg=config_file)
 
-        self._trex_daemon_handler.append(trex_daemon)
+        self._trex_daemon_handlers.append(trex_daemon)
 
 
-    def _create_trex_handler(self, server, sync_port, async_port, statefulness):
+    def _create_trex_handlers(self, server, sync_port, async_port, statefulness):
         """Create TRex API handler.
 
         This method only creates handler but does not connect to TRex. Connection to TRex via
@@ -264,7 +264,7 @@ class TRexTest(BaseTest):
         else:
             handler = ASTFClient(server = server, sync_port=sync_port, async_port=async_port)
 
-        self._trex_handler.append(handler)
+        self._trex_handlers.append(handler)
         return handler
 
 
@@ -278,7 +278,7 @@ class TRexTest(BaseTest):
         """
 
         if handler is None:
-            for hnd in self._trex_handler:
+            for hnd in self._trex_handlers:
                 hnd.reset()
         else:
             handler.reset()
@@ -373,7 +373,7 @@ class TRexTest(BaseTest):
                     if handler.ports[pid].streams:
                         handler.start(ports = pid, duration = duration, mult=target_speed, **kwargs)
             else:
-                for hnd in self._trex_handler:
+                for hnd in self._trex_handlers:
                     if isinstance(hnd, STLClient):
                         for pid in hnd.get_acquired_ports():
                             if hnd.ports[pid].streams:
@@ -397,7 +397,7 @@ class TRexTest(BaseTest):
         if handler is not None:
             handler.start(duration = duration, mult=mult)
         else:
-            for hnd in self._trex_handler:
+            for hnd in self._trex_handlers:
                 if isinstance(hnd, ASTFClient):
                     hnd.start(duration = duration, mult=mult)
 
@@ -413,7 +413,7 @@ class TRexTest(BaseTest):
         """
 
         if handler is None:
-            for hnd in self._trex_handler:
+            for hnd in self._trex_handlers:
                 hnd.stop()
         else:
             handler.stop()
@@ -434,7 +434,7 @@ class TRexTest(BaseTest):
         """
 
         if handler is None:
-            for hnd in self._trex_handler:
+            for hnd in self._trex_handlers:
                 hnd.wait_on_traffic()
         else:
             handler.wait_on_traffic()
