@@ -36,6 +36,9 @@ from trex_client import CTRexClient
 class TRexTest(BaseTest):
     """Base TRex test class extending BaseTest class.
 
+    Tests based on this class should call _setup_trex_instance() method during _setup() phase to create TRex instances.
+    See _setup_trex_instance() method's docstring for more information.
+
     Attributes
     ----------
     _trex_client : list(CTRexClient)
@@ -66,16 +69,6 @@ class TRexTest(BaseTest):
 
         self._trex_client = []
         self._trex_handler = []
-
-
-    def _setup(self):
-        """Perform general test environment setup.
-
-        Extends BaseTest._setup() method. Tests based on this (TRexTest) class should call
-        _setup_trex_instance() in this method to create TRex instances.
-        """
-
-        super()._setup()
 
 
     def _prologue(self):
