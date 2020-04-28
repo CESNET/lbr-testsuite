@@ -55,9 +55,9 @@ class BaseTest:
     """
 
     _TEST_CASE_CONFIG_DIR = 'config'
-    _TEST_CASE_SRC_DIR = 'src'
-    _PROLOGUE_SETUP_FILE = 'setup.sh'
-    _EPILOGUE_CLEANUP_FILE = 'cleanup.sh'
+    _TEST_CASE_SRC_DIR = 'src' # DEPRECATED (no longer needed)
+    _PROLOGUE_SETUP_FILE = 'setup.sh' # DEPRECATED (no longer needed)
+    _EPILOGUE_CLEANUP_FILE = 'cleanup.sh' # DEPRECATED (no longer needed)
 
     def __init__(self, args, output_dir, logger=None):
         """
@@ -129,7 +129,7 @@ class BaseTest:
             'test': test_dir,
             # Location of test configuration
             'config': os.path.join(test_dir, self._TEST_CASE_CONFIG_DIR),
-            # Location of test auxiliary scripts
+            # Location of test auxiliary scripts- DEPRECATED (no longer needed)
             'src': os.path.join(test_dir, self._TEST_CASE_SRC_DIR),
         }
 
@@ -155,9 +155,11 @@ class BaseTest:
         if self._base_class_logging:
             self._logger.info('Setting up local enviroment ...')
 
+        # DEPRECATED (no longer needed) - setup.sh script is now optional and does not have to exist
         setup_script = os.path.join(self._dirs['src'], self._PROLOGUE_SETUP_FILE)
-        output = self._execute_script(setup_script)
-        self._check_subprocess_output(output, "Setup script failed.", exit_on_fail=True)
+        if os.path.isfile(setup_script):
+            output = self._execute_script(setup_script)
+            self._check_subprocess_output(output, "Setup script failed.", exit_on_fail=True)
 
 
     def _epilogue(self):
@@ -171,9 +173,11 @@ class BaseTest:
         if self._base_class_logging:
             self._logger.info('Cleaning up local enviroment ...')
 
+        # DEPRECATED (no longer needed) - cleanup.sh script is now optional and does not have to exist
         cleanup_script = os.path.join(self._dirs['src'], self._EPILOGUE_CLEANUP_FILE)
-        output = self._execute_script(cleanup_script)
-        self._check_subprocess_output(output, "Cleanup script failed.", exit_on_fail=True)
+        if os.path.isfile(cleanup_script):
+            output = self._execute_script(cleanup_script)
+            self._check_subprocess_output(output, "Cleanup script failed.", exit_on_fail=True)
 
 
     def _testing(self):

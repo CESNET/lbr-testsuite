@@ -81,8 +81,8 @@ class Ping(StcTest):
         super()._setup()
 
         self._spirent_config = os.path.join(self._dirs['config'], Ping._SPIRENT_INPUT_FILE)
-        self._dpcro_filter_file = os.path.join(self._dirs['src'], Ping._DCPRO_FILTER_FILE)
-        self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Ping._DCPRO_PR_FILTER_FILE)
+        self._dpcro_filter_file = os.path.join(self._dirs['config'], Ping._DCPRO_FILTER_FILE)
+        self._dpcro_pr_filter_file = os.path.join(self._dirs['config'], Ping._DCPRO_PR_FILTER_FILE)
 
 
     def _set_test_cases(self):

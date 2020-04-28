@@ -85,8 +85,8 @@ class Packets_forwarding(StcTest):
         super()._setup()
 
         self._spirent_config = os.path.join(self._dirs['config'], Packets_forwarding._SPIRENT_INPUT_FILE)
-        self._dpcro_filter_file = os.path.join(self._dirs['src'], Packets_forwarding._DCPRO_FILTER_FILE)
-        self._dpcro_pr_filter_file = os.path.join(self._dirs['src'], Packets_forwarding._DCPRO_PR_FILTER_FILE)
+        self._dpcro_filter_file = os.path.join(self._dirs['config'], Packets_forwarding._DCPRO_FILTER_FILE)
+        self._dpcro_pr_filter_file = os.path.join(self._dirs['config'], Packets_forwarding._DCPRO_PR_FILTER_FILE)
 
 
     def _set_test_cases(self):
