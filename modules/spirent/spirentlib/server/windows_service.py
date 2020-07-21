@@ -4,9 +4,7 @@ import win32event
 import win32service
 import win32serviceutil
 import logging
-import argparse
 import time
-import os
 from datetime import datetime
 import spirent_ctrl
 
@@ -21,7 +19,7 @@ class SpirentCtrlService(win32serviceutil.ServiceFramework):
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
 
     def SvcStop(self):
-        self.server.shutdown()
+        self.Server.stop_server()
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         win32event.SetEvent(self.hWaitStop)
 
@@ -30,20 +28,15 @@ class SpirentCtrlService(win32serviceutil.ServiceFramework):
         self.filename = datetime.now()
         self.filename = self.filename.strftime("%d %B %Y")
 
-
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
         logging.basicConfig(level=logging.WARNING,
                             filename='C:\\SpirentServerCtrl\\logs\\{}'.format(self.filename),
                             filemode='w')
-
-        self.listen = ""
-        self.port = 42000
-        logging.getLogger().info("Starting server")
-        self.server = spirent_ctrl.ThreadingTCPServer((self.listen, self.port), spirent_ctrl.ConnectionHandler)
-        self.server.serve_forever()
-        
+    
+        self.Server = spirent_ctrl.ServerController()
+        self.Server.run_server()
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
