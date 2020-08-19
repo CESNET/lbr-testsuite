@@ -1,9 +1,11 @@
 """
-    Author(s): Jan Kucera <jan.kucera@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.cz>
-    Copyright: (C) 2019 CESNET
-    Licence: GPL-2.0
+Author(s): Jan Kucera <jan.kucera@cesnet.cz>,
+           Pavel Krobot <Pavel.Krobot@cesnet.cz>,
+           Simon Lapsansky <xlapsa01@vutbr.cz>
 
-    Description: Server part of spirent test library.
+Copyright: (C) 202O CESNET
+
+Description: Server part of spirent test library.
 """
 
 # Run this script only with the Python packed with the Spirent Test Center
@@ -12,10 +14,8 @@
 import sys
 import os
 
-os.environ[
-    "STC_PRIVATE_INSTALL_DIR"] = "C:\\Program Files (x86)\\Spirent Communications\\Spirent TestCenter 4.81\\Spirent TestCenter Application"
-sys.path.append(
-    "C:\\Program Files (x86)\\Spirent Communications\\Spirent TestCenter 4.81\\Spirent TestCenter Application\\API\\Python")
+os.environ["STC_PRIVATE_INSTALL_DIR"] = "C:\\Program Files (x86)\\Spirent Communications\\Spirent TestCenter 4.81\\Spirent TestCenter Application"
+sys.path.append("C:\\Program Files (x86)\\Spirent Communications\\Spirent TestCenter 4.81\\Spirent TestCenter Application\\API\\Python")
 
 from spirent.stcapi.StcPythonTcl import StcPythonTcl
 
@@ -37,7 +37,6 @@ class ServerStopException(Exception):
     pass
 
 
-
 class STCManager:
     """ Wrapper around StcPython allowing calls its methods through names """
 
@@ -45,7 +44,6 @@ class STCManager:
         self._stc = StcPythonTcl()
         self._logger = logger.getChild("STC")
         self._logger.debug("Loaded")
-
 
     def __call__(self, method_name, *args, **kwargs):
         if hasattr(self._stc, method_name):
@@ -58,7 +56,6 @@ class STCManager:
             return method(*args, **kwargs)
         else:
             raise AttributeError("Given method '{}' is not valid method for the STC API.".format(method_name)) from None
-
 
 
 def stc_process(pipe, logger_name):
@@ -92,7 +89,6 @@ def stc_process(pipe, logger_name):
             logger.debug("Interrupted.")
 
 
-
 class ConnectionHandler(socketserver.BaseRequestHandler):
     """ Handler for every new connection. """
 
@@ -108,7 +104,6 @@ class ConnectionHandler(socketserver.BaseRequestHandler):
         self._process = mp.Process(target=stc_process, args=(proc_pipe, self._logger.name))
         self._process.start()
         self.request.settimeout(1)
-
 
     def handle(self):
         """ Receive STC message over the network and forward it to the process which performs it. """
@@ -137,13 +132,11 @@ class ConnectionHandler(socketserver.BaseRequestHandler):
             self._logger.exception(e)
             raise
 
-
     def finish(self):
         """ Send exit command to worker and wait until it ends. """
         self._logger.info("Connection closed.")
         self._pipe.send("exit")
         self._process.join()
-
 
     def _recv(self, length):
         """ Receive data over the network. Also checks for stop request from the main thread. """
@@ -156,7 +149,6 @@ class ConnectionHandler(socketserver.BaseRequestHandler):
             except socket.timeout:
                 pass
         raise ServerStopException()
-
 
     def _recv_msg(self):
         """ Receive valid STC command and returns it. """
@@ -173,7 +165,6 @@ class ConnectionHandler(socketserver.BaseRequestHandler):
         self._logger.debug("Received message - {}B".format(4 + len(buffer)))
         return pickle.loads(buffer)
 
-
     def _send_msg(self, msg):
         """ Format and send msg over the network. """
         raw_data = pickle.dumps(msg)
@@ -182,24 +173,35 @@ class ConnectionHandler(socketserver.BaseRequestHandler):
         self._logger.debug("Sent message - {}B".format(sent))
 
 
-
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """ Define TCP server whci creates thread for every incoming connection. """
     allow_reuse_address = True
 
+class ServerController:
+
+    def __init__(self):
+        self.server = None
+
+    def run_server(self):
+        logging.basicConfig(level=logging.DEBUG)
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-l", "--listen", help="IP address for listening.", default="")
+        parser.add_argument("-p", "--port", help="Port number for incoming connections.", type=int, default=42000)
+        args = parser.parse_args()
+
+        logging.getLogger().info("Starting server")
+        self.server = ThreadingTCPServer((args.listen, args.port), ConnectionHandler)
+        try:
+            self.server.serve_forever()
+        except KeyboardInterrupt:
+            SERVER_STOP = True
+            self.server.shutdown()
+
+    def stop_server(self):
+        SERVER_STOP = True
+        self.server.shutdown()
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--listen", help="IP address for listening.", default="")
-    parser.add_argument("-p", "--port", help="Port number for incoming connections.", type=int, default=42000)
-    args = parser.parse_args()
-
-    logging.getLogger().info("Starting server")
-    server = ThreadingTCPServer((args.listen, args.port), ConnectionHandler)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        SERVER_STOP = True
-        server.shutdown()
+    Server = ServerController()
+    Server.run_server()
