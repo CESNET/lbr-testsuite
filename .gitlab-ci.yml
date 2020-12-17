@@ -1,0 +1,47 @@
+stages:
+    - prepare
+    - check
+    - build
+    - upload
+
+image: $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG
+
+docker:
+    stage: prepare
+    tags: [docker-shell]
+    script: [docker build -t $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG .]
+
+pycodestyle:
+    stage: check
+    needs: [docker]
+    script:
+        - pytest --color=yes --flake8 -m flake8 --junitxml=pycodestyle.xml lbr_testsuite | tee pycodestyle.log
+    artifacts:
+        paths: [pycodestyle.*]
+        reports: { junit: pycodestyle.xml }
+        when: always
+
+build:
+    stage: build
+    script:
+        - python3.6 setup.py bdist_wheel
+    artifacts:
+        paths: [dist]
+
+upload:
+    stage: upload
+    script:
+        - |
+          { CODE=0; TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3.6 -m twine upload --verbose --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/* > output.txt || CODE=$?; }
+        - if [[ $CODE -ne 0 ]]; then
+        -    ERR_MSG=`cat output.txt | tail -n -1`
+        -    |
+             FILE_EXISTS='{"message":"Validation failed: File name has already been taken"}'
+        -    if [[ "$ERR_MSG" != "$FILE_EXISTS" ]]; then
+        -        exit 1
+        -    fi
+        - fi
+    only: ['master']
+
+variables:
+    GIT_STRATEGY: clone
