@@ -2,6 +2,8 @@ pytest>=6.1
 pyroute2
 pytest-flake8
 flake8~=3.7.0
+sphinx
+sphinx_rtd_theme
 setuptools
 wheel
 twine

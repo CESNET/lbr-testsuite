@@ -1,6 +1,7 @@
 stages:
     - prepare
     - check
+    - doc
     - build
     - upload
 
@@ -20,6 +21,16 @@ pycodestyle:
         paths: [pycodestyle.*]
         reports: { junit: pycodestyle.xml }
         when: always
+
+doc:
+    stage: doc
+    script:
+        - make -C doc html
+    artifacts:
+        paths: [doc/build/html]
+    environment:
+        name: $CI_COMMIT_REF_SLUG/$CI_BUILD_NAME
+        url: $CI_JOB_URL/artifacts/file/doc/build/html/index.html
 
 build:
     stage: build
