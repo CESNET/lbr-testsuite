@@ -5,7 +5,7 @@ long_description = "Package includes following modules:\n" \
 
 setuptools.setup(
     name="lbr_testsuite",
-    version="1.0",
+    version="1.0.1",
     author="CESNET",
     author_email="tran@cesnet.cz",
     description="Lbr_testsuite package contains various modules used by CESNET projects",
@@ -15,6 +15,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.6",
+    ],
+    install_requires=[
+        'pyroute2>=0.5.14',
     ],
     python_requires='>=3.6',
 )
