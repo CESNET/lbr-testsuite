@@ -1,7 +1,8 @@
 import setuptools
 
 long_description = "Package includes following modules:\n" \
-    "- ipconfigurer | API for ip configuration using pyroute2 library"
+    "- ipconfigurer | API for ip configuration using pyroute2 library\n" \
+    "- TRex tools | tools to simplify basic TRex operations"
 
 setuptools.setup(
     name="lbr_testsuite",
