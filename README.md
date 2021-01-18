@@ -2,7 +2,7 @@
 
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
-only `ipconfigurer` module.
+`ipconfigurer` module and `TRex` tools.
 
 ## Hosting and contribution
 
@@ -13,10 +13,13 @@ by following this [link](https://gitlab.liberouter.org/tmc/testsuite/-/packages)
 This project uses GitLab CI pipeline which is triggered
 with every new commit. If coding style (PEP8) check passes, then
 pipeline creates .whl package from contents inside [lbr_testsuite](./lbr_testsuite)
-folder and uploads it into Package Registry. If version of package
-(defined in [setup.py](./setup.py)) already exists in Package Registry, then
-package is rejected. This means that if you make **changes**, then
-you also need to **increase version**.
+folder. This package can be found in `build` step of pipeline and downloaded
+for manual installation.
+
+If pipeline triggers on `master` branch, then package is also uploaded into
+Package Registry. If version of package(defined in [setup.py](./setup.py)) already
+exists in Package Registry, then package is rejected.
+This means that if you make **changes**, then you also need to **increase version**.
 
 
 ## Installation
@@ -45,8 +48,18 @@ scope set to `api`.
 
 ## Usage
 
-Currently only `ipconfigurer` is included. You can import it like this:
-
+For `ipconfigurer`:
 ```
 import lbr_testsuite.ipconfigurer as ipconf
 ```
+Ipconfigurer provides API for ip configuration using pyroute2 library.
+
+
+For `TRex` tools:
+```
+from lbr_testsuite.trex_tools.trex_instances import TRex_Instances
+from lbr_testsuite.trex_tools.trex_stl_stream_generator import TRex_Stl_Stream_Generator
+from lbr_testsuite.trex_tools.trex_astf_profile_generator import TRex_Astf_Profile_Generator
+```
+These tools provide some useful methods to work with TRex. They are
+built on top of official API and make certain things much easier.
