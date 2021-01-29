@@ -4,6 +4,8 @@ pytest-flake8
 flake8~=3.7.0
 sphinx
 sphinx_rtd_theme
+--extra-index-url https://trex_client_deploy_token:vyd-dNs7ZnqpUfkm4o-v@gitlab.liberouter.org/api/v4/projects/79/packages/pypi/simple
+lbr_trex_client
 setuptools
 wheel
 twine
