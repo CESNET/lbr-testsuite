@@ -22,7 +22,7 @@ sys.path.append(str(Path(__file__).parents[2].absolute() / 'lbr_testsuite'))
 # -- Project information -----------------------------------------------------
 
 project = 'lbr_testsuite package'
-copyright = '2020 CESNET, z.s.p.o.'
+copyright = '2021 CESNET, z.s.p.o.'
 author = 'Dominik Tran <tran@cesnet.cz>'
 
 # The full version, including alpha/beta/rc tags
