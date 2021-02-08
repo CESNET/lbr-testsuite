@@ -4,7 +4,7 @@
     Licence: GPL-2.0
 """
 
-from spirentlib.stcapi.StcPythonTCP import StcPythonTCP
+from spirentlib.stcapi.StcPythonREST import StcPythonREST
 
 import re
 import pprint
@@ -28,7 +28,7 @@ class StcHandler:
 
 
     def stc_api_connect(self, host: str, port: int):
-        self._stc = StcPythonTCP(host, port)
+        self._stc = StcPythonREST(host, port)
 
 
     def stc(self):
@@ -60,9 +60,8 @@ class StcHandler:
 
     def load_xml(self, xml_config_file: str):
         """Load XML config using string format"""
-        with open(xml_config_file, 'rb') as file:
-            config_string = file.read()
-        return self._stc.perform('loadfromxml', FileName='', InputConfigString=config_string)
+        return self._stc.perform('loadfromxml', FileName=xml_config_file)
+
 
 
     def set_sequencer(self):
@@ -100,7 +99,6 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            viewAttributeList='totalframecount totaloctetcount generatorframecount generatoroctetcount generatorsigframecount generatorundersizeframecount generatoroversizeframecount generatorjumboframecount totalframerate totaloctetrate generatorframerate generatoroctetrate generatorsigframerate generatorundersizeframerate generatoroversizeframerate generatorjumboframerate generatorcrcerrorframecount generatorl3checksumerrorcount generatorl4checksumerrorcount generatorcrcerrorframerate generatorl3checksumerrorrate generatorl4checksumerrorrate totalipv4framecount totalipv6framecount totalmplsframecount generatoripv4framecount generatoripv6framecount generatorvlanframecount generatormplsframecount totalipv4framerate totalipv6framerate totalmplsframerate generatoripv4framerate generatoripv6framerate generatorvlanframerate generatormplsframerate totalbitrate generatorbitrate l1bitcount l1bitrate pfcframecount pfcpri0framecount pfcpri1framecount pfcpri2framecount pfcpri3framecount pfcpri4framecount pfcpri5framecount pfcpri6framecount pfcpri7framecount l1bitratepercent ',
             interval=1
         )
         return generator_port_results
@@ -113,7 +111,6 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            viewAttributeList='totalframecount totaloctetcount sigframecount undersizeframecount oversizeframecount jumboframecount minframelength maxframelength pauseframecount totalframerate totaloctetrate sigframerate undersizeframerate oversizeframerate jumboframerate pauseframerate fcserrorframecount ipv4checksumerrorcount tcpchecksumerrorcount udpchecksumerrorcount prbsfilloctetcount prbsbiterrorcount fcserrorframerate ipv4checksumerrorrate tcpchecksumerrorrate udpchecksumerrorrate prbsfilloctetrate prbsbiterrorrate ipv4framecount ipv6framecount ipv6overipv4framecount tcpframecount udpframecount mplsframecount icmpframecount vlanframecount ipv4framerate ipv6framerate ipv6overipv4framerate tcpframerate udpframerate mplsframerate icmpframerate vlanframerate trigger1count trigger1rate trigger2count trigger2rate trigger3count trigger3rate trigger4count trigger4rate trigger5count trigger5rate trigger6count trigger6rate trigger7count trigger7rate trigger8count trigger8rate combotriggercount combotriggerrate totalbitrate prbsbiterrorratio vlanframerate l1bitcount l1bitrate pfcframecount fcoeframecount pfcframerate fcoeframerate pfcpri0framecount pfcpri1framecount pfcpri2framecount pfcpri3framecount pfcpri4framecount pfcpri5framecount pfcpri6framecount pfcpri7framecount pfcpri0quanta pfcpri1quanta pfcpri2quanta pfcpri3quanta pfcpri4quanta pfcpri5quanta pfcpri6quanta pfcpri7quanta prbserrorframecount prbserrorframerate userdefinedframecount1 userdefinedframerate1 userdefinedframecount2 userdefinedframerate2 userdefinedframecount3 userdefinedframerate3 userdefinedframecount4 userdefinedframerate4 userdefinedframecount5 userdefinedframerate5 userdefinedframecount6 userdefinedframerate6 l1bitratepercent outseqframecount ',
             interval=1
         )
         return analyzer_port_results
@@ -128,7 +125,6 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            viewAttributeList='streamindex framecount sigframecount fcserrorframecount minlatency maxlatency seqrunlength droppedframecount droppedframepercent inorderframecount reorderedframecount duplicateframecount lateframecount prbsbiterrorcount prbsfilloctetcount ipv4checksumerrorcount tcpudpchecksumerrorcount framerate sigframerate fcserrorframerate droppedframerate droppedframepercentrate inorderframerate reorderedframerate duplicateframerate lateframerate prbsbiterrorrate ipv4checksumerrorrate tcpudpchecksumerrorrate filteredvalue_1 filteredvalue_2 filteredvalue_3 filteredvalue_4 filteredvalue_5 filteredvalue_6 filteredvalue_7 filteredvalue_8 filteredvalue_9 filteredvalue_10 bitrate shorttermavglatency avglatency prbsbiterrorratio bitcount l1bitcount l1bitrate prbserrorframecount prbserrorframerate shorttermavgjitter avgjitter minjitter maxjitter shorttermavginterarrivaltime avginterarrivaltime mininterarrivaltime maxinterarrivaltime lastseqnum inseqframecount outseqframecount inseqframerate outseqframerate histbin1count histbin2count histbin3count histbin4count histbin5count histbin6count histbin7count histbin8count histbin9count histbin10count histbin11count histbin12count histbin13count histbin14count histbin15count histbin16count ',
             interval=1
         )
         return filtered_stream_results
@@ -142,7 +138,6 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            viewAttributeList='framecount framerate bitrate sigframecount fcserrorframecount minlatency maxlatency droppedframecount droppedframepercent inorderframecount reorderedframecount duplicateframecount lateframecount prbsbiterrorcount prbsfilloctetcount ipv4checksumerrorcount tcpudpchecksumerrorcount avglatency prbsbiterrorratio prbserrorframecount rxportname avgjitter minjitter maxjitter avginterarrivaltime mininterarrivaltime maxinterarrivaltime inseqframecount outseqframecount histbin1count histbin2count histbin3count histbin4count histbin5count histbin6count histbin7count histbin8count histbin9count histbin10count histbin11count histbin12count histbin13count histbin14count histbin15count histbin16count ',
             interval=1
         )
         return rx_stream_block_results
@@ -496,6 +491,11 @@ class StcHandler:
 
 
     def stc_stream_block(self, names='*'):
+        # HACK: Handle strange behavior of STC API where stream block
+        # is not accessible before its parent is accessed.
+        # self._stc.get(self.stc_object_xpath('StcSystem/Project/Port')[0][0])
+        self._stc.get(self.stc_object_xpath('StcSystem/Project/Port')[0][0])
+
         # Handle default input
         if type(names) == str:
             names = [x for x in names.split()]

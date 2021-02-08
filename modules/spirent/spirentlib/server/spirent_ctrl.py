@@ -187,7 +187,7 @@ class ServerController:
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-l", "--listen", help="IP address for listening.", default="")
-        parser.add_argument("-p", "--port", help="Port number for incoming connections.", type=int, default=42000)
+        parser.add_argument("-p", "--port", help="Port number for incoming connections.", type=int, default=8888)
         args = parser.parse_args()
 
         logging.getLogger().info("Starting server")

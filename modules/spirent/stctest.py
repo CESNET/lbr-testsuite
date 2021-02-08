@@ -42,7 +42,7 @@ class StcTest(BaseTest):
     """
 
     """ Server part of StcHandler listens on this port number """
-    SERVER_PORT = 42000
+    SERVER_PORT = 8888
 
     def __init__(self, args, output_dir, logger=None):
         """
