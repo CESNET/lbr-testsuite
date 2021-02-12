@@ -22,7 +22,7 @@ exists in Package Registry, then package is rejected.
 This means that if you make **changes**, then you also need to **increase version**.
 
 
-## Installation
+## Installation and dependency on lbr_trex_client package
 
 You can click on some specific version of package from [list](https://gitlab.liberouter.org/tmc/testsuite/-/packages)
 and GitLab will show you details of that package. This also
@@ -35,16 +35,34 @@ pip install lbr-testsuite --extra-index-url https://__token__:<your_personal_tok
 `lbr_testsuite` package is hosted on GitLab and isn't
 included in official PyPI index, so you need to specify extra URL
 for pip. And since this project is private, you need credentials
-to access Package Registry. Preffered way is to use project's
-**deploy token**. Then you can use this command for installation:
+to access Package Registry. This project uses **deploy token**, but
+you can also use [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with
+scope set to `api`.
+
+Last thing to consider is `lbr_testsuite`'s dependency on `lbr_trex_client` package. 
+This package can be installed manually by this command:
+
+```
+python3.6 -m pip install lbr-trex-client --extra-index-url https://trex_client_deploy_token:vyd-dNs7ZnqpUfkm4o-v@gitlab.liberouter.org/api/v4/projects/79/packages/pypi/simple
+*or*
+python3.6 -m pip install lbr-trex-client --extra-index-url http://cisticka-devel.liberouter.org/piproxy/testing/trex-client/simple --trusted-host cisticka-devel.liberouter.org
+```
+
+Then you can use this command for installation of `lbr_testsuite`:
 
 ```
 python3.6 -m pip install lbr-testsuite --extra-index-url https://gitlab+deploy-token-13:dPyQaA7ypwhNLxSttz2r@gitlab.liberouter.org/api/v4/projects/30/packages/pypi/simple
+*or*
+python3.6 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.liberouter.org/piproxy/tmc/testsuite/simple --trusted-host cisticka-devel.liberouter.org
 ```
 
-Another way is to use [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with
-scope set to `api`.
+It is also possible to install **both** `lbr_testsuite` and `lbr_trex_client` in a **single command**:
 
+```
+python3.6 -m pip install lbr-testsuite --extra-index-url https://gitlab+deploy-token-13:dPyQaA7ypwhNLxSttz2r@gitlab.liberouter.org/api/v4/projects/30/packages/pypi/simple --extra-index-url http://cisticka-devel.liberouter.org/piproxy/testing/trex-client/simple --trusted-host cisticka-devel.liberouter.org
+*or*
+python3.6 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.liberouter.org/piproxy/tmc/testsuite/simple --extra-index-url http://cisticka-devel.liberouter.org/piproxy/testing/trex-client/simple --trusted-host cisticka-devel.liberouter.org
+```
 
 ## Usage
 
