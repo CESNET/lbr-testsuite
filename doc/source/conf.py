@@ -22,7 +22,7 @@ sys.path.append(str(Path(__file__).parents[2].absolute() / 'lbr_testsuite'))
 # -- Project information -----------------------------------------------------
 
 project = 'lbr_testsuite package'
-copyright = '2020 CESNET, z.s.p.o.'
+copyright = '2021 CESNET, z.s.p.o.'
 author = 'Dominik Tran <tran@cesnet.cz>'
 
 # The full version, including alpha/beta/rc tags
@@ -60,4 +60,8 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+html_static_path = ['css']
+
+html_css_files = [
+    'one_parameter_per_line.css',
+]
