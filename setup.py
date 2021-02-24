@@ -21,6 +21,7 @@ setuptools.setup(
     install_requires=[
         'pyroute2>=0.5.14',
         'lbr_trex_client',
+        'stcrestclient',
     ],
     python_requires='>=3.6',
 )
