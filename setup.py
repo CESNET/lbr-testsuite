@@ -2,11 +2,12 @@ import setuptools
 
 long_description = "Package includes following modules:\n" \
     "- ipconfigurer | API for ip configuration using pyroute2 library\n" \
+    "- spirent, spirentlib | API for Spirent Test Center (STC)\n" \
     "- TRex tools | tools to simplify basic TRex operations"
 
 setuptools.setup(
     name="lbr_testsuite",
-    version="1.1",
+    version="1.2",
     author="CESNET",
     author_email="tran@cesnet.cz",
     description="Lbr_testsuite package contains various modules used by CESNET projects",
@@ -20,6 +21,7 @@ setuptools.setup(
     install_requires=[
         'pyroute2>=0.5.14',
         'lbr_trex_client',
+        'stcrestclient',
     ],
     python_requires='>=3.6',
 )
