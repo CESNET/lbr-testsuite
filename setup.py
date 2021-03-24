@@ -7,7 +7,13 @@ long_description = "Package includes following modules:\n" \
 
 setuptools.setup(
     name="lbr_testsuite",
-    version="1.2",
+    version_config={
+        "template": "{tag}",
+        "dev_template": "{tag}.post{ccount}+git.{sha}",
+        "dirty_template": "{tag}.post{ccount}+git.{sha}.dirty",
+        "starting_version": "1.0.0",
+    },
+    setup_requires=['setuptools-git-versioning'],
     author="CESNET",
     author_email="tran@cesnet.cz",
     description="Lbr_testsuite package contains various modules used by CESNET projects",
