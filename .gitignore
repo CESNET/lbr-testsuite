@@ -4,3 +4,5 @@ build
 dist
 *.egg*
 *.pyc
+pycodestyle.log
+pycodestyle.xml
