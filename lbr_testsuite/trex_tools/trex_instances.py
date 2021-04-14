@@ -460,20 +460,20 @@ class TRex_Instances():
         return int(decode_multiplier(unit.lower())['value'])
 
     @staticmethod
-    def bps_L2_to_L3(bps_l2, fixed_packet_size, vlan=True):
-        """Convert L2 bits per second value to L3 bits per second value.
+    def bps_L3_to_L2(bps_l3, fixed_packet_size, vlan=True):
+        """Convert L3 bits per second value to L2 bits per second value.
 
         TRex's bits per second (bps) units are computed on L2 layer.
         Some devices work with L3 bps values,
         meaning that whole L2 header (6B dstMAC, 6B srcMAC,
         2B EthType, 4B CRC [,+4B VLAN]) of each packet is not counted.
-        To properly convert L2 bps to L3 bps, every generated packet
+        To properly convert L3 bps to L2 bps, every generated packet
         must be of fixed size. If your packet size changes during
         generation, then this method won't work correctly.
 
         Parameters
         ----------
-        bps_l2 : Union[str, int]
+        bps_l3 : Union[str, int]
             Value to be converted. Can be set as integer or
             string (then it will be converted to integer by
             :meth:`~trex_tools.trex_instances.TRex_Instances.u2i`).
@@ -485,7 +485,7 @@ class TRex_Instances():
         Raises
         ------
         ValueError
-            If passed bps_l2 argument is of "pps" type instead of "bps".
+            If passed bps_l3 argument is of "pps" type instead of "bps".
 
         Returns
         -------
@@ -493,10 +493,10 @@ class TRex_Instances():
             Converted value.
         """
 
-        if isinstance(bps_l2, str):
-            if bps_l2[-3:].lower() == "pps":
+        if isinstance(bps_l3, str):
+            if bps_l3[-3:].lower() == "pps":
                 raise ValueError('Expected "bps" (bits per second) unit, but got "pps" (packets per second) unit.')
-            bps_l2 = TRex_Instances.u2i(bps_l2)
+            bps_l3 = TRex_Instances.u2i(bps_l3)
 
         L2_header_size = 18
         if vlan:
@@ -504,6 +504,6 @@ class TRex_Instances():
 
         # This ratio will always be above 1.0 because you need to
         # generate more bps on L2 to reach same value on L3
-        l2_to_l3_ratio = (fixed_packet_size + L2_header_size) / fixed_packet_size
+        l3_to_l2_ratio = (fixed_packet_size + L2_header_size) / fixed_packet_size
 
-        return int(l2_to_l3_ratio * bps_l2)
+        return int(l3_to_l2_ratio * bps_l3)
