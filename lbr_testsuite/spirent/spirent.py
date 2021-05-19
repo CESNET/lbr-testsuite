@@ -277,6 +277,41 @@ class Spirent():
         else:
             raise ValueError("Invalid port load type '{}'.".format(pl_type))
 
+    def stream_blocks_arpnd_resolved(self, stream_blocks):
+        """Check ARP/ND status of selected stream blocks.
+
+        If some stream block have ARP/ND unresolved, function tries to
+        resolve ARP/ND using spirent. If ARP/ND remains unresolved
+        False is returned.
+
+        Parameters
+        ----------
+        stream_blocks : list(str)
+            List of stream block names for which an ARP/ND status is
+            checked.
+
+        Returns
+        -------
+        bool
+            True when all stream blocks have ARP/ND resolved, False
+            otherwise.
+        """
+
+        arpnd_ok = []
+        for sb_name in stream_blocks:
+            sb = self._stc_handler.stc_stream_block(sb_name)
+            arpnd_status = self._stc_handler.stc_attribute(sb, "IsArpResolved")[0][0]
+            arpnd_ok.append(arpnd_status.lower())
+
+        if "false" in arpnd_ok:
+            self._stc_handler.stc_start_arpnd()
+            for sb_name in stream_blocks:
+                arpnd_fixed = self._stc_handler.stc_attribute(sb, "IsArpResolved")[0][0]
+                if arpnd_fixed.lower() != "true":
+                    return False
+
+        return True
+
     def generate_traffic(self, duration, use_analyzer=False):
         """Perform packets sending based on current stream blocks setup
         using STC generators. Usage of analyzers is optional.
