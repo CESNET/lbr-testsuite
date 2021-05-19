@@ -30,7 +30,11 @@ used until it is unbound manually.
 import logging
 import time
 
-from .spirentlib.spirentlib import StcHandler
+from .spirentlib.spirentlib import StcHandler, STC_API_PROPRIETARY, STC_API_OFFICIAL
+
+
+STC_API_PROPRIETARY = STC_API_PROPRIETARY
+STC_API_OFFICIAL = STC_API_OFFICIAL
 
 
 class Spirent():
@@ -58,9 +62,11 @@ class Spirent():
 
     """Server part of STC API which converts commands from Python API
     to TCL API listens on this port number."""
-    _SERVER_PORT = 8888
+    _SERVER_PORT = dict()
+    _SERVER_PORT[STC_API_OFFICIAL] = 8888
+    _SERVER_PORT[STC_API_PROPRIETARY] = 42000
 
-    def __init__(self, server, chassis, port):
+    def __init__(self, server, chassis, port, api_version=STC_API_OFFICIAL):
         """
         Parameters
         ----------
@@ -70,6 +76,9 @@ class Spirent():
             Address of Spirent Test Center chassis.
         port : str
             Spirent Test Center chassis port.
+        api_version : int
+            spirentlib.STC_API_OFFICIAL for official spirent api or
+            spirentlib.STC_API_PROPRIETARY for our proprietary api.
         """
 
         self._server = server
@@ -77,7 +86,8 @@ class Spirent():
         self._port = port
         self._spirent_config = None
         self._logger = logging.getLogger(__name__)
-        self._stc_handler = StcHandler()
+        self._server_port = Spirent._SERVER_PORT[api_version]
+        self._stc_handler = StcHandler(api_version)
         self._port_reserved = False
 
     def set_config_file(self, config_path):
@@ -95,8 +105,8 @@ class Spirent():
         """Establishes a connection to spirentlib server application.
         """
 
-        self._logger.debug(f'Connecting to STC terminal server: {self._server}:{self._SERVER_PORT}.')
-        self._stc_handler.stc_api_connect(self._server, self._SERVER_PORT)
+        self._logger.debug(f'Connecting to STC terminal server: {self._server}:{self._server_port}.')
+        self._stc_handler.stc_api_connect(self._server, self._server_port)
 
     def _load_config(self):
         """Configure STC using the configuration file.

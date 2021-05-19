@@ -4,14 +4,20 @@
 """
 
 from .stcapi.StcPythonREST import StcPythonREST
+from .stcapi.StcPythonTCP import StcPythonTCP
 
 import re
+
+
+STC_API_PROPRIETARY = 0
+STC_API_OFFICIAL = 1
 
 
 class StcHandler:
     """Basic STC configuration class"""
 
-    def __init__(self):
+    def __init__(self, stc_api_version=STC_API_OFFICIAL):
+        self._stc_api_version = stc_api_version
         self._stc = None
         self._generator_port_results = None
         self._analyzer_port_results = None
@@ -24,7 +30,10 @@ class StcHandler:
         self._arpnd_results = None
 
     def stc_api_connect(self, host: str, port: int):
-        self._stc = StcPythonREST(host, port)
+        if self._stc_api_version == STC_API_OFFICIAL:
+            self._stc = StcPythonREST(host, port)
+        else:
+            self._stc = StcPythonTCP(host, port)
 
     def stc(self):
         return self._stc
@@ -52,7 +61,12 @@ class StcHandler:
 
     def load_xml(self, xml_config_file: str):
         """Load XML config using string format"""
-        return self._stc.perform('loadfromxml', FileName=xml_config_file)
+        if self._stc_api_version == STC_API_OFFICIAL:
+            return self._stc.perform('loadfromxml', FileName=xml_config_file)
+        else:
+            with open(xml_config_file, 'rb') as file:
+                config_string = file.read()
+            return self._stc.perform('loadfromxml', FileName='', InputConfigString=config_string)
 
     def set_sequencer(self):
         sequencer = self._stc.get('system1', 'children-sequencer')
