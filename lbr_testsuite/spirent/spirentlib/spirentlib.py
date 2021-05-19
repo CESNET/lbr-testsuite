@@ -58,6 +58,13 @@ class StcHandler:
         sequencer = self._stc.get('system1', 'children-sequencer')
         self._stc.config(sequencer, errorHandler='stop_on_error')
 
+    def stc_get_stream_block_load(self, sb_name):
+        xpath = ['StcSystem/Project/Port/StreamBlock[@Name={}]'.format(sb_name)]
+        sb_handler = self.stc_object_xpath(xpath)
+
+        load_handler = self.stc_get_attributes(sb_handler, 'AffiliationStreamBlockLoadProfile')
+        return self.stc_attribute(load_handler, 'Load')
+
     def subscribe_to_results(self):
         project = self._stc.get('system1', 'children-Project')
 
