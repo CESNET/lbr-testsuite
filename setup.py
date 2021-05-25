@@ -25,7 +25,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=[
-        'pyroute2>=0.6.2',
+        'pyroute2>=0.6.2,<1.',
         'lbr_trex_client',
         'stcrestclient',
     ],
