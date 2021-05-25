@@ -1,6 +1,5 @@
 pytest>=6.1
-pyroute2>=0.5.14
-mitogen
+pyroute2>=0.6.2
 pytest-flake8
 flake8~=3.7.0
 sphinx
