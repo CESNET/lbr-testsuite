@@ -16,7 +16,6 @@ from pr2modules import netns
 from pr2modules.iproute import IPRoute
 from pr2modules.nslink.nslink import NetNS
 from pr2modules.netlink.exceptions import NetlinkError
-from pr2modules.netlink.rtnl import ndmsg
 
 
 IFA_F_SECONDARY = 0x01
@@ -725,7 +724,7 @@ def _manipulate_ip_neigh(
     address,
     lladdr,
     family=socket.AF_INET,
-    state=ndmsg.states['permanent'],
+    state='permanent',
     namespace=None
 ):
     assert cmd == 'add' or cmd == 'del'
@@ -748,7 +747,7 @@ def add_ip_neigh(
     address,
     lladdr,
     family=socket.AF_INET,
-    state=ndmsg.states['permanent'],
+    state='permanent',
     namespace=None,
     safe=False
 ):
@@ -768,7 +767,7 @@ def add_ip_neigh(
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
-    state : int, optional
+    state : str, optional
         Neighbour cache entry state.
     namespace : str, optional
         Name of a namespace.
@@ -795,7 +794,7 @@ def delete_ip_neigh(
     address,
     lladdr,
     family=socket.AF_INET,
-    state=ndmsg.states['permanent'],
+    state='permanent',
     namespace=None,
     safe=False
 ):
@@ -815,7 +814,7 @@ def delete_ip_neigh(
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
-    state : int, optional
+    state : str, optional
         Neighbour cache entry state.
     namespace : str, optional
         Name of a namespace.
