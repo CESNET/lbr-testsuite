@@ -12,9 +12,11 @@ import errno
 import socket
 import time
 
-from pyroute2 import IPRoute, netns, NetNS
-from pyroute2.netlink.exceptions import NetlinkError
-from pyroute2.netlink.rtnl import ndmsg
+from pr2modules import netns
+from pr2modules.iproute import IPRoute
+from pr2modules.nslink.nslink import NetNS
+from pr2modules.netlink.exceptions import NetlinkError
+from pr2modules.netlink.rtnl import ndmsg
 
 
 IFA_F_SECONDARY = 0x01
