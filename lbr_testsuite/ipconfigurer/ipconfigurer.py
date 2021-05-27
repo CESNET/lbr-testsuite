@@ -727,7 +727,7 @@ def _manipulate_ip_neigh(
     state='permanent',
     namespace=None
 ):
-    assert cmd == 'add' or cmd == 'del'
+    assert cmd == 'add' or cmd == 'del' or cmd == 'change'
 
     with _get_ipr_context(namespace) as ipr:
         ifc_index = _link_lookup_first(ifc_name, namespace)
@@ -784,6 +784,54 @@ def add_ip_neigh(
         _manipulate_ip_neigh('add', ifc_name, address, lladdr, family, state, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.EEXIST:
+            raise err
+        return False
+    return True
+
+
+def change_ip_neigh(
+    ifc_name,
+    address,
+    lladdr,
+    family=socket.AF_INET,
+    state='permanent',
+    namespace=None,
+    safe=False
+):
+    """Change an existing IP neighbour (ARP/NDP cache entry). If the
+    record does not exist, fail.
+
+    Most of the arguments corresponds to the appropriate method from
+    pyroute2 library.
+
+    Parameters
+    ----------
+    ifc_name : str
+        Name of an interface connected to the neighbour.
+    address : str
+        IP address of neighbour.
+    lladdr : str
+        MAC address of neighbour.
+    family : socket.AF_INET | socket.AF_INET6, optional
+        IP address family - socket.AF_INET for IPv4, socket.AF_INET6
+        for IPv6.
+    state : str, optional
+        Neighbour cache entry state.
+    namespace : str, optional
+        Name of a namespace.
+    safe : bool, optional
+        Ignore an error if neighbour does not exists.
+
+    Returns
+    -------
+    bool
+        True on success, False otherwise
+    """
+
+    try:
+        _manipulate_ip_neigh('change', ifc_name, address, lladdr, family, state, namespace)
+    except NetlinkError as err:
+        if not safe or err.code != errno.ENOENT:
             raise err
         return False
     return True
