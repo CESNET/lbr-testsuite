@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
+url = "http://cisticka-devel.liberouter.org/piproxy/tmc/pypi-liberouter/simple"
+verify_ssl = false
+name = "liberouter-pypi"
+
+[packages]
+pytest = ">=6.1"
+pyroute2 = "<1.,>=0.6.2"
+pytest-flake8 = "*"
+flake8 = "~=3.7.0"
+sphinx-rtd-theme = "*"
+lbr-trex-client = "*"
+stcrestclient = "*"
+twine = "*"
+Sphinx = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"

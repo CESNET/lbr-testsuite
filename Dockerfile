@@ -1,4 +1,4 @@
 FROM python:3.6
 
-COPY requirements.txt /tmp/requirements.txt
-RUN python3.6 -m pip install -r /tmp/requirements.txt
+COPY Pipfile Pipfile.lock /tmp/
+RUN python3 -m pip install pipenv && cd /tmp && pipenv install --system --deploy
