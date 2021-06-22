@@ -541,6 +541,41 @@ class StcHandler:
         line_speed = self.stc_attribute(phy_handler, 'LineSpeed')[0][0]
         return _LINE_SPEEDS_TABLE[line_speed]
 
+    def stc_set_port_scheduling_mode(self, mode):
+        """Set port scheduling mode.
+
+        The scheduling mode affects the sequence in which frames from
+        each stream block are transmitted.
+
+        Parameters
+        ----------
+        mode : str
+            Scheduling mode. Allowed modes are 'port', 'rate',
+            'priority' and 'manual'.
+
+        Raises
+        ------
+        ValueError
+            If invalid mode passed.
+        """
+
+        xpath = ['StcSystem/Project/Port/Generator/GeneratorConfig']
+        gen_config_handler = self.stc_object_xpath(xpath)
+
+        if mode == 'port':
+            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'PORT_BASED')
+        elif mode == 'rate':
+            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'RATE_BASED')
+        elif mode == 'priority':
+            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'PRIORITY_BASED')
+        elif mode == 'manual':
+            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'MANUAL_BASED')
+        else:
+            raise ValueError(
+                "Invalid scheduling mode '{mode}'. Allowed scheduling modes are "
+                "'port', 'rate', 'priority' and 'manual'."
+            )
+
     def stc_set_port_load(self, port_load_type, port_load_value):
         """Set port load.
 
