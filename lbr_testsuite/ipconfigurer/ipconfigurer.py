@@ -1037,10 +1037,14 @@ def _format_rule_match_errmsg(kwargs):
         iif = kwargs['iif']
         msg += f' and iif {iif}'
 
+    if 'oif' in kwargs:
+        oif = kwargs['oif']
+        msg += f' and oif {oif}'
+
     return msg
 
 
-def _add_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=False):
+def _add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Add a rule.
 
     Parameters
@@ -1049,6 +1053,8 @@ def _add_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=F
         Routing table ID.
     iif_name : str, optional
         Name of a related iif interface.
+    oif_name : str, optional
+        Name of a related oif interface.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -1068,6 +1074,8 @@ def _add_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=F
     }
     if iif_name is not None:
         kwargs['iif'] = iif_name
+    if oif_name is not None:
+        kwargs['oif'] = oif_name
 
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
@@ -1093,15 +1101,15 @@ def add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _add_rule wrapper to enable API changes"""
     from warnings import warn
     warn('function add_rule() is deprecated due to future API changes, use add_rule_iif()')
-    return _add_rule(table, ifc_name, family, priority, safe)
+    return _add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
 
 
 def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Temporary _add_rule wrapper to enable API changes"""
-    return _add_rule(table, ifc_name, family, priority, safe)
+    return _add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
 
 
-def _delete_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=False):
+def _delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Delete a rule.
 
     Parameters
@@ -1110,6 +1118,8 @@ def _delete_rule(table, iif_name=None, family=socket.AF_INET, priority=None, saf
         Routing table ID.
     iif_name : str, optional
         Name of a related iif interface.
+    oif_name : str, optional
+        Name of a related oif interface.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -1130,6 +1140,8 @@ def _delete_rule(table, iif_name=None, family=socket.AF_INET, priority=None, saf
     }
     if iif_name is not None:
         kwargs['iif'] = iif_name
+    if oif_name is not None:
+        kwargs['oif'] = oif_name
 
     try:
         _manipulate_rule('del', table, **kwargs)
@@ -1144,9 +1156,9 @@ def delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fals
     """Deprecated _delete_rule wrapper to enable API changes"""
     from warnings import warn
     warn('function delete_rule() is deprecated due to future API changes, use delete_rule_iif()')
-    return _delete_rule(table, ifc_name, family, priority, safe)
+    return _delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
 
 
 def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Temporary _delete_rule wrapper to enable API changes"""
-    return _delete_rule(table, ifc_name, family, priority, safe)
+    return _delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
