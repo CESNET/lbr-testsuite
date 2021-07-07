@@ -1010,7 +1010,7 @@ def _rule_match(rule, table, iif=None, oif=None, priority=None):
         return not _rule_contains_attr(rule, 'FRA_IIFNAME') and not _rule_contains_attr(rule, 'FRA_OIFNAME')
 
 
-def _manipulate_rule(cmd, table, iif_name=None, family=socket.AF_INET, priority=None):
+def _manipulate_rule(cmd, table, iif=None, family=socket.AF_INET, priority=None):
     assert cmd == 'add' or cmd == 'del'
 
     kwargs = {
@@ -1018,8 +1018,8 @@ def _manipulate_rule(cmd, table, iif_name=None, family=socket.AF_INET, priority=
         'family': family,
     }
 
-   if iif_name is not None:
-        kwargs['FRA_IIFNAME'] = iif_name
+    if iif is not None:
+        kwargs['FRA_IIFNAME'] = iif
 
     if priority is not None:
         kwargs['priority'] = priority
