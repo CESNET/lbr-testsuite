@@ -988,7 +988,7 @@ def _manipulate_rule(cmd, ifc_name, table, family=socket.AF_INET, priority=None)
         ipr.rule(cmd, **kwargs)
 
 
-def add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Add a rule.
 
     Parameters
@@ -1029,7 +1029,19 @@ def add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     return True
 
 
-def delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+    """Deprecated _add_rule wrapper to enable API changes"""
+    from warnings import warn
+    warn('function add_rule() is deprecated due to future API changes, use add_rule_iif()')
+    return _add_rule(ifc_name, table, family, priority, safe)
+
+
+def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+    """Temporary _add_rule wrapper to enable API changes"""
+    return _add_rule(ifc_name, table, family, priority, safe)
+
+
+def _delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Delete a rule.
 
     Parameters
@@ -1059,3 +1071,15 @@ def delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fals
             raise err
         return False
     return True
+
+
+def delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+    """Deprecated _delete_rule wrapper to enable API changes"""
+    from warnings import warn
+    warn('function delete_rule() is deprecated due to future API changes, use delete_rule_iif()')
+    return _delete_rule(ifc_name, table, family, priority, safe)
+
+
+def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+    """Temporary _delete_rule wrapper to enable API changes"""
+    return _delete_rule(ifc_name, table, family, priority, safe)
