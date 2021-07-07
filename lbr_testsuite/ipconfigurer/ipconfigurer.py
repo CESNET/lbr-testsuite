@@ -1010,7 +1010,7 @@ def _rule_match(rule, table, iif=None, oif=None, priority=None):
         return not _rule_contains_attr(rule, 'FRA_IIFNAME') and not _rule_contains_attr(rule, 'FRA_OIFNAME')
 
 
-def _manipulate_rule(cmd, table, iif=None, family=socket.AF_INET, priority=None):
+def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, priority=None):
     assert cmd == 'add' or cmd == 'del'
 
     kwargs = {
@@ -1020,6 +1020,8 @@ def _manipulate_rule(cmd, table, iif=None, family=socket.AF_INET, priority=None)
 
     if iif is not None:
         kwargs['FRA_IIFNAME'] = iif
+    if oif is not None:
+        kwargs['FRA_OIFNAME'] = oif
 
     if priority is not None:
         kwargs['priority'] = priority
@@ -1034,7 +1036,7 @@ def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False)
     Parameters
     ----------
     ifc_name : str
-        Name of a related interface.
+        Name of a related iif interface.
     table : int
         Routing table ID.
     family : socket.AF_INET | socket.AF_INET6, optional
@@ -1065,7 +1067,7 @@ def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False)
                 f"The rule already exists for table '{table}' and interface '{ifc_name}'."
             )
 
-    _manipulate_rule('add', table, ifc_name, family, priority)
+    _manipulate_rule('add', table, iif=ifc_name, family=family, priority=priority)
     return True
 
 
@@ -1087,7 +1089,7 @@ def _delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fal
     Parameters
     ----------
     ifc_name : str
-        Name of a related interface.
+        Name of a related iif interface.
     table : int
         Routing table ID.
     family : socket.AF_INET | socket.AF_INET6, optional
@@ -1105,7 +1107,7 @@ def _delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fal
     """
 
     try:
-        _manipulate_rule('del', table, ifc_name, family, priority)
+        _manipulate_rule('del', table, iif=ifc_name, family=family, priority=priority)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
