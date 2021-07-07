@@ -975,7 +975,7 @@ def delete_vlan(name, link, vlan_id, namespace=None, safe=False):
 ##
 # Rules
 ##
-def _rule_match(rule, table, ifc=None, priority=None):
+def _rule_match(rule, table, iif=None, priority=None):
     if rule['table'] != table:
         return False
 
@@ -985,11 +985,11 @@ def _rule_match(rule, table, ifc=None, priority=None):
             return False
 
     for att in rule['attrs']:
-        if ifc is not None and att[0] == 'FRA_IIFNAME':
-            return att[1] == ifc
+        if iif is not None and att[0] == 'FRA_IIFNAME':
+            return att[1] == iif
 
 
-def _manipulate_rule(cmd, table, ifc_name=None, family=socket.AF_INET, priority=None):
+def _manipulate_rule(cmd, table, iif_name=None, family=socket.AF_INET, priority=None):
     assert cmd == 'add' or cmd == 'del'
 
     kwargs = {
@@ -997,8 +997,8 @@ def _manipulate_rule(cmd, table, ifc_name=None, family=socket.AF_INET, priority=
         'family': family,
     }
 
-   if ifc_name is not None:
-        kwargs['FRA_IIFNAME'] = ifc_name
+   if iif_name is not None:
+        kwargs['FRA_IIFNAME'] = iif_name
 
     if priority is not None:
         kwargs['priority'] = priority
