@@ -1044,7 +1044,7 @@ def _format_rule_match_errmsg(kwargs):
     return msg
 
 
-def _add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
+def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Add a rule.
 
     Parameters
@@ -1097,19 +1097,14 @@ def _add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priori
     return True
 
 
-def add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _add_rule wrapper to enable API changes"""
     from warnings import warn
-    warn('function add_rule() is deprecated due to future API changes, use add_rule_iif()')
-    return _add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
+    warn('function add_rule_iif() is deprecated, use add_rule()')
+    return add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
 
 
-def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
-    """Temporary _add_rule wrapper to enable API changes"""
-    return _add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
-
-
-def _delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
+def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Delete a rule.
 
     Parameters
@@ -1152,13 +1147,8 @@ def _delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, pri
     return True
 
 
-def delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _delete_rule wrapper to enable API changes"""
     from warnings import warn
-    warn('function delete_rule() is deprecated due to future API changes, use delete_rule_iif()')
-    return _delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
-
-
-def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
-    """Temporary _delete_rule wrapper to enable API changes"""
-    return _delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
+    warn('function delete_rule_iif() is deprecated, use delete_rule()')
+    return delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
