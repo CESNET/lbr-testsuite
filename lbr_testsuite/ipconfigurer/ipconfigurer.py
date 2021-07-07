@@ -1030,6 +1030,16 @@ def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, prio
         ipr.rule(cmd, **kwargs)
 
 
+def _format_rule_match_errmsg(kwargs):
+    msg = ''
+
+    if 'iif' in kwargs:
+        iif = kwargs['iif']
+        msg += f' and iif {iif}'
+
+    return msg
+
+
 def _add_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Add a rule.
 
@@ -1053,10 +1063,16 @@ def _add_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=F
         True on success, False otherwise
     """
 
+    kwargs = {
+        'priority': priority,
+    }
+    if iif_name is not None:
+        kwargs['iif'] = iif_name
+
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
             family=family,
-            match=lambda x: _rule_match(x, table, iif=iif_name, priority=priority)
+            match=lambda x: _rule_match(x, table, **kwargs)
         )
 
     if curr_rules:
@@ -1064,10 +1080,12 @@ def _add_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=F
             return False
         raise IpConfigurerError(
                 errno.EEXIST,
-                f"The rule already exists for table '{table}' and interface '{iif_name}'."
+                f"The rule already exists for table '{table}'" + _format_rule_match_errmsg(**kwargs) + "."
             )
 
-    _manipulate_rule('add', table, iif=iif_name, family=family, priority=priority)
+    kwargs['family'] = family
+
+    _manipulate_rule('add', table, **kwargs)
     return True
 
 
@@ -1106,8 +1124,15 @@ def _delete_rule(table, iif_name=None, family=socket.AF_INET, priority=None, saf
         True on success, False otherwise
     """
 
+    kwargs = {
+        'family': priority,
+        'priority': priority,
+    }
+    if iif_name is not None:
+        kwargs['iif'] = iif_name
+
     try:
-        _manipulate_rule('del', table, iif=iif_name, family=family, priority=priority)
+        _manipulate_rule('del', table, **kwargs)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
