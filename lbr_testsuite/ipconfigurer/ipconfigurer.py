@@ -975,7 +975,7 @@ def delete_vlan(name, link, vlan_id, namespace=None, safe=False):
 ##
 # Rules
 ##
-def _rule_match(rule, ifc, table, priority=None):
+def _rule_match(rule, table, ifc=None, priority=None):
     if rule['table'] != table:
         return False
 
@@ -985,18 +985,20 @@ def _rule_match(rule, ifc, table, priority=None):
             return False
 
     for att in rule['attrs']:
-        if att[0] == 'FRA_IIFNAME':
+        if ifc is not None and att[0] == 'FRA_IIFNAME':
             return att[1] == ifc
 
 
-def _manipulate_rule(cmd, ifc_name, table, family=socket.AF_INET, priority=None):
+def _manipulate_rule(cmd, table, ifc_name=None, family=socket.AF_INET, priority=None):
     assert cmd == 'add' or cmd == 'del'
 
     kwargs = {
-        'FRA_IIFNAME': ifc_name,
         'table': table,
         'family': family,
     }
+
+   if ifc_name is not None:
+        kwargs['FRA_IIFNAME'] = ifc_name
 
     if priority is not None:
         kwargs['priority'] = priority
@@ -1031,7 +1033,7 @@ def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False)
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
             family=family,
-            match=lambda x: _rule_match(x, ifc_name, table, priority)
+            match=lambda x: _rule_match(x, table, ifc_name, priority)
         )
 
     if curr_rules:
@@ -1042,7 +1044,7 @@ def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False)
                 f"The rule already exists for table '{table}' and interface '{ifc_name}'."
             )
 
-    _manipulate_rule('add', ifc_name, table, family, priority)
+    _manipulate_rule('add', table, ifc_name, family, priority)
     return True
 
 
@@ -1082,7 +1084,7 @@ def _delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fal
     """
 
     try:
-        _manipulate_rule('del', ifc_name, table, family, priority)
+        _manipulate_rule('del', table, ifc_name, family, priority)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
