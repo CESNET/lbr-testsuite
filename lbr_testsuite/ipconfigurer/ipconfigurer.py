@@ -988,6 +988,8 @@ def _rule_match(rule, table, iif=None, priority=None):
         if iif is not None and att[0] == 'FRA_IIFNAME':
             return att[1] == iif
 
+    return False
+
 
 def _manipulate_rule(cmd, table, iif_name=None, family=socket.AF_INET, priority=None):
     assert cmd == 'add' or cmd == 'del'
