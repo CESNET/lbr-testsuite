@@ -1030,14 +1030,14 @@ def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, prio
         ipr.rule(cmd, **kwargs)
 
 
-def _add_rule(table, ifc_name=None, family=socket.AF_INET, priority=None, safe=False):
+def _add_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Add a rule.
 
     Parameters
     ----------
     table : int
         Routing table ID.
-    ifc_name : str, optional
+    iif_name : str, optional
         Name of a related iif interface.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
@@ -1056,7 +1056,7 @@ def _add_rule(table, ifc_name=None, family=socket.AF_INET, priority=None, safe=F
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
             family=family,
-            match=lambda x: _rule_match(x, table, iif=ifc_name, priority=priority)
+            match=lambda x: _rule_match(x, table, iif=iif_name, priority=priority)
         )
 
     if curr_rules:
@@ -1064,10 +1064,10 @@ def _add_rule(table, ifc_name=None, family=socket.AF_INET, priority=None, safe=F
             return False
         raise IpConfigurerError(
                 errno.EEXIST,
-                f"The rule already exists for table '{table}' and interface '{ifc_name}'."
+                f"The rule already exists for table '{table}' and interface '{iif_name}'."
             )
 
-    _manipulate_rule('add', table, iif=ifc_name, family=family, priority=priority)
+    _manipulate_rule('add', table, iif=iif_name, family=family, priority=priority)
     return True
 
 
@@ -1083,14 +1083,14 @@ def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fal
     return _add_rule(table, ifc_name, family, priority, safe)
 
 
-def _delete_rule(table, ifc_name=None, family=socket.AF_INET, priority=None, safe=False):
+def _delete_rule(table, iif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Delete a rule.
 
     Parameters
     ----------
     table : int
         Routing table ID.
-    ifc_name : str, optional
+    iif_name : str, optional
         Name of a related iif interface.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
@@ -1107,7 +1107,7 @@ def _delete_rule(table, ifc_name=None, family=socket.AF_INET, priority=None, saf
     """
 
     try:
-        _manipulate_rule('del', table, iif=ifc_name, family=family, priority=priority)
+        _manipulate_rule('del', table, iif=iif_name, family=family, priority=priority)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
