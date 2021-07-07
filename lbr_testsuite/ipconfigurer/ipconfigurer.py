@@ -983,7 +983,15 @@ def _rule_match_attr(rule, key, value):
     return False
 
 
-def _rule_match(rule, table, iif=None, priority=None):
+def _rule_contains_attr(rule, key):
+    for att in rule['attrs']:
+        if att[0] == key:
+            return True
+
+    return False
+
+
+def _rule_match(rule, table, iif=None, oif=None, priority=None):
     if rule['table'] != table:
         return False
 
@@ -992,10 +1000,14 @@ def _rule_match(rule, table, iif=None, priority=None):
         if 'FRA_PRIORITY' in atts and atts['FRA_PRIORITY'] != priority:
             return False
 
-    if iif is not None:
-        return _rule_match_attr(rule, 'FRA_IIFNAME', iif)
-
-    return False
+    if iif is not None and oif is not None:
+        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and _rule_match_attr(rule, 'FRA_OIFNAME', oif)
+    elif iif is not None:
+        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and not _rule_contains_attr(rule, 'FRA_OIFNAME')
+    elif oif is not None:
+        return _rule_match_attr(rule, 'FRA_OIFNAME', oif) and not _rule_contains_attr(rule, 'FRA_IIFNAME')
+    else:
+        return not _rule_contains_attr(rule, 'FRA_IIFNAME') and not _rule_contains_attr(rule, 'FRA_OIFNAME')
 
 
 def _manipulate_rule(cmd, table, iif_name=None, family=socket.AF_INET, priority=None):
@@ -1042,7 +1054,7 @@ def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False)
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
             family=family,
-            match=lambda x: _rule_match(x, table, ifc_name, priority)
+            match=lambda x: _rule_match(x, table, iif=ifc_name, priority=priority)
         )
 
     if curr_rules:
