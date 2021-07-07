@@ -975,6 +975,14 @@ def delete_vlan(name, link, vlan_id, namespace=None, safe=False):
 ##
 # Rules
 ##
+def _rule_match_attr(rule, key, value):
+    for att in rule['attrs']:
+        if att[0] == key:
+            return att[1] == value
+
+    return False
+
+
 def _rule_match(rule, table, iif=None, priority=None):
     if rule['table'] != table:
         return False
@@ -984,9 +992,8 @@ def _rule_match(rule, table, iif=None, priority=None):
         if 'FRA_PRIORITY' in atts and atts['FRA_PRIORITY'] != priority:
             return False
 
-    for att in rule['attrs']:
-        if iif is not None and att[0] == 'FRA_IIFNAME':
-            return att[1] == iif
+    if iif is not None:
+        return _rule_match_attr(rule, 'FRA_IIFNAME', iif)
 
     return False
 
