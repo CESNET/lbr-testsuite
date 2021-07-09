@@ -209,6 +209,23 @@ def delete_ip_addr(
 ##
 # Interfaces
 ##
+def ifc_set_mac(ifc_name, mac_addr, namespace=None):
+    """Set a new mac address of an interface.
+
+    Parameters
+    ----------
+    ifc_name : str
+        Name of an interface.
+    mac_addr : str
+        New mac address.
+    namespace : str, optional
+        Name of a namespace.
+    """
+
+    with _get_ipr_context(namespace) as ipr:
+        ipr.link('set', ifname=ifc_name, address=mac_addr)
+
+
 def _ifc_up_down(state, ifc_name, namespace=None):
     assert state == 'up' or state == 'down'
 
