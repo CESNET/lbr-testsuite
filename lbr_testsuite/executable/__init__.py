@@ -1,3 +1,6 @@
 from . import executable
 
-__all__ = ['executable']
+__all__ = [
+    'executable',
+    'coredump',
+]
