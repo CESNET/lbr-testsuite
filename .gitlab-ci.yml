@@ -12,6 +12,12 @@ docker:
     tags: [docker-shell]
     script: [docker build -t $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG .]
 
+editorconfig:
+    stage: check
+    needs: []
+    image: mstruebing/editorconfig-checker
+    script: [ec]
+
 pycodestyle:
     stage: check
     needs: [docker]
