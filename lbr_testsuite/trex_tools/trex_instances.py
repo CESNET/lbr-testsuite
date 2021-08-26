@@ -3,12 +3,12 @@ Author(s): Dominik Tran <tran@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.cz>
 Copyright: (C) 2021 CESNET
 
 Base TRex test module. Provides a common frame for tests using Cisco TRex.
- | TRex_Instances class contains following features:
- | - provides initialization of TRex handlers for control,
- | - handles connection to TRex servers,
- | - provides *some* TRex control methods. For other TRex methods use
- | standard TRex API, see
- | `Python Automation API <https://trex-tgn.cisco.com/trex/doc/>`_.
+    | TRex_Instances class contains following features:
+    | - provides initialization of TRex handlers for control,
+    | - handles connection to TRex servers,
+    | - provides *some* TRex control methods. For other TRex methods use
+    | standard TRex API, see
+    | `Python Automation API <https://trex-tgn.cisco.com/trex/doc/>`_.
 """
 
 from functools import partial
@@ -96,9 +96,9 @@ class TRex_Instances():
             Connect------------------------>
             <-----------------------------OK
             Start TRex--------------------->
-                                      Start------------------------->
-                                                                START
-                                      <----------------------------OK
+            .                         Start------------------------->
+            .                                                   START
+            .                         <----------------------------OK
             <-----------------------------OK
             Connect------------------------------------------------->
             <------------------------------------------------------OK
@@ -116,9 +116,9 @@ class TRex_Instances():
             Disconnect---------------------------------------------->
             <------------------------------------------------------OK
             Terminate TRex---------------------->
-                                      Terminate--------------------->
-                                      <----------------------------OK
-                                                                 STOP
+            .                         Terminate--------------------->
+            .                         <----------------------------OK
+            .                                                    STOP
             <-----------------------------OK
 
         Parameters

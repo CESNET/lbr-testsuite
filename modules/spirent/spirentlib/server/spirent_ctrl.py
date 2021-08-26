@@ -1,7 +1,7 @@
 """
 Author(s): Jan Kucera <jan.kucera@cesnet.cz>,
-           Pavel Krobot <Pavel.Krobot@cesnet.cz>,
-           Simon Lapsansky <xlapsa01@vutbr.cz>
+        Pavel Krobot <Pavel.Krobot@cesnet.cz>,
+        Simon Lapsansky <xlapsa01@vutbr.cz>
 
 Copyright: (C) 202O CESNET
 

@@ -8,7 +8,7 @@ logy sa nachádzajú v súbore s cestou "C:\logger.log"
 
 pyinstaller -n "SpirentServerCtrl" -F --hidden-import=win32timezone windows_service.py
 
-2) Inštalácia služby 
+2) Inštalácia služby
 
 dist\SpirentServerCtrl.exe --startup=auto install
 

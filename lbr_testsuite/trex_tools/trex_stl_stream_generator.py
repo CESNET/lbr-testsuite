@@ -31,19 +31,21 @@ class TRex_Stl_Stream_Generator():
 
     Example of stream usage::
 
-        client_traffic_stream = TRex_Stl_Stream_Generator( traffic_trex,
-                                                           port=0,
-                                                           stream_pps='8mpps')
+        client_traffic_stream = TRex_Stl_Stream_Generator(traffic_trex,
+            port=0,
+            stream_pps='8mpps'
+        )
         traffic_trex.add_streams(client_traffic_stream.udp4_stream(), ports=0)
 
-        server_traffic_stream = TRex_Stl_Stream_Generator( traffic_trex,
-                                                           port=1,
-                                                           packet_size=512,
-                                                           src_ipv4_from='10.0.1.1',
-                                                           src_ipv4_to='10.0.1.62',
-                                                           dst_ipv4_from='10.0.0.1',
-                                                           dst_ipv4_to='10.0.0.254',
-                                                           stream_bps_L2='5gbps')
+        server_traffic_stream = TRex_Stl_Stream_Generator(traffic_trex,
+            port=1,
+            packet_size=512,
+            src_ipv4_from='10.0.1.1',
+            src_ipv4_to='10.0.1.62',
+            dst_ipv4_from='10.0.0.1',
+            dst_ipv4_to='10.0.0.254',
+            stream_bps_L2='5gbps'
+        )
         traffic_trex.add_streams(server_traffic_stream.udp4_stream(), ports=1)
 
     Example of checking stream packets::
@@ -77,9 +79,9 @@ class TRex_Stl_Stream_Generator():
         Packet size without Ethernet's FCS, as FCS processing is
         offloaded to HW.
         This means that actual sent/received packets are 4B bigger.
-         | **Warning**: It seems like some packet sizes (even without
-         | padding) can cause overwriting of packet fields, resulting
-         | in failed tests.
+            | **Warning**: It seems like some packet sizes (even without
+            | padding) can cause overwriting of packet fields, resulting
+            | in failed tests.
     src_ipv4_from : str, optional
         IPv4 source address - beginning of range.
     src_ipv4_to : str, optional
@@ -136,7 +138,7 @@ class TRex_Stl_Stream_Generator():
         | Packet stream mode: ``STLTXCont`` - Continuous packet generation until stopped.
         |                     ``STLTXSingleBurst`` - Only single stream burst, *total_pkts* must be set.
         | More information can be found `here
-         <https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/profile_code.html#stlstream-modes>`_.
+        <https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/profile_code.html#stlstream-modes>`_.
     stream_pps : Union[int, str], optional
         Generate N packets per second. Example: 80000 or '80kpps'
         (see :meth:`~trex_tools.trex_instances.TRex_Instances.u2i`).
