@@ -975,7 +975,23 @@ def delete_vlan(name, link, vlan_id, namespace=None, safe=False):
 ##
 # Rules
 ##
-def _rule_match(rule, ifc, table, priority=None):
+def _rule_match_attr(rule, key, value):
+    for att in rule['attrs']:
+        if att[0] == key:
+            return att[1] == value
+
+    return False
+
+
+def _rule_contains_attr(rule, key):
+    for att in rule['attrs']:
+        if att[0] == key:
+            return True
+
+    return False
+
+
+def _rule_match(rule, table, iif=None, oif=None, priority=None):
     if rule['table'] != table:
         return False
 
@@ -984,19 +1000,28 @@ def _rule_match(rule, ifc, table, priority=None):
         if 'FRA_PRIORITY' in atts and atts['FRA_PRIORITY'] != priority:
             return False
 
-    for att in rule['attrs']:
-        if att[0] == 'FRA_IIFNAME':
-            return att[1] == ifc
+    if iif is not None and oif is not None:
+        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and _rule_match_attr(rule, 'FRA_OIFNAME', oif)
+    elif iif is not None:
+        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and not _rule_contains_attr(rule, 'FRA_OIFNAME')
+    elif oif is not None:
+        return _rule_match_attr(rule, 'FRA_OIFNAME', oif) and not _rule_contains_attr(rule, 'FRA_IIFNAME')
+    else:
+        return not _rule_contains_attr(rule, 'FRA_IIFNAME') and not _rule_contains_attr(rule, 'FRA_OIFNAME')
 
 
-def _manipulate_rule(cmd, ifc_name, table, family=socket.AF_INET, priority=None):
+def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, priority=None):
     assert cmd == 'add' or cmd == 'del'
 
     kwargs = {
-        'FRA_IIFNAME': ifc_name,
         'table': table,
         'family': family,
     }
+
+    if iif is not None:
+        kwargs['FRA_IIFNAME'] = iif
+    if oif is not None:
+        kwargs['FRA_OIFNAME'] = oif
 
     if priority is not None:
         kwargs['priority'] = priority
@@ -1005,15 +1030,31 @@ def _manipulate_rule(cmd, ifc_name, table, family=socket.AF_INET, priority=None)
         ipr.rule(cmd, **kwargs)
 
 
-def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def _format_rule_match_errmsg(kwargs):
+    msg = ''
+
+    if 'iif' in kwargs:
+        iif = kwargs['iif']
+        msg += f' and iif {iif}'
+
+    if 'oif' in kwargs:
+        oif = kwargs['oif']
+        msg += f' and oif {oif}'
+
+    return msg
+
+
+def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Add a rule.
 
     Parameters
     ----------
-    ifc_name : str
-        Name of a related interface.
     table : int
         Routing table ID.
+    iif_name : str, optional
+        Name of a related iif interface.
+    oif_name : str, optional
+        Name of a related oif interface.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -1028,10 +1069,18 @@ def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False)
         True on success, False otherwise
     """
 
+    kwargs = {
+        'priority': priority,
+    }
+    if iif_name is not None:
+        kwargs['iif'] = iif_name
+    if oif_name is not None:
+        kwargs['oif'] = oif_name
+
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
             family=family,
-            match=lambda x: _rule_match(x, ifc_name, table, priority)
+            match=lambda x: _rule_match(x, table, **kwargs)
         )
 
     if curr_rules:
@@ -1039,34 +1088,33 @@ def _add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False)
             return False
         raise IpConfigurerError(
                 errno.EEXIST,
-                f"The rule already exists for table '{table}' and interface '{ifc_name}'."
+                f"The rule already exists for table '{table}'" + _format_rule_match_errmsg(**kwargs) + "."
             )
 
-    _manipulate_rule('add', ifc_name, table, family, priority)
+    kwargs['family'] = family
+
+    _manipulate_rule('add', table, **kwargs)
     return True
 
 
-def add_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _add_rule wrapper to enable API changes"""
     from warnings import warn
-    warn('function add_rule() is deprecated due to future API changes, use add_rule_iif()')
-    return _add_rule(ifc_name, table, family, priority, safe)
+    warn('function add_rule_iif() is deprecated, use add_rule()')
+    return add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
 
 
-def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
-    """Temporary _add_rule wrapper to enable API changes"""
-    return _add_rule(ifc_name, table, family, priority, safe)
-
-
-def _delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
     """Delete a rule.
 
     Parameters
     ----------
-    ifc_name : str
-        Name of a related interface.
     table : int
         Routing table ID.
+    iif_name : str, optional
+        Name of a related iif interface.
+    oif_name : str, optional
+        Name of a related oif interface.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -1081,8 +1129,17 @@ def _delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fal
         True on success, False otherwise
     """
 
+    kwargs = {
+        'family': priority,
+        'priority': priority,
+    }
+    if iif_name is not None:
+        kwargs['iif'] = iif_name
+    if oif_name is not None:
+        kwargs['oif'] = oif_name
+
     try:
-        _manipulate_rule('del', ifc_name, table, family, priority)
+        _manipulate_rule('del', table, **kwargs)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
@@ -1090,13 +1147,8 @@ def _delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=Fal
     return True
 
 
-def delete_rule(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
+def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _delete_rule wrapper to enable API changes"""
     from warnings import warn
-    warn('function delete_rule() is deprecated due to future API changes, use delete_rule_iif()')
-    return _delete_rule(ifc_name, table, family, priority, safe)
-
-
-def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
-    """Temporary _delete_rule wrapper to enable API changes"""
-    return _delete_rule(ifc_name, table, family, priority, safe)
+    warn('function delete_rule_iif() is deprecated, use delete_rule()')
+    return delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
