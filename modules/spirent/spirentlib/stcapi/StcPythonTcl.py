@@ -120,8 +120,8 @@ class StcPythonTcl:
         info = StcIntPythonHelp.HELP_INFO.get(topic)
         if info:
             return 'Desc: ' + info['desc'] + '\n' + \
-                   'Usage: ' + info['usage'] + '\n' + \
-                   'Example: ' + info['example'] + '\n'
+                    'Usage: ' + info['usage'] + '\n' + \
+                    'Example: ' + info['example'] + '\n'
 
 
     def log(self, level, msg):

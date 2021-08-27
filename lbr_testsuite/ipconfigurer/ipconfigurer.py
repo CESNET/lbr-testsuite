@@ -1,7 +1,7 @@
 """
 Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
-           Jan Kucera <jan.kucera@cesnet.cz>
-           Dominik Tran <tran@cesnet.cz>
+        Jan Kucera <jan.kucera@cesnet.cz>
+        Dominik Tran <tran@cesnet.cz>
 
 Copyright: (C) 2020 CESNET, z.s.p.o.
 

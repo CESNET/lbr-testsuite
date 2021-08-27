@@ -39,7 +39,7 @@ to access Package Registry. This project uses **deploy token**, but
 you can also use [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with
 scope set to `api`.
 
-Last thing to consider is `lbr_testsuite`'s dependency on `lbr_trex_client` package. 
+Last thing to consider is `lbr_testsuite`'s dependency on `lbr_trex_client` package.
 This package can be installed manually by this command:
 
 ```

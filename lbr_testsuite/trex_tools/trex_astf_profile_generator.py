@@ -149,16 +149,17 @@ class TRex_Astf_Profile_Generator():
         self.http_req = (
             b'GET /3384 HTTP/1.1\r\nHost: 22.0.0.3\r\nConnection: Keep-Alive\r\nUser-Agent: Mozilla/4.0' +
             b'(compatible; MSIE 7.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)\r\nAccept: */*\r\n' +
-            b'Accept-Language: en-us\r\nAccept-Encoding: gzip, deflate, compress\r\n\r\n')
+            b'Accept-Language: en-us\r\nAccept-Encoding: gzip, deflate, compress\r\n\r\n'
+        )
         self.http_response = (
             'HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/6.0\r\nContent-Type: text/html\r\nContent-Length: ' +
-            '32000\r\n\r\n<html><pre>**********</pre></html>')
+            '32000\r\n\r\n<html><pre>**********</pre></html>'
+        )
 
         self.udp_req = 128 * 'x'
         self.udp_response = 256 * 'x'
 
     def _create_global_info(self, server_side=False, ipv6=False):
-
         glob_info = ASTFGlobalInfo()
         glob_info.tcp.rxbufsize = self.gi_tcp_rxbufsize
         glob_info.tcp.txbufsize = self.gi_tcp_txbufsize
@@ -177,7 +178,6 @@ class TRex_Astf_Profile_Generator():
         return glob_info
 
     def _create_profile(self, prog_c, prog_s, c_glob_info, s_glob_info, ipv6=False):
-
         if ipv6:
             ip_gen_c = ASTFIPGenDist(ip_range=[self.client_ipv6_from, self.client_ipv6_to], distribution=self.client_ipv6_op)
             ip_gen_s = ASTFIPGenDist(ip_range=[self.server_ipv6_from, self.server_ipv6_to], distribution=self.server_ipv6_op)
@@ -191,11 +191,14 @@ class TRex_Astf_Profile_Generator():
         temp_s = ASTFTCPServerTemplate(program=prog_s, assoc=ASTFAssociationRule(port=self.server_port))
         template = ASTFTemplate(client_template=temp_c, server_template=temp_s)
 
-        return ASTFProfile(default_ip_gen=ip_gen, templates=template,
-                           default_c_glob_info=c_glob_info, default_s_glob_info=s_glob_info)
+        return ASTFProfile(
+            default_ip_gen=ip_gen,
+            templates=template,
+            default_c_glob_info=c_glob_info,
+            default_s_glob_info=s_glob_info
+        )
 
     def _profile(self, prog_c, prog_s, ipv6=False):
-
         if ipv6:
             c_glob_info = self._create_global_info(ipv6=True)
             s_glob_info = self._create_global_info(server_side=True, ipv6=True)
@@ -225,7 +228,7 @@ class TRex_Astf_Profile_Generator():
 
             close()
             FIN+ACK-------------------->
-                                 close()
+            .                    close()
             <--------------------FIN+ACK
             ACK------------------------>
 

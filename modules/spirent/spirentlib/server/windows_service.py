@@ -34,7 +34,7 @@ class SpirentCtrlService(win32serviceutil.ServiceFramework):
         logging.basicConfig(level=logging.WARNING,
                             filename='C:\\SpirentServerCtrl\\logs\\{}'.format(self.filename),
                             filemode='w')
-    
+
         self.Server = spirent_ctrl.ServerController()
         self.Server.run_server()
 

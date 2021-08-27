@@ -1,6 +1,6 @@
 """
-    Author(s): Jan Kucera <jan.kucera@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.cz>
-    Copyright: (C) 2019 CESNET, z.s.p.o.
+Author(s): Jan Kucera <jan.kucera@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.cz>
+Copyright: (C) 2019 CESNET, z.s.p.o.
 """
 
 from .stcapi.StcPythonREST import StcPythonREST

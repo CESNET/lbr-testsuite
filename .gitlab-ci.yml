@@ -12,6 +12,12 @@ docker:
     tags: [docker-shell]
     script: [docker build -t $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG .]
 
+editorconfig:
+    stage: check
+    needs: []
+    image: mstruebing/editorconfig-checker
+    script: [ec]
+
 pycodestyle:
     stage: check
     needs: [docker]
@@ -43,11 +49,11 @@ upload:
     stage: upload
     script:
         - |
-          { CODE=0; TWINE_PASSWORD=${LRB_PYPI_PASSWORD} TWINE_USERNAME=${LRB_PYPI_USERNAME} python3.6 -m twine upload --verbose --repository-url ${LBR_PYPI_REPOSITORY_URL} dist/* | tee output.txt || CODE=$?; }
+            { CODE=0; TWINE_PASSWORD=${LRB_PYPI_PASSWORD} TWINE_USERNAME=${LRB_PYPI_USERNAME} python3.6 -m twine upload --verbose --repository-url ${LBR_PYPI_REPOSITORY_URL} dist/* | tee output.txt || CODE=$?; }
         - if [[ $CODE -ne 0 ]]; then
         -    ERR_MSG=`cat output.txt | tail -n -1`
         -    |
-             FILE_EXISTS='{"message":"Validation failed: File name has already been taken"}'
+            FILE_EXISTS='{"message":"Validation failed: File name has already been taken"}'
         -    if [[ "$ERR_MSG" != "$FILE_EXISTS" ]]; then
         -        exit 1
         -    fi

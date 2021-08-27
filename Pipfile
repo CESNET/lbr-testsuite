@@ -9,17 +9,19 @@ verify_ssl = false
 name = "liberouter-pypi"
 
 [packages]
-pytest = ">=6.1"
 pyroute2 = "<1.,>=0.6.2"
-pytest-flake8 = "*"
-flake8 = "~=3.7.0"
-sphinx-rtd-theme = "*"
 lbr-trex-client = "*"
 stcrestclient = "*"
-twine = "*"
-Sphinx = "*"
 
 [dev-packages]
+twine = "*"
+Sphinx = "*"
+sphinx-rtd-theme = "*"
+pytest = ">=6.1"
+pytest-flake8 = "*"
+flake8 = "~=3.7.0"
+pytest-cases = "~=3.2.0"
+pytest-instafail = "*"
 
 [requires]
 python_version = "3.6"
