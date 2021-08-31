@@ -1130,7 +1130,7 @@ def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, prio
     """
 
     kwargs = {
-        'family': priority,
+        'family': family,
         'priority': priority,
     }
     if iif_name is not None:
