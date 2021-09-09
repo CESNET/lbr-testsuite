@@ -44,12 +44,30 @@ class Executable:
         # process KeyboardInterrupt properly and kill the subprocess afterwards.
     }
 
+    """Failure verbosity levels controls how will an executable acts on
+    a failure:
+    - normal: fails in a normal way. An error is printed and
+    an exception is raised when an executable fails.
+    - no-error: does not produce an error (error messages are printed
+    only as a debug), rest is as same as on 'normal' level.
+    - no-exception: does not raise an exception on executable failure,
+    rest is as same as on 'no-error' level.
+    - silent: a failure does not provide any output nor raises
+    an exception.
+    """
+    FAILURE_VERBOSITY_LEVELS = (
+        'normal',
+        'no-error',
+        'no-exception',
+        'silent'
+    )
+
     def __init__(
         self,
         command,
         logger=None,
         default_logger_level=None,
-        allow_to_fail=False,
+        failure_verbosity='normal',
         env=None,
     ):
         """
@@ -67,17 +85,16 @@ class Executable:
             Logging value of default logger. Value is logging level as
             defined by logging library. Setting this argument has no
             effect if custom logger is passed via logger argument.
-        allow_to_fail : bool
-            Flag whether the command is allowed to end with an error.
-            When a command is not allowed to fail, an error is printed
-            and an exception is raised. If command is allowed to fail,
-            the error is printed only as a debug message and no
-            exception is raised.
+        failure_verbosity : str
+            Failure verbosity control. See FAILURE_VERBOSITY_LEVELS
+            description.
         env : dict()
             Mapping that defines the environment variables for the new
             process. For more information, see official documentation
             of subprocess module.
         """
+
+        assert failure_verbosity in self.FAILURE_VERBOSITY_LEVELS
 
         self._process = None
         self._options = self.DEFAULT_OPTIONS.copy()
@@ -99,7 +116,7 @@ class Executable:
             if default_logger_level is not None:
                 self._logger.setLevel(default_logger_level)
 
-        self._allow_to_fail = allow_to_fail
+        self._failure_verbosity = failure_verbosity
         self._options['env'] = env
 
     def _cmd_str(self):
@@ -192,14 +209,21 @@ class Executable:
         an exception is reraised.
         """
 
+        if self._failure_verbosity == 'silent':
+            return
+
         fail_msg = f'Command "{process_error.cmd}" has failed with code {process_error.returncode}.'
 
-        if self._allow_to_fail:
-            self._logger.debug(f'{fail_msg}. This failure is allowed.')
-        else:
+        if self._failure_verbosity == 'normal':
             self._logger.error(fail_msg)
-            self._logger.debug(f'Captured stdout:\n{stdout}')
-            self._logger.debug(f'Captured stderr:\n{stderr}')
+        else:
+            assert self._failure_verbosity == 'no-error' or self._failure_verbosity == 'no-exception'
+            self._logger.debug(fail_msg)
+
+        self._logger.debug(f'Captured stdout:\n{stdout}')
+        self._logger.debug(f'Captured stderr:\n{stderr}')
+
+        if self._failure_verbosity == 'normal' or self._failure_verbosity == 'no-error':
             raise
 
     def append_arguments(self, args):
