@@ -102,7 +102,7 @@ def test_daemon_simple_args_allowed_failure(helper_app):
     """
 
     invalid_option = 'X'
-    cmd = executable.Daemon([helper_app, f'-{invalid_option}'], allow_to_fail=True)
+    cmd = executable.Daemon([helper_app, f'-{invalid_option}'], failure_verbosity='no-exception')
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -110,6 +110,24 @@ def test_daemon_simple_args_allowed_failure(helper_app):
 
     assert stdout == ''
     assert stderr == _invalid_option_err_message(helper_app, invalid_option)
+
+
+def test_daemon_simple_args_expected_failure(helper_app):
+    """Test of command which is expected to fail.
+
+    Parameters
+    ----------
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    """
+
+    invalid_option = 'X'
+    cmd = executable.Daemon([helper_app, f'-{invalid_option}'], failure_verbosity='no-error')
+
+    with pytest.raises(subprocess.CalledProcessError):
+        cmd.start()
+        time.sleep(1)  # wait some time so helper_app can register signal handlers
+        cmd.stop()
 
 
 def test_daemon_is_running(helper_app):
