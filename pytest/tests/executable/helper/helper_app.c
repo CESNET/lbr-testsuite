@@ -27,6 +27,7 @@ void print_help()
 	printf("-s   Die on segfault. Print requested message on stdout ('-o') and/or stderr ('-e') once first.\n");
 	printf("-o msg   Print message 'msg' on stdout (every 'sec' seconds when '-f' is used).\n");
 	printf("-e msg   Print message 'msg' on stderr (every 'sec' seconds when '-f' is used).\n");
+	printf("-r code   Exit with return code 'code'.\n");
 	printf("\n");
 	printf("Examples:\n");
 	printf("\n");
@@ -66,7 +67,7 @@ int main(int argc, char *argv[]) {
 
 	run_forever = 0;
 
-	while ((c = getopt(argc, argv, "hf:so:e:")) != -1) {
+	while ((c = getopt(argc, argv, "hf:so:e:r:")) != -1) {
 		switch (c){
 		case 'h':
 			print_help();
@@ -83,6 +84,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'e':
 			print_stderr = optarg;
+			break;
+		case 'r':
+			ret_code = atoi(optarg); // this will be overriden on unknown argument
 			break;
 		default:
 			ret_code = 1;
