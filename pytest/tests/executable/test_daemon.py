@@ -20,7 +20,6 @@ from .conftest import match_syscalls
 
 
 TESTING_OUTPUT = 'I am testing myself!'
-NONEXISTING_FILE = 'I_expect_to_never_exist'
 
 
 def _invalid_option_err_message(app, invalid_option):
