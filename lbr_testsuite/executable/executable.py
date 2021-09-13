@@ -355,15 +355,21 @@ class Daemon(Executable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._terminated = False
+
+    def _finalize(self):
+        super()._finalize()
+        self._terminated = True
 
     def start(self):
         """Start the command on background.
         """
 
-        if self._process is not None:
+        if self._process is not None and not self._terminated:
             raise RuntimeError('start called on a started process')
 
         self._start()
+        self._terminated = False
 
     def stop(self, timeout=30):
         """Stop previously started command.
@@ -381,7 +387,7 @@ class Daemon(Executable):
             subprocess.communicate() method.
         """
 
-        if self._process is None:
+        if self._process is None or self._terminated:
             return
 
         self._process.terminate()
@@ -396,7 +402,7 @@ class Daemon(Executable):
             True if the process is running, False otherwise.
         """
 
-        if self._process is None:
+        if self._process is None or self._terminated:
             return False
 
         return self._process.poll() is None
