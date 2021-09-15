@@ -59,6 +59,7 @@ int main(int argc, char *argv[]) {
 	char *print_stdout = NULL;
 	char *print_stderr = NULL;
 	int c;
+	int ret_code = 0;
 
 	signal(SIGINT, sig_handler);
 	signal(SIGTERM, sig_handler);
@@ -84,6 +85,7 @@ int main(int argc, char *argv[]) {
 			print_stderr = optarg;
 			break;
 		default:
+			ret_code = 1;
 			break;
 		}
 	}
@@ -97,5 +99,5 @@ int main(int argc, char *argv[]) {
 		sleep(run_forever);
 	} while(run_forever);
 
-	return 0;
+	return ret_code;
 }

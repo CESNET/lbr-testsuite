@@ -148,12 +148,22 @@ def test_tool_simple_args_allowed_failure():
     """Test of command which is allowed to fail.
     """
 
-    cmd = executable.Tool(['ls', NONEXISTING_FILE], allow_to_fail=True)
+    cmd = executable.Tool(['ls', NONEXISTING_FILE], failure_verbosity='no-exception')
 
     stdout, stderr = cmd.run()
 
     assert stdout == ''
     assert stderr == _ls_err_message(NONEXISTING_FILE)
+
+
+def test_tool_simple_args_expected_failure():
+    """Test of command which is expected to fail.
+    """
+
+    cmd = executable.Tool(['ls', NONEXISTING_FILE], failure_verbosity='no-error')
+
+    with pytest.raises(subprocess.CalledProcessError):
+        stdout, stderr = cmd.run()
 
 
 def test_tool_env():
