@@ -36,6 +36,7 @@ setuptools.setup(
     entry_points={
         "pytest11": [
             "lbr_testsuite = lbr_testsuite.pytest.plugin",
+            "lbr_keyboard_interrupt = lbr_testsuite.pytest.keyboard_interrupt.plugin",
         ],
     },
 )
