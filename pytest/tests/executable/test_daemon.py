@@ -20,11 +20,6 @@ from .conftest import match_syscalls
 
 
 TESTING_OUTPUT = 'I am testing myself!'
-NONEXISTING_FILE = 'I_expect_to_never_exist'
-
-
-def _invalid_option_err_message(app, invalid_option):
-    return f"{app}: invalid option -- '{invalid_option}'\n"
 
 
 def test_daemon_simple_args(helper_app):
@@ -101,15 +96,14 @@ def test_daemon_simple_args_allowed_failure(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    invalid_option = 'X'
-    cmd = executable.Daemon([helper_app, f'-{invalid_option}'], failure_verbosity='no-exception')
+    cmd = executable.Daemon([helper_app, '-r', '2', '-e', TESTING_OUTPUT], failure_verbosity='no-exception')
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
     stdout, stderr = cmd.stop()
 
     assert stdout == ''
-    assert stderr == _invalid_option_err_message(helper_app, invalid_option)
+    assert stderr == TESTING_OUTPUT
 
 
 def test_daemon_simple_args_expected_failure(helper_app):
@@ -121,8 +115,7 @@ def test_daemon_simple_args_expected_failure(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    invalid_option = 'X'
-    cmd = executable.Daemon([helper_app, f'-{invalid_option}'], failure_verbosity='no-error')
+    cmd = executable.Daemon([helper_app, '-r', '2'], failure_verbosity='no-error')
 
     with pytest.raises(subprocess.CalledProcessError):
         cmd.start()

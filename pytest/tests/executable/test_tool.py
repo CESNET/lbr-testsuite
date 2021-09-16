@@ -20,11 +20,6 @@ from .conftest import match_syscalls
 
 
 TESTING_OUTPUT = 'I am testing myself!'
-NONEXISTING_FILE = 'I_expect_to_never_exist'
-
-
-def _ls_err_message(file):
-    return f'ls: cannot access {file}: No such file or directory\n'
 
 
 def test_tool_simple():
@@ -131,39 +126,39 @@ def test_tool_simple_arg_append_str():
     assert stderr == ''
 
 
-def test_tool_simple_args_fail():
+def test_tool_simple_args_fail(helper_app):
     """Test of simple command failure.
 
     Raising of subprocess.CalledProcessError exception is expected.
     """
 
     # Prevent logging of messages of any severity (i.e. all messages) from the testing command
-    cmd = executable.Tool(['ls', NONEXISTING_FILE], default_logger_level=logging.CRITICAL + 1)
+    cmd = executable.Tool([helper_app, '-r', '2'], default_logger_level=logging.CRITICAL + 1)
 
     with pytest.raises(subprocess.CalledProcessError):
         cmd.run()
 
 
-def test_tool_simple_args_allowed_failure():
+def test_tool_simple_args_allowed_failure(helper_app):
     """Test of command which is allowed to fail.
     """
 
-    cmd = executable.Tool(['ls', NONEXISTING_FILE], failure_verbosity='no-exception')
+    cmd = executable.Tool([helper_app, '-r', '2', '-e', TESTING_OUTPUT], failure_verbosity='no-exception')
 
     stdout, stderr = cmd.run()
 
     assert stdout == ''
-    assert stderr == _ls_err_message(NONEXISTING_FILE)
+    assert stderr == TESTING_OUTPUT
 
 
-def test_tool_simple_args_expected_failure():
+def test_tool_simple_args_expected_failure(helper_app):
     """Test of command which is expected to fail.
     """
 
-    cmd = executable.Tool(['ls', NONEXISTING_FILE], failure_verbosity='no-error')
+    cmd = executable.Tool([helper_app, '-r', '2'], failure_verbosity='no-error')
 
     with pytest.raises(subprocess.CalledProcessError):
-        stdout, stderr = cmd.run()
+        cmd.run()
 
 
 def test_tool_env():
