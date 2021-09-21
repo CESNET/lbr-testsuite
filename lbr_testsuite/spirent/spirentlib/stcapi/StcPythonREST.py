@@ -23,8 +23,8 @@ class StcPythonREST(StcPython):
     a look at https://github.com/Spirent/py-stcrestclient/tree/master.
     """
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, **kwargs):
         os.environ['STC_REST_API'] = str(1)
         os.environ['STC_SERVER_ADDRESS'] = str(host)
         os.environ['STC_SERVER_PORT'] = str(port)
-        super().__init__()
+        super().__init__(**kwargs)

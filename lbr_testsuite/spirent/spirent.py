@@ -66,7 +66,14 @@ class Spirent():
     _SERVER_PORT[STC_API_OFFICIAL] = 8888
     _SERVER_PORT[STC_API_PROPRIETARY] = 42000
 
-    def __init__(self, server, chassis, port, api_version=STC_API_OFFICIAL):
+    def __init__(
+        self,
+        server,
+        chassis,
+        port,
+        api_version=STC_API_OFFICIAL,
+        api_session_start_timeout=120
+    ):
         """
         Parameters
         ----------
@@ -87,7 +94,7 @@ class Spirent():
         self._spirent_config = None
         self._logger = logging.getLogger(__name__)
         self._server_port = Spirent._SERVER_PORT[api_version]
-        self._stc_handler = StcHandler(api_version)
+        self._stc_handler = StcHandler(api_version, api_session_start_timeout)
         self._port_reserved = False
 
     def set_config_file(self, config_path):
