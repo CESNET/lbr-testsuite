@@ -9,14 +9,14 @@ Spirent REST API wrapper class.
 import os
 
 try:
-    from stcrestclient.stcpythonrest import StcPythonRest as StcPython
+    from stcrestclient.stcpythonrest import StcPythonRest
 except ImportError:
     raise ImportError(
         "Unable to import 'stcrestclient'. Install latest using 'pip install -U stcrestclient'."
     )
 
 
-class StcPythonREST(StcPython):
+class StcPythonREST(StcPythonRest):
     """Spirent REST API wrapper class to simulate the same interface as
     our previous Spirent API classes, e.g. StcPythonTCP, etc. It is based
     on the official Spirent REST API client for python. For details have
