@@ -16,8 +16,9 @@ STC_API_OFFICIAL = 1
 class StcHandler:
     """Basic STC configuration class"""
 
-    def __init__(self, stc_api_version=STC_API_OFFICIAL):
+    def __init__(self, stc_api_version=STC_API_OFFICIAL, stc_api_session_start_timeout=120):
         self._stc_api_version = stc_api_version
+        self._stc_api_session_start_timeout = stc_api_session_start_timeout
         self._stc = None
         self._generator_port_results = None
         self._analyzer_port_results = None
@@ -31,7 +32,7 @@ class StcHandler:
 
     def stc_api_connect(self, host: str, port: int):
         if self._stc_api_version == STC_API_OFFICIAL:
-            self._stc = StcPythonREST(host, port)
+            self._stc = StcPythonREST(host, port, session_start_timeout=self._stc_api_session_start_timeout)
         else:
             self._stc = StcPythonTCP(host, port)
 
