@@ -24,11 +24,18 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.6",
+        "Framework :: Pytest"
     ],
     install_requires=[
         'pyroute2>=0.6.2,<1.',
         'lbr_trex_client',
         'stcrestclient',
+        'pytest'
     ],
     python_requires='>=3.6',
+    entry_points={
+        "pytest11": [
+            "lbr_testsuite = lbr_testsuite.pytest.plugin",
+        ],
+    },
 )
