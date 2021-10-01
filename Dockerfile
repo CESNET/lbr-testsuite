@@ -8,7 +8,8 @@ ENV LANG en_US.UTF-8
 
 COPY Pipfile Pipfile.lock /tmp/
 RUN <<EOF
-yum install -y python3
+yum install -y oracle-epel-release-el8
+yum install -y python3 gcc strace make
 yum clean all
 python3 -m pip install pipenv && cd /tmp && pipenv install --dev --system --deploy
 EOF

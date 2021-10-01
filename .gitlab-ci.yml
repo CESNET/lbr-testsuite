@@ -1,6 +1,7 @@
 stages:
     - prepare
     - check
+    - pytest
     - doc
     - build
     - upload
@@ -27,6 +28,17 @@ pycodestyle:
     artifacts:
         paths: [pycodestyle.*]
         reports: { junit: pycodestyle.xml }
+        when: always
+
+pytest:
+    stage: pytest
+    script:
+        - pip install .
+        - mkdir -p pytest/output
+        - cd pytest && pytest --color=yes --basetemp=output --log-level=debug --junitxml=report.xml $PYTESTS_ARGS | tee report.log
+    artifacts:
+        paths: [pytest/output, pytest/report.*]
+        reports: { junit: pytest/report.xml }
         when: always
 
 doc:
