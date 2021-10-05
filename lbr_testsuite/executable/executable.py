@@ -8,6 +8,7 @@ An executable module providing classes for execution of various tools
 """
 
 import logging
+import os
 import pathlib
 import subprocess
 
@@ -88,10 +89,12 @@ class Executable:
         failure_verbosity : str
             Failure verbosity control. See FAILURE_VERBOSITY_LEVELS
             description.
-        env : dict()
+        env : dict(), deprecated
             Mapping that defines the environment variables for the new
             process. For more information, see official documentation
-            of subprocess module.
+            of subprocess module. This option is deprecated and will
+            be removed in next major version. To set environment
+            variables use *_env methods.
         """
 
         assert failure_verbosity in self.FAILURE_VERBOSITY_LEVELS
@@ -117,7 +120,10 @@ class Executable:
                 self._logger.setLevel(default_logger_level)
 
         self._failure_verbosity = failure_verbosity
-        self._options['env'] = env
+        if env is not None:
+            self._options['env'] = env
+        else:
+            self._options['env'] = os.environ.copy()
 
     def _cmd_str(self):
         """Convert command to string representation.
@@ -128,6 +134,36 @@ class Executable:
         else:
             assert isinstance(self._cmd, list)
             return " ".join(self._cmd)
+
+    def set_env(self, env):
+        """Set an environment.
+
+        Parameters
+        ----------
+        env : dict
+            Mapping that defines the environment variables.
+        """
+
+        self._options['env'] = env
+
+    def set_env_key(self, key, value):
+        """Set new environment variable mapping.
+
+        Parameters
+        ----------
+        key : str
+            Key value of the variable.
+        value : str
+            Value of the varible.
+        """
+
+        self._options['env'][key] = value
+
+    def clear_env(self):
+        """Clear all environment variables mapping.
+        """
+
+        self._options['env'] = {}
 
     def set_strace(self, strace):
         """Set strace for a command.
