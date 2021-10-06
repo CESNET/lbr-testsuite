@@ -12,3 +12,4 @@ https://gitlab.liberouter.org/tmc/testsuite/-/blob/master/README.md
    :hidden:
 
    sources/modules
+   plugins/modules
