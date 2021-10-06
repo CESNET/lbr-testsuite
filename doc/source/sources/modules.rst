@@ -4,6 +4,7 @@ src
 .. toctree::
    :maxdepth: 4
 
+   common
    ipconfigurer
    spirent
    spirentlib
