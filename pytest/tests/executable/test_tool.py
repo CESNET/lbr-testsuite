@@ -169,11 +169,41 @@ def test_tool_env():
     test_var_value = TESTING_OUTPUT
     test_env = dict()
     test_env[test_var] = test_var_value
-    cmd = executable.Tool(f'printf "${test_var}"', env=test_env)
+    cmd = executable.Tool(['printenv', '-0'])
+    cmd.set_env(test_env)
+
+    stdout, stderr = cmd.run()
+
+    expected_output = f'{test_var}={test_var_value}\x00'
+    assert stdout == expected_output
+    assert stderr == ''
+
+
+def test_tool_env_key():
+    """Test of environment variable setup.
+    """
+
+    test_var = 'TEST_TOOL_ENV_VAR'
+    test_var_value = TESTING_OUTPUT
+    cmd = executable.Tool(f'printf "${test_var}"')
+    cmd.set_env_key(test_var, test_var_value)
 
     stdout, stderr = cmd.run()
 
     assert stdout == test_var_value
+    assert stderr == ''
+
+
+def test_tool_env_clear():
+    """Test of environment variable setup.
+    """
+
+    cmd = executable.Tool(['printenv', '-0'])
+    cmd.clear_env()
+
+    stdout, stderr = cmd.run()
+
+    assert stdout == ''
     assert stderr == ''
 
 
