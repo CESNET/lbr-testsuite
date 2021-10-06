@@ -7,7 +7,7 @@ Submodules
 spirent.spirent module
 --------------------------------
 
-.. automodule:: spirent.spirent
+.. automodule:: lbr_testsuite.spirent.spirent
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ spirent.spirent module
 Module contents
 ---------------
 
-.. automodule:: spirent
+.. automodule:: lbr_testsuite.spirent
    :members:
    :undoc-members:
    :show-inheritance:
