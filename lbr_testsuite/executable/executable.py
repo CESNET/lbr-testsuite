@@ -135,6 +135,20 @@ class Executable:
             assert isinstance(self._cmd, list)
             return " ".join(self._cmd)
 
+    def set_failure_verbosity(self, failure_verbosity):
+        """Set failure verbosity. See FAILURE_VERBOSITY_LEVELS
+        description.
+
+        Parameters
+        ----------
+        failure_verbosity : str
+            Failure verbosity value.
+        """
+
+        assert failure_verbosity in self.FAILURE_VERBOSITY_LEVELS
+
+        self._failure_verbosity = failure_verbosity
+
     def set_env(self, env):
         """Set an environment.
 
