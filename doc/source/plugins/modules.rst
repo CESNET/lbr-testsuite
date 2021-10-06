@@ -6,3 +6,4 @@ pytest plugins
 
    lbr_testsuite
    lbr_keyboard_interrupt
+   lbr_renamer
