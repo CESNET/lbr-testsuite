@@ -17,7 +17,6 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parents[2].absolute()))
-sys.path.append(str(Path(__file__).parents[2].absolute() / 'lbr_testsuite'))
 
 # -- Project information -----------------------------------------------------
 

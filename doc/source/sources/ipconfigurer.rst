@@ -7,7 +7,7 @@ Submodules
 ipconfigurer.ipconfigurer module
 --------------------------------
 
-.. automodule:: ipconfigurer.ipconfigurer
+.. automodule:: lbr_testsuite.ipconfigurer.ipconfigurer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ ipconfigurer.ipconfigurer module
 Module contents
 ---------------
 
-.. automodule:: ipconfigurer
+.. automodule:: lbr_testsuite.ipconfigurer
    :members:
    :undoc-members:
    :show-inheritance:

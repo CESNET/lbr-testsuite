@@ -5,6 +5,7 @@ from .trex_tools import trex_stl_stream_generator
 from .trex_tools import trex_astf_profile_generator
 from .spirent import spirent
 from .spirent.spirentlib import spirentlib
+from .common import common
 
 __all__ = [
     'ipconfigurer',
@@ -13,5 +14,6 @@ __all__ = [
     'trex_stl_stream_generator',
     'trex_astf_profile_generator',
     'spirent',
-    'spirentlib'
+    'spirentlib',
+    'common',
 ]
