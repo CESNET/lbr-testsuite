@@ -135,6 +135,20 @@ class Executable:
             assert isinstance(self._cmd, list)
             return " ".join(self._cmd)
 
+    def set_failure_verbosity(self, failure_verbosity):
+        """Set failure verbosity. See FAILURE_VERBOSITY_LEVELS
+        description.
+
+        Parameters
+        ----------
+        failure_verbosity : str
+            Failure verbosity value.
+        """
+
+        assert failure_verbosity in self.FAILURE_VERBOSITY_LEVELS
+
+        self._failure_verbosity = failure_verbosity
+
     def set_env(self, env):
         """Set an environment.
 
@@ -355,15 +369,21 @@ class Daemon(Executable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._terminated = False
+
+    def _finalize(self):
+        super()._finalize()
+        self._terminated = True
 
     def start(self):
         """Start the command on background.
         """
 
-        if self._process is not None:
+        if self._process is not None and not self._terminated:
             raise RuntimeError('start called on a started process')
 
         self._start()
+        self._terminated = False
 
     def stop(self, timeout=30):
         """Stop previously started command.
@@ -381,7 +401,7 @@ class Daemon(Executable):
             subprocess.communicate() method.
         """
 
-        if self._process is None:
+        if self._process is None or self._terminated:
             return
 
         self._process.terminate()
@@ -396,7 +416,7 @@ class Daemon(Executable):
             True if the process is running, False otherwise.
         """
 
-        if self._process is None:
+        if self._process is None or self._terminated:
             return False
 
         return self._process.poll() is None
