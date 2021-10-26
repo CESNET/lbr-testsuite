@@ -12,6 +12,14 @@ common.common module
    :undoc-members:
    :show-inheritance:
 
+common.sysctl module
+--------------------
+
+.. automodule:: lbr_testsuite.common.sysctl
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
