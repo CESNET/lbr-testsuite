@@ -72,7 +72,8 @@ class Spirent():
         chassis,
         port,
         api_version=STC_API_OFFICIAL,
-        api_session_start_timeout=120
+        api_session_start_timeout=120,
+        server_port=None
     ):
         """
         Parameters
@@ -86,6 +87,9 @@ class Spirent():
         api_version : int
             spirentlib.STC_API_OFFICIAL for official spirent api or
             spirentlib.STC_API_PROPRIETARY for our proprietary api.
+        server_port : int, optional
+            Server port for connection to the spirent test center. If
+            not set, the default port for given API version is used.
         """
 
         self._server = server
@@ -93,7 +97,10 @@ class Spirent():
         self._port = port
         self._spirent_config = None
         self._logger = logging.getLogger(__name__)
-        self._server_port = Spirent._DEFAULT_SERVER_PORT[api_version]
+        if server_port is None:
+            self._server_port = Spirent._DEFAULT_SERVER_PORT[api_version]
+        else:
+            self._server_port = server_port
         self._stc_handler = StcHandler(api_version, api_session_start_timeout)
         self._port_reserved = False
 
