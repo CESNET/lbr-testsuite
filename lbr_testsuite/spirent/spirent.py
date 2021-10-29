@@ -42,7 +42,7 @@ class Spirent():
 
     Attributes
     ----------
-    _SERVER_PORT : int
+    _DEFAULT_SERVER_PORT : int
         Server port for connection to the spirent test center.
     _stc_handler : StcHandler
         Handler for communication with Spirent Test Center (STC).
@@ -62,9 +62,9 @@ class Spirent():
 
     """Server part of STC API which converts commands from Python API
     to TCL API listens on this port number."""
-    _SERVER_PORT = dict()
-    _SERVER_PORT[STC_API_OFFICIAL] = 8888
-    _SERVER_PORT[STC_API_PROPRIETARY] = 42000
+    _DEFAULT_SERVER_PORT = dict()
+    _DEFAULT_SERVER_PORT[STC_API_OFFICIAL] = 8888
+    _DEFAULT_SERVER_PORT[STC_API_PROPRIETARY] = 42000
 
     def __init__(
         self,
@@ -93,7 +93,7 @@ class Spirent():
         self._port = port
         self._spirent_config = None
         self._logger = logging.getLogger(__name__)
-        self._server_port = Spirent._SERVER_PORT[api_version]
+        self._server_port = Spirent._DEFAULT_SERVER_PORT[api_version]
         self._stc_handler = StcHandler(api_version, api_session_start_timeout)
         self._port_reserved = False
 
