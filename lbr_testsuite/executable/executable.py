@@ -371,6 +371,9 @@ class Daemon(Executable):
         super().__init__(*args, **kwargs)
         self._terminated = False
 
+    def _terminate(self):
+        self._process.terminate()
+
     def _finalize(self):
         super()._finalize()
         self._terminated = True
@@ -404,7 +407,7 @@ class Daemon(Executable):
         if self._process is None or self._terminated:
             return
 
-        self._process.terminate()
+        self._terminate()
         return self._wait_or_kill(timeout)
 
     def is_running(self):
