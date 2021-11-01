@@ -28,6 +28,23 @@ import logging
 global_logger = logging.getLogger(__name__)
 
 
+def pytest_addoption(parser):
+    """Standard pytest hook to handle command line or `pytest.ini` file
+    options. It defines `lbr_keyboard_interrupt` ini option. This option allows
+    user to choose whether he wishes to activate this plugin.
+    """
+
+    parser.addini(
+        'lbr_keyboard_interrupt',
+        type='bool',
+        default=False,
+        help=(
+            'Convenience flag which allows user to explicitly enable/disable activation '
+            'of this plugin.'
+        )
+    )
+
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_keyboard_interrupt(excinfo):
     """Standard pytest hook to handle keyboard interrupts. We only set
@@ -58,6 +75,10 @@ def pytest_sessionstart(session):
     session : pytest.Session
         Pytest session object
     """
+
+    # user didn't choose to use this plugin
+    if not session.config.getini('lbr_keyboard_interrupt'):
+        return
 
     global keyboard_interrupt
     keyboard_interrupt = False
