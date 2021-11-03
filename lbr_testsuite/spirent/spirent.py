@@ -239,6 +239,21 @@ class Spirent():
         # set VLAN ID
         self._stc_handler.stc_attribute(vlan_handler, 'ID', str(vlan_id))
 
+    def delete_stream_blocks_vlan(self, stream_block_names):
+        """Delete VLANs of stream blocks selected by names.
+
+        Parameters
+        ----------
+        stream_block_names : str or list(str)
+            Stream block name or list of stream block names from current
+            STC configuration.
+        """
+
+        stream_blocks = self._stream_blocks_handler(stream_block_names)
+        eth = self._stc_handler.stc_attribute(stream_blocks, 'children-ethernet:EthernetII')
+        vlans = self._stc_handler.stc_attribute(eth, 'children-vlans')
+        self._stc_handler.stc_delete(vlans)
+
     def configure_device_vlan(self, device_names, vlan_id):
         """Set VLAN ID on devices selected by names.
 
@@ -255,6 +270,24 @@ class Spirent():
         devices = self._stc_handler.stc_device(device_names)
         vlan_handler = self._stc_handler.stc_attribute(devices, 'children-VlanIf')
         self._stc_handler.stc_attribute(vlan_handler, 'VlanId', str(vlan_id))
+
+    def delete_device_vlan(self, device_names):
+        """Delete VLANs of devices selected by names.
+
+        Parameters
+        ----------
+        device_names : str or list(str)
+            Device name or list of device names from current STC
+            configuration.
+        """
+
+        device_names = self._object_name_list(device_names)
+        devices = self._stc_handler.stc_device(device_names)
+        vlan = self._stc_handler.stc_attribute(devices, 'children-VlanIf')
+        upper_layer = [self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Sources')[0][0].split()]
+        lower_layer = [self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Targets')[0][0]]
+        self._stc_handler.stc_attribute(upper_layer, 'StackedOnEndpoint-Targets', lower_layer)
+        self._stc_handler.stc_delete(vlan)
 
     def set_port_load(self, port_load_type, port_load_value):
         """Set port load on spirent port.

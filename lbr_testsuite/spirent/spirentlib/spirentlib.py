@@ -367,6 +367,17 @@ class StcHandler:
             # Apply config
             self._stc.apply()
 
+    def stc_delete(self, handles, call_apply=True):
+        if type(handles) == str:
+            handles = handles.split()
+
+        for handle in handles:
+            for subhandle in handle:
+                self._stc.delete(subhandle)
+
+        if call_apply:
+            self._stc.apply()
+
     def stc_attribute_xpath(self, xpaths, values=''):
         # Handle single xpath as a list with 1 member
         if type(xpaths) == str:
