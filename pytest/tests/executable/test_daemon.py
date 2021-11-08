@@ -132,8 +132,9 @@ def test_daemon_is_running(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    outputs_interval = 2
-    test_duration = 3 * outputs_interval
+    outputs_interval = 3
+    outputs_multiplier = 2
+    test_duration = outputs_multiplier * outputs_interval + 2
     cmd = executable.Daemon([helper_app, '-f', str(outputs_interval), '-o', TESTING_OUTPUT])
 
     cmd.start()
@@ -142,7 +143,8 @@ def test_daemon_is_running(helper_app):
     stdout, stderr = cmd.stop()
     assert not cmd.is_running()
 
-    assert stdout == TESTING_OUTPUT * (1 + test_duration // outputs_interval)
+    # TESTING_OUTPUT is printed right away and every outputs_interval second
+    assert stdout == TESTING_OUTPUT * (1 + outputs_multiplier)
     assert stderr == ''
 
 
