@@ -257,7 +257,7 @@ def test_tool_outputs_separated(tmp_files, helper_app):
         assert of.read() == err_testing_output
 
 
-def test_tool_coredump(tmp_files, helper_app):
+def test_tool_coredump(require_root, tmp_files, helper_app):
     """Test that a failed command produces a coredump.
 
     Parameters
@@ -325,7 +325,7 @@ def test_tool_strace_expressions(tmp_files):
     assert match_syscalls(st.get_output_file(), strace_expressions)
 
 
-def test_tool_strace_expressions_coredump(tmp_files, helper_app):
+def test_tool_strace_expressions_coredump(require_root, tmp_files, helper_app):
     """Test that a commad produces a strace with specified system calls
     only together with a coredump.
 
