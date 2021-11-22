@@ -167,7 +167,7 @@ def test_daemon_not_running(helper_app):
     assert stderr == ''
 
 
-def test_daemon_coredump(tmp_files, helper_app):
+def test_daemon_coredump(require_root, tmp_files, helper_app):
     """Test that a failed command produces a coredump.
 
     Parameters
@@ -216,7 +216,7 @@ def test_daemon_strace(tmp_files, helper_app):
     assert pathlib.Path(st.get_output_file()).exists()
 
 
-def test_daemon_strace_expressions_coredump(tmp_files, helper_app):
+def test_daemon_strace_expressions_coredump(require_root, tmp_files, helper_app):
     """Test that a commad produces a strace with specified system calls
     only together with a coredump.
 
