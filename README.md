@@ -2,7 +2,8 @@
 
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
-`common`, `ipconfigurer`, `spirent`, `spirentlib` modules and `TRex` tools.
+`common`, `ipconfigurer`, `executable`, `spirent`, `spirentlib` modules and
+`TRex` tools.
 
 ## Hosting and contribution
 
@@ -61,6 +62,14 @@ For `ipconfigurer`:
 from lbr_testsuite import ipconfigurer
 ```
 Ipconfigurer provides API for ip configuration using pyroute2 library.
+
+
+For `executable`:
+```
+from lbr_testsuite import executable
+```
+Executable module provides Tool and Daemon convenient classes for execution of
+various commands.
 
 
 For `spirent` and `spirentlib`:
