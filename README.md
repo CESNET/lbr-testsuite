@@ -51,15 +51,15 @@ python3.6 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.l
 
 For `ipconfigurer`:
 ```
-import lbr_testsuite.ipconfigurer as ipconf
+from lbr_testsuite import ipconfigurer
 ```
 Ipconfigurer provides API for ip configuration using pyroute2 library.
 
 
 For `spirent` and `spirentlib`:
 ```
-import lbr_testsuite.spirent as spirent
-import lbr_testsuite.spirent.spirentlib as spirentlib
+from lbr_testsuite import spirent
+from lbr_testsuite.spirent import spirentlib
 ```
 Provides API for Spirent Test Center (STC).
 
