@@ -89,3 +89,8 @@ from lbr_testsuite.trex_tools.trex_astf_profile_generator import TRex_Astf_Profi
 ```
 These tools provide some useful methods to work with TRex. They are
 built on top of official API and make certain things much easier.
+
+
+## Repository Maintainer
+
+- Pavel Krobot, Pavel.Krobot@cesnet.cz
