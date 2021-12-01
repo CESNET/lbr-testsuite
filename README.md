@@ -21,7 +21,7 @@ the Package Registry. Version of the package is controlled using git tags.
 Package names are composed from current version and hash of last commit.
 
 
-## Installation and dependency on lbr_trex_client package
+## Installation
 
 You can click on some specific version of package from [list](https://gitlab.liberouter.org/tmc/pypi-liberouter/-/packages)
 and GitLab will show you details of that package. This also
@@ -38,29 +38,13 @@ to access Package Registry. This project uses **deploy token**, but
 you can also use [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with
 scope set to `api`.
 
-Last thing to consider is `lbr_testsuite`'s dependency on `lbr_trex_client` package.
-This package can be installed manually by this command:
 
-```
-python3.6 -m pip install lbr-trex-client --extra-index-url https://trex_client_deploy_token:vyd-dNs7ZnqpUfkm4o-v@gitlab.liberouter.org/api/v4/projects/79/packages/pypi/simple
-*or*
-python3.6 -m pip install lbr-trex-client --extra-index-url http://cisticka-devel.liberouter.org/piproxy/testing/trex-client/simple --trusted-host cisticka-devel.liberouter.org
-```
-
-Then you can use this command for installation of `lbr_testsuite`:
+For installation of `lbr_testsuite` you can use one of these commands:
 
 ```
 python3.6 -m pip install lbr-testsuite --extra-index-url https://gitlab+deploy-token-13:dPyQaA7ypwhNLxSttz2r@gitlab.liberouter.org/api/v4/projects/95/packages/pypi/simple
 *or*
 python3.6 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.liberouter.org/piproxy/tmc/pypi-liberouter/simple --trusted-host cisticka-devel.liberouter.org
-```
-
-It is also possible to install **both** `lbr_testsuite` and `lbr_trex_client` in a **single command**:
-
-```
-python3.6 -m pip install lbr-testsuite --extra-index-url https://gitlab+deploy-token-13:dPyQaA7ypwhNLxSttz2r@gitlab.liberouter.org/api/v4/projects/95/packages/pypi/simple --extra-index-url https://trex_client_deploy_token:vyd-dNs7ZnqpUfkm4o-v@gitlab.liberouter.org/api/v4/projects/79/packages/pypi/simple --trusted-host cisticka-devel.liberouter.org
-*or*
-python3.6 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.liberouter.org/piproxy/tmc/testsuite/simple --extra-index-url http://cisticka-devel.liberouter.org/piproxy/testing/trex-client/simple --trusted-host cisticka-devel.liberouter.org
 ```
 
 ## Usage
