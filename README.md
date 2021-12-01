@@ -2,7 +2,7 @@
 
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
-`ipconfigurer`, `spirent`, `spirentlib` modules and `TRex` tools.
+`common`, `ipconfigurer`, `spirent`, `spirentlib` modules and `TRex` tools.
 
 ## Hosting and contribution
 
@@ -48,6 +48,13 @@ python3.6 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.l
 ```
 
 ## Usage
+
+For `common`:
+```
+import lbr_testsuite
+```
+All stuff from common module are available directly under the lbr_testsuite
+package.
 
 For `ipconfigurer`:
 ```
