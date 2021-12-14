@@ -40,15 +40,11 @@ def wait_until_condition(condition, timeout=1.0, sleep_step=1):
         now = time.monotonic()
 
 
-dcpro_tmp_dir_global = None
+def compose_output_path(pyt_request, target, suffix='', dir=''):
+    """Compose output path for a file or a directory.
 
-
-def compose_output_path(pyt_request, target, suffix=''):
-    """Compose output path in tests temporary directory for a file or
-    a directory.
-
-    A path is composed from the tests tmp directory, a target name (or
-    path) a test case name and a suffix.
+    A path is composed from an optional directory, a target name (or
+    path) a test case name and an optional suffix.
 
     Parameters
     ----------
@@ -58,6 +54,8 @@ def compose_output_path(pyt_request, target, suffix=''):
         Name of target file or directory.
     suffix : str, optional
         Suffix of the file. Default is empty string (i.e. no suffix).
+    dir : str, optional
+        Path to the directory.
 
     Returns
     -------
@@ -65,15 +63,11 @@ def compose_output_path(pyt_request, target, suffix=''):
         Composed path to the object (file or directory).
     """
 
-    global dcpro_tmp_dir_global
-    if not dcpro_tmp_dir_global:
-        raise Exception('Temporary directory is not set.')
-
     valid_file_name = pyt_request.node.name.replace('/', '-')
     suffix = f'__{valid_file_name}{suffix}'
 
     target_path = f'{target}{suffix}'
-    return Path(dcpro_tmp_dir_global) / target_path
+    return Path(dir) / target_path
 
 
 def local_tests(items, config, testdir):
