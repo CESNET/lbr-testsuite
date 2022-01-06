@@ -5,6 +5,7 @@ src
    :maxdepth: 4
 
    common
+   executable
    ipconfigurer
    spirent
    spirentlib

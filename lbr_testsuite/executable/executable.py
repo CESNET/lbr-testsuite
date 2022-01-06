@@ -184,7 +184,7 @@ class Executable:
 
         Parameters
         ----------
-        strace : Strace()
+        strace : :class:`Strace`
             Configured instance of Strace class.
         """
 
@@ -195,7 +195,7 @@ class Executable:
 
         Parameters
         ----------
-        coredump : Coredump()
+        coredump : :class:`Coredump`
             Configured instance of Coredump class.
         """
 
