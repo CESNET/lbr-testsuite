@@ -79,9 +79,11 @@ class TRex_Stl_Stream_Generator():
         Packet size without Ethernet's FCS, as FCS processing is
         offloaded to HW.
         This means that actual sent/received packets are 4B bigger.
-            | **Warning**: It seems like some packet sizes (even without
-            | padding) can cause overwriting of packet fields, resulting
-            | in failed tests.
+
+        .. warning::
+            It seems like some packet sizes (even without
+            padding) can cause overwriting of packet fields, resulting
+            in failed tests.
     src_ipv4_from : str, optional
         IPv4 source address - beginning of range.
     src_ipv4_to : str, optional
@@ -135,10 +137,12 @@ class TRex_Stl_Stream_Generator():
         TCP flags. Example: ``'SA'`` for SYN+ACK.
 
     stream_mode : str, optional
-        | Packet stream mode: ``STLTXCont`` - Continuous packet generation until stopped.
-        |                     ``STLTXSingleBurst`` - Only single stream burst, *total_pkts* must be set.
-        | More information can be found `here
-        <https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/profile_code.html#stlstream-modes>`_.
+        | Packet stream mode:
+        | ``STLTXCont`` - Continuous packet generation until stopped.
+        | ``STLTXSingleBurst`` - Only single stream burst, *total_pkts* must be set.
+
+        More information can be found at this
+        `link <https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/profile_code.html#stlstream-modes>`_.
     stream_pps : Union[int, str], optional
         Generate N packets per second. Example: 80000 or '80kpps'
         (see :meth:`~trex_tools.trex_instances.TRex_Instances.u2i`).
