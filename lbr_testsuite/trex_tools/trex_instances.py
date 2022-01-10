@@ -301,7 +301,7 @@ class TRex_Instances():
             Examples: ``"2", "10kpps", "300mbps", "100%", 20.666gbps"``.
             Default value is "1", meaning default speed defined by stream.
         kwargs: dict, optional
-            Additional arguments passed to official `start()
+            Additional arguments passed to official `STLClient.start
             <https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/client_code.html#trex.stl.trex_stl_client.STLClient.start>`_
             method.
         """
@@ -355,7 +355,7 @@ class TRex_Instances():
             Multiply total CPS (Connections per second) of ASTFProfile
             by this value.
         kwargs: dict, optional
-            Additional arguments passed to official `start()
+            Additional arguments passed to official `ASTFClient.start
             <https://trex-tgn.cisco.com/trex/doc/cp_astf_docs/api/client_code.html#trex.astf.trex_astf_client.ASTFClient.start>`_
             method.
         """

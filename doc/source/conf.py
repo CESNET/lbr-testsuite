@@ -16,7 +16,7 @@
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parents[2].absolute()))
+sys.path.insert(0, str(Path(__file__).parents[2].absolute()))
 
 # -- Project information -----------------------------------------------------
 

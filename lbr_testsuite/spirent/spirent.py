@@ -44,7 +44,7 @@ class Spirent():
     ----------
     _DEFAULT_SERVER_PORT : int
         Server port for connection to the spirent test center.
-    _stc_handler : StcHandler
+    _stc_handler : :class:`StcHandler`
         Handler for communication with Spirent Test Center (STC).
     _spirent_config : str
         Path to STC configuration.
