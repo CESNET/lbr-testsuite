@@ -29,6 +29,24 @@ class Coredump:
         File where to write core dump output.
     """
 
+    CORE_SIGNALS = [
+        signal.SIGABRT,
+        signal.SIGBUS,
+        signal.SIGFPE,
+        signal.SIGILL,
+        signal.SIGIOT,
+        signal.SIGQUIT,
+        signal.SIGSEGV,
+        signal.SIGSYS,
+        signal.SIGTRAP,
+        signal.SIGXCPU,
+        signal.SIGXFSZ,
+    ]
+    """CORE_SIGNALS : list[int]
+        All the signals, which according to man pages, i.e. signal(7), have
+        CORE as the default action. They can potentially produce a core dump.
+    """
+
     def __init__(self, inherit=False):
         """
         Helper to start core dumps configuration.
@@ -104,7 +122,7 @@ class Coredump:
             Popen object of the child process terminated.
         """
 
-        if process.returncode != -signal.SIGSEGV:
+        if -process.returncode not in self.CORE_SIGNALS:
             return
 
         if not self._output_file:
