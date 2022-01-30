@@ -300,6 +300,7 @@ class Executable:
     def _finalize(self):
         self._close_output_files()
         if self._process is not None:
+            self._process.wait()
             if self._post_exec_fn is not None:
                 self._post_exec_fn(self._process)
 
