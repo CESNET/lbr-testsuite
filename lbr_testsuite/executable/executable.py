@@ -299,14 +299,17 @@ class Executable:
 
     def _finalize(self):
         self._close_output_files()
-        if self._post_exec_fn is not None:
-            self._post_exec_fn(self._process)
+        if self._process is not None:
+            self._process.wait()
+            if self._post_exec_fn is not None:
+                self._post_exec_fn(self._process)
 
     def _start(self):
         try:
             self._process = subprocess.Popen(self._cmd, **self._options)
-        finally:
+        except Exception:
             self._finalize()
+            raise
 
     def _wait_or_kill(self, timeout):
         try:
