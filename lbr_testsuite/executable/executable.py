@@ -307,8 +307,9 @@ class Executable:
     def _start(self):
         try:
             self._process = subprocess.Popen(self._cmd, **self._options)
-        finally:
+        except Exception:
             self._finalize()
+            raise
 
     def _wait_or_kill(self, timeout):
         try:
