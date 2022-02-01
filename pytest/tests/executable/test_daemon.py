@@ -169,6 +169,60 @@ def test_daemon_not_running(helper_app):
     assert stderr == ''
 
 
+def test_daemon_outputs_mixed(tmp_files, helper_app):
+    """Test of outputs setting - stdout and stderr are mixed to a single
+    file.
+
+    Parameters
+    ----------
+    tmp_files : dict(Path)
+        Paths to temporary output paths.
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    """
+
+    cmd = executable.Daemon(f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{TESTING_OUTPUT}"')
+    cmd.set_outputs(str(tmp_files['stdout']))
+
+    cmd.start()
+    time.sleep(1)  # wait some time so helper_app can register signal handlers
+    stdout, stderr = cmd.stop()
+
+    assert stdout is None and stderr is None
+    assert tmp_files['stdout'].exists()
+    with open(tmp_files['stdout'], 'r') as of:
+        assert of.read() == f'{TESTING_OUTPUT}{TESTING_OUTPUT}'
+
+
+def test_daemon_outputs_separated(tmp_files, helper_app):
+    """Test of outputs setting - stdout and stderr are separated to
+    different files.
+
+    Parameters
+    ----------
+    tmp_files : dict(Path)
+        Paths to temporary output paths.
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    """
+
+    err_testing_output = f'err: {TESTING_OUTPUT}'
+    cmd = executable.Daemon(f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{err_testing_output}"')
+    cmd.set_outputs(stdout=str(tmp_files['stdout']), stderr=str(tmp_files['stderr']))
+
+    cmd.start()
+    time.sleep(1)  # wait some time so helper_app can register signal handlers
+    stdout, stderr = cmd.stop()
+
+    assert stdout is None and stderr is None
+    assert tmp_files['stdout'].exists()
+    assert tmp_files['stderr'].exists()
+    with open(tmp_files['stdout'], 'r') as of:
+        assert of.read() == TESTING_OUTPUT
+    with open(tmp_files['stderr'], 'r') as of:
+        assert of.read() == err_testing_output
+
+
 def test_daemon_coredump(require_root, tmp_files, helper_app):
     """Test that a failed command produces a coredump.
 
