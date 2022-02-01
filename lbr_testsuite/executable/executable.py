@@ -299,8 +299,9 @@ class Executable:
 
     def _finalize(self):
         self._close_output_files()
-        if self._post_exec_fn is not None:
-            self._post_exec_fn(self._process)
+        if self._process is not None:
+            if self._post_exec_fn is not None:
+                self._post_exec_fn(self._process)
 
     def _start(self):
         try:
