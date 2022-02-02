@@ -15,7 +15,7 @@ stcrestclient = "*"
 
 [dev-packages]
 twine = "*"
-Sphinx = "*"
+Sphinx = ">=4.4.0"
 sphinx-rtd-theme = "*"
 pytest = ">=6.1"
 pytest-flake8 = "*"

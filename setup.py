@@ -4,7 +4,8 @@ long_description = "Package includes following modules:\n" \
     "- common | module with useful functions for testing in python\n" \
     "- ipconfigurer | API for ip configuration using pyroute2 library\n" \
     "- spirent, spirentlib | API for Spirent Test Center (STC)\n" \
-    "- TRex tools | tools to simplify basic TRex operations"
+    "- TRex tools | tools to simplify basic TRex operations\n" \
+    "- topology | module with implementation of our pytest topologies."
 
 setuptools.setup(
     name="lbr_testsuite",
@@ -38,6 +39,7 @@ setuptools.setup(
             "lbr_testsuite = lbr_testsuite.pytest.plugin",
             "lbr_keyboard_interrupt = lbr_testsuite.pytest.keyboard_interrupt.plugin",
             "lbr_renamer = lbr_testsuite.pytest.renamer.plugin",
+            "lbr_topology = lbr_testsuite.pytest.topology.plugin",
         ],
     },
 )
