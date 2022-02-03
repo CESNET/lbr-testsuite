@@ -11,8 +11,8 @@ setuptools.setup(
     name="lbr_testsuite",
     version_config={
         "template": "{tag}",
-        "dev_template": "{tag}.post{ccount}+git.{sha}",
-        "dirty_template": "{tag}.post{ccount}+git.{sha}.dirty",
+        "dev_template": "{tag}.dev{ccount}+git.{sha}",
+        "dirty_template": "{tag}.dev{ccount}+git.{sha}.dirty",
         "starting_version": "1.0.0",
     },
     setup_requires=['setuptools-git-versioning'],
