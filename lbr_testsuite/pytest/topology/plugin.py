@@ -19,6 +19,7 @@ from ...topology import registration
 from . import _options
 from ._wired_loopback import topology_wired_loopback  # noqa
 from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
+from ._spirent import topology_wired_spirent  # noqa
 
 
 def pytest_addoption(parser):

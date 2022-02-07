@@ -32,6 +32,8 @@ import time
 
 from .spirentlib.spirentlib import StcHandler, STC_API_PROPRIETARY, STC_API_OFFICIAL
 
+from ..topology.generator import Generator
+
 
 STC_API_PROPRIETARY = STC_API_PROPRIETARY
 STC_API_OFFICIAL = STC_API_OFFICIAL
@@ -551,3 +553,40 @@ class Spirent():
             </frame>
         '''
         self._stc_handler.stc_analyzer_filter([MAC_ADDRESS_FILTER])
+
+
+class SpirentGenerator(Generator, Spirent):
+
+    def configure_stream_blocks_vlan(self, stream_block_names, vlan_id):
+        """Configure VLAN for stream blocks selected by names.
+
+        Parameters
+        ----------
+        stream_block_names : str or list(str)
+            Stream block name or list of stream block names from current
+            STC configuration.
+        vlan_id : int or str or None
+            VLAN ID to set (value is converted to str) or None to remove VLAN.
+        """
+
+        if vlan_id:
+            super().configure_stream_blocks_vlan(stream_block_names, vlan_id)
+        else:
+            super().delete_stream_blocks_vlan(stream_block_names)
+
+    def configure_device_vlan(self, device_names, vlan_id):
+        """Configure VLAN on devices selected by names.
+
+        Parameters
+        ----------
+        device_names : str or list(str)
+            Device name or list of device names from current STC
+            configuration.
+        vlan_id : int or str or None
+            VLAN ID to set (value is converted to str) or None to remove VLAN.
+        """
+
+        if vlan_id:
+            super().configure_device_vlan(device_names, vlan_id)
+        else:
+            super().delete_device_vlan(device_names)
