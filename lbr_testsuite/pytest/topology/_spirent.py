@@ -14,7 +14,7 @@ import pytest_cases
 from ...topology.device import PciDevice
 from ...topology.topology import Topology
 from ...topology import registration
-from ...spirent.spirent import SpirentGenerator, STC_API_OFFICIAL, STC_API_PROPRIETARY
+from ...spirent.spirent import Spirent, STC_API_OFFICIAL, STC_API_PROPRIETARY
 
 from . import _options
 
@@ -120,7 +120,7 @@ def topology_wired_spirent(request, option_wired_spirent):
     spirent_chassis = request.config.getoption('spirent_chassis')
     spirent_api_version = SPIRENT_API_VERSION_CONV[request.config.getoption('spirent_api_version')]
     spirent_stc_server_port = request.config.getoption('spirent_stc_server_port')
-    generator = SpirentGenerator(
+    generator = Spirent(
             spirent_server,
             spirent_chassis,
             spirent_chassis_port,

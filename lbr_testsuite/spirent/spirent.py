@@ -39,7 +39,7 @@ STC_API_PROPRIETARY = STC_API_PROPRIETARY
 STC_API_OFFICIAL = STC_API_OFFICIAL
 
 
-class Spirent():
+class Spirent(Generator):
     """Base spirent test class extending BaseTest class.
 
     Attributes
@@ -221,7 +221,7 @@ class Spirent():
         stream_blocks = self._stream_blocks_handler(stream_block_names)
         self._stc_handler.stc_attribute(stream_blocks, 'Active', 'TRUE')
 
-    def configure_stream_blocks_vlan(self, stream_block_names, vlan_id):
+    def set_stream_blocks_vlan(self, stream_block_names, vlan_id):
         """Set VLAN ID for stream blocks selected by names.
 
         Parameters
@@ -256,7 +256,7 @@ class Spirent():
         vlans = self._stc_handler.stc_attribute(eth, 'children-vlans')
         self._stc_handler.stc_delete(vlans)
 
-    def configure_device_vlan(self, device_names, vlan_id):
+    def set_device_vlan(self, device_names, vlan_id):
         """Set VLAN ID on devices selected by names.
 
         Parameters
@@ -290,6 +290,40 @@ class Spirent():
         lower_layer = [self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Targets')[0][0]]
         self._stc_handler.stc_attribute(upper_layer, 'StackedOnEndpoint-Targets', lower_layer)
         self._stc_handler.stc_delete(vlan)
+
+    def configure_stream_blocks_vlan(self, stream_block_names, vlan_id):
+        """Configure VLAN for stream blocks selected by names.
+
+        Parameters
+        ----------
+        stream_block_names : str or list(str)
+            Stream block name or list of stream block names from current
+            STC configuration.
+        vlan_id : int or str or None
+            VLAN ID to set (value is converted to str) or None to remove VLAN.
+        """
+
+        if vlan_id:
+            self.set_stream_blocks_vlan(stream_block_names, vlan_id)
+        else:
+            self.delete_stream_blocks_vlan(stream_block_names)
+
+    def configure_device_vlan(self, device_names, vlan_id):
+        """Configure VLAN on devices selected by names.
+
+        Parameters
+        ----------
+        device_names : str or list(str)
+            Device name or list of device names from current STC
+            configuration.
+        vlan_id : int or str or None
+            VLAN ID to set (value is converted to str) or None to remove VLAN.
+        """
+
+        if vlan_id:
+            self.set_device_vlan(device_names, vlan_id)
+        else:
+            self.delete_device_vlan(device_names)
 
     def set_port_load(self, port_load_type, port_load_value):
         """Set port load on spirent port.
@@ -553,40 +587,3 @@ class Spirent():
             </frame>
         '''
         self._stc_handler.stc_analyzer_filter([MAC_ADDRESS_FILTER])
-
-
-class SpirentGenerator(Generator, Spirent):
-
-    def configure_stream_blocks_vlan(self, stream_block_names, vlan_id):
-        """Configure VLAN for stream blocks selected by names.
-
-        Parameters
-        ----------
-        stream_block_names : str or list(str)
-            Stream block name or list of stream block names from current
-            STC configuration.
-        vlan_id : int or str or None
-            VLAN ID to set (value is converted to str) or None to remove VLAN.
-        """
-
-        if vlan_id:
-            super().configure_stream_blocks_vlan(stream_block_names, vlan_id)
-        else:
-            super().delete_stream_blocks_vlan(stream_block_names)
-
-    def configure_device_vlan(self, device_names, vlan_id):
-        """Configure VLAN on devices selected by names.
-
-        Parameters
-        ----------
-        device_names : str or list(str)
-            Device name or list of device names from current STC
-            configuration.
-        vlan_id : int or str or None
-            VLAN ID to set (value is converted to str) or None to remove VLAN.
-        """
-
-        if vlan_id:
-            super().configure_device_vlan(device_names, vlan_id)
-        else:
-            super().delete_device_vlan(device_names)

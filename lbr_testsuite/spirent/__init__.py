@@ -4,12 +4,11 @@ from .spirentlib.spirentlib import (
     StcHandler,
 )
 
-from .spirent import Spirent, SpirentGenerator
+from .spirent import Spirent
 
 __all__ = [
     'STC_API_PROPRIETARY',
     'STC_API_OFFICIAL',
     'StcHandler',
     'Spirent',
-    'SpirentGenerator',
 ]
