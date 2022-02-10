@@ -4,14 +4,15 @@ Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
 Copyright: (C) 2020-2021 CESNET, z.s.p.o.
 
 Demonstration of topology usage. To use test topologies run tests with
-arguments: `--wired-loopback=<ifc>,<pci-address>  --vdevs`. For more
-details on these topology arguments see tests help.
+arguments: `--wired-loopback=<ifc>,<pci-address>`, `--vdevs` and
+`--wired-spirent=<spirent-port>,<pci-address>`. For more details on
+these topology arguments see tests help.
 """
 
 from lbr_testsuite.topology.topology import select_topologies
 
 
-select_topologies(['wired_loopback', 'vdev_loopback'])
+select_topologies(['wired_loopback', 'vdev_loopback', 'wired_spirent'])
 
 def test_topology(device, generator):
     print()
