@@ -32,6 +32,17 @@ class Executable:
         - return code within subprocess.CompletedProcess.returncode is
         tested and in the case of non-zero return code an exception is
         raised.
+    FAILURE_VERBOSITY_LEVELS: tuple()
+        Failure verbosity levels controls how will an executable acts on
+        a failure:
+        - normal: fails in a normal way. An error is printed and
+        an exception is raised when an executable fails.
+        - no-error: does not produce an error (error messages are printed
+        only as a debug), rest is as same as on 'normal' level.
+        - no-exception: does not raise an exception on executable failure,
+        rest is as same as on 'no-error' level.
+        - silent: a failure does not provide any output nor raises
+        an exception.
     """
 
     DEFAULT_OPTIONS = {
@@ -45,17 +56,6 @@ class Executable:
         # process KeyboardInterrupt properly and kill the subprocess afterwards.
     }
 
-    """Failure verbosity levels controls how will an executable acts on
-    a failure:
-    - normal: fails in a normal way. An error is printed and
-    an exception is raised when an executable fails.
-    - no-error: does not produce an error (error messages are printed
-    only as a debug), rest is as same as on 'normal' level.
-    - no-exception: does not raise an exception on executable failure,
-    rest is as same as on 'no-error' level.
-    - silent: a failure does not provide any output nor raises
-    an exception.
-    """
     FAILURE_VERBOSITY_LEVELS = ("normal", "no-error", "no-exception", "silent")
 
     def __init__(

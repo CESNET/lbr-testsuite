@@ -29,7 +29,7 @@ class TRex_Stl_Stream_Generator:
     Only commonly used parameters were selected.
     TRex and Scapy support more customization and class can be extended
     if new requirements appear. Some TRex documentation can be found
-    `here <https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/profile_code.html>`_.
+    `here <https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/profile_code.html>`__.
 
     Example of stream usage::
 

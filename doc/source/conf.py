@@ -13,10 +13,14 @@
 # import os
 # sys.path.insert(0, os.path.abspath('.'))
 
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[2].absolute()))
+
+# Mock certain imports to prevent import errors during documentation build.
+autodoc_mock_imports = ['tkinter']
 
 # -- Project information -----------------------------------------------------
 
@@ -29,6 +33,12 @@ release = '1.0'
 
 
 # -- General configuration ---------------------------------------------------
+
+# Default value is "members,undoc-members, show-inheritance". This line supresses
+# document generation for members causing following warning during build:
+#      "WARNING: duplicate object description of XXX, other instance in YYY,
+#      "use :noindex: for one of them"
+os.environ["SPHINX_APIDOC_OPTIONS"] = "members,show-inheritance"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -47,6 +57,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
+# Note: No effect when using sphinx-apidoc
 exclude_patterns = []
 
 
@@ -70,5 +81,6 @@ html_css_files = [
 
 apidoc_module_dir = str(Path(__file__).parents[2])
 apidoc_output_dir = str(Path(__file__).parents[0] / 'sources')
+apidoc_excluded_paths = ['framework', 'setup.py']
 apidoc_separate_modules = True
 apidoc_module_first = True
