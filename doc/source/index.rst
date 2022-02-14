@@ -8,8 +8,7 @@ https://gitlab.liberouter.org/tmc/testsuite/-/blob/master/README.md
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
    :hidden:
 
-   sources/modules
-   plugins/modules
+   sources/lbr_testsuite
+   sources/pytest_tests

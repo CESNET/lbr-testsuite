@@ -38,6 +38,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.githubpages',
+    'sphinxcontrib.apidoc',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -64,3 +65,10 @@ html_static_path = ['css']
 html_css_files = [
     'one_parameter_per_line.css',
 ]
+
+# -- Configuration for sphinxcontrib-apidoc extension ------------------------
+
+apidoc_module_dir = str(Path(__file__).parents[2])
+apidoc_output_dir = str(Path(__file__).parents[0] / 'sources')
+apidoc_separate_modules = True
+apidoc_module_first = True
