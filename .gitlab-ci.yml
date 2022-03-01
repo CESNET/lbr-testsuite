@@ -10,6 +10,7 @@ image: $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG
 docker:
     stage: prepare
     tags: [docker-shell]
+    variables: { DOCKER_BUILDKIT: 1 }
     script: [docker build -t $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG .]
 
 editorconfig:

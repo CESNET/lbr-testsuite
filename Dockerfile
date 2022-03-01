@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.3-labs
+
 FROM oraclelinux:8
 
 # http://bugs.python.org/issue19846
@@ -5,6 +7,8 @@ FROM oraclelinux:8
 ENV LANG en_US.UTF-8
 
 COPY Pipfile Pipfile.lock /tmp/
-RUN yum install -y python3
-RUN yum clean all
-RUN python3 -m pip install pipenv && cd /tmp && pipenv install --dev --system --deploy
+RUN <<EOF
+yum install -y python3
+yum clean all
+python3 -m pip install pipenv && cd /tmp && pipenv install --dev --system --deploy
+EOF
