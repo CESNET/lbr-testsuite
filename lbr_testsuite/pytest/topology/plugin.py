@@ -17,6 +17,7 @@ from ...topology.device import PciDevice, RingDevice, PcapLiveDevice
 from ...topology.generator import NetdevGenerator
 from ...topology.topology import Topology, select_topologies
 from ...topology.pci_address import PciAddress
+from ...topology import registration
 
 
 def pytest_addoption(parser):
@@ -114,8 +115,12 @@ def pytest_generate_tests(metafunc):
     """
 
     config = metafunc.config
-    _define_pseudofixture(metafunc, "option_wired_loopback", config.getoption('wired_loopback'))
-    _define_pseudofixture(metafunc, "option_vdevs", config.getoption('vdevs'))
+    for topology in registration.registered_topologies().values():
+        _define_pseudofixture(
+            metafunc,
+            topology['pseudofixture'],
+            config.getoption(topology['option_name'])
+        )
 
 
 def pytest_collection_modifyitems(session, config, items):
@@ -125,11 +130,7 @@ def pytest_collection_modifyitems(session, config, items):
     runs that uses undefined pseudofixtures.
     """
 
-    pseudofixtures = [
-        "option_wired_loopback",
-        "option_vdevs",
-    ]
-
+    pseudofixtures = [t['pseudofixture'] for t in registration.registered_topologies().values()]
     filtered = []
 
     # Deselect all the test runs having any pseudofixture not defined
@@ -176,6 +177,9 @@ def topology_wired_loopback(request, option_wired_loopback):
     return Topology(device, generator)
 
 
+registration.topology_register('wired-loopback', 'wired_loopback')
+
+
 @pytest_cases.fixture(scope='session')
 def topology_vdev_loopback(request, require_root, option_vdevs):
     """Fixture creating virtual loopback topology. Internally, it adds
@@ -211,6 +215,9 @@ def topology_vdev_ring(option_vdevs):
 
     device = RingDevice()
     return Topology(device)
+
+
+registration.topology_register('virtual-devices', 'vdevs')
 
 
 # Select the default topology for all the tests
