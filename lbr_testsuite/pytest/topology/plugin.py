@@ -20,30 +20,12 @@ from ...topology.topology import Topology, select_topologies
 from ...topology.pci_address import PciAddress
 from ...topology import registration
 
+from . import _options
+
 
 def pytest_addoption(parser):
-    parser.addoption(
-        '--wired-loopback',
-        action='append',
-        default=[],
-        type=str,
-        help=(
-            'Add wired loopback topology of two ports, the first is a kernel interface '
-            '(its name or its PCI address) the second is PCI address. (Example: '
-            'tge3,0000:01:00.0 or 0000:04:00.0,0000:04:00.1).'
-        )
-    )
-
-    parser.addoption(
-        '--vdevs',
-        action='store_true',
-        default=None,
-        help=(
-            'Enable virtual topologies, e.g., vdev_loopback and vdev_ring. This collects '
-            'also tests that supports these virtual topologies. By default virtual '
-            'topologies are disabled.'
-        )
-    )
+    for args, kwargs in _options.options():
+        parser.addoption(*args, **kwargs)
 
 
 def _define_pseudofixture(metafunc, pseudofixture, options):
@@ -178,6 +160,22 @@ def topology_wired_loopback(request, option_wired_loopback):
     return Topology(device, generator)
 
 
+_options.add_option(
+    (
+        ['--wired-loopback'],
+        dict(
+            action='append',
+            default=[],
+            type=str,
+            help=(
+                'Add wired loopback topology of two ports, the first is a kernel interface '
+                '(its name or its PCI address) the second is PCI address. (Example: '
+                'tge3,0000:01:00.0 or 0000:04:00.0,0000:04:00.1).'
+            )
+        )
+    )
+)
+
 registration.topology_register('wired-loopback', 'wired_loopback')
 
 
@@ -217,6 +215,21 @@ def topology_vdev_ring(option_vdevs):
     device = RingDevice()
     return Topology(device)
 
+
+_options.add_option(
+    (
+        ['--vdevs'],
+        dict(
+            action='store_true',
+            default=None,
+            help=(
+                'Enable virtual topologies, e.g., vdev_loopback and vdev_ring. This collects '
+                'also tests that supports these virtual topologies. By default virtual '
+                'topologies are disabled.'
+            )
+        )
+    )
+)
 
 registration.topology_register('virtual-devices', 'vdevs')
 
