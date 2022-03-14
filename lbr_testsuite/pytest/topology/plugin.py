@@ -1,9 +1,10 @@
 """
-Author(s): Jan Kucera <jan.kucera@cesnet.cz>
+Author(s): Pavel Krobot <pavel.krobot@cesnet.cz>,
+    Jan Kucera <jan.kucera@cesnet.cz>
 
-Copyright: (C) 2020-2021 CESNET
+Copyright: (C) 2022 CESNET
 
-Topology fixtures.
+Topology plugin implementation.
 """
 
 import pytest
@@ -11,38 +12,19 @@ import pytest_cases
 from pathlib import Path
 
 from ...executable import executable
-from ...common.sysctl import sysctl_set, sysctl_set_with_restore
-from ...ipconfigurer import ipconfigurer as ipconf
-from ...topology.device import PciDevice, RingDevice, PcapLiveDevice
-from ...topology.generator import NetdevGenerator
+from ...topology.device import PciDevice
 from ...topology.topology import Topology, select_topologies
-from ...topology.pci_address import PciAddress
 from ...topology import registration
+
+from . import _options
+from ._wired_loopback import topology_wired_loopback  # noqa
+from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
+from ._spirent import topology_wired_spirent  # noqa
 
 
 def pytest_addoption(parser):
-    parser.addoption(
-        '--wired-loopback',
-        action='append',
-        default=[],
-        type=str,
-        help=(
-            'Add wired loopback topology of two ports, the first is a kernel interface '
-            '(its name or its PCI address) the second is PCI address. (Example: '
-            'tge3,0000:01:00.0 or 0000:04:00.0,0000:04:00.1).'
-        )
-    )
-
-    parser.addoption(
-        '--vdevs',
-        action='store_true',
-        default=None,
-        help=(
-            'Enable virtual topologies, e.g., vdev_loopback and vdev_ring. This collects '
-            'also tests that supports these virtual topologies. By default virtual '
-            'topologies are disabled.'
-        )
-    )
+    for args, kwargs in _options.options():
+        parser.addoption(*args, **kwargs)
 
 
 def _define_pseudofixture(metafunc, pseudofixture, options):
@@ -136,88 +118,6 @@ def pytest_collection_modifyitems(session, config, items):
     # Deselect all the test runs having any pseudofixture not defined
     _filter_undefined_pseudofixtures(items, filtered, pseudofixtures)
     config.hook.pytest_deselected(items=filtered)
-
-
-@pytest_cases.fixture(scope='session')
-def topology_wired_loopback(request, option_wired_loopback):
-    """Fixture creating wired loopback topology. Unlike vdev_loopback,
-    it is uses real NIC interfaces to build Device and Generator objects
-    on top of a real NIC.
-
-    Parameters
-    ----------
-    request : FixtureRequest
-        Special pytest fixture
-
-    Returns
-    -------
-    Topology
-        An instance of Topology representing wired loopback
-    """
-
-    # Workaroud for a weird bug in pytest_cases similar to
-    # https://github.com/smarie/python-pytest-cases/issues/37
-    if (option_wired_loopback == pytest_cases.NOT_USED):
-        return  # skip the fixture if its parameter not used
-
-    wlpbk = option_wired_loopback.split(",")
-    if len(wlpbk) < 2:
-        pytest.skip("wired loopback is missing PCI address (see --wired-loopback)")
-
-    if PciAddress.is_valid(wlpbk[0]):
-        root_dir = Path(request.config.getoption('repository_root')).resolve()
-        utility = root_dir / request.config.getoption('dcpro_autobind_exec')
-        executable.Tool([str(utility), '-d', wlpbk[0], '-m', 'kernel']).run()
-
-    device = PciDevice(wlpbk[1])
-    generator = NetdevGenerator(wlpbk[0])
-
-    sysctl_set_with_restore(request, f'net.ipv6.conf.{generator.get_netdev()}.disable_ipv6', '1')
-
-    return Topology(device, generator)
-
-
-registration.topology_register('wired-loopback', 'wired_loopback')
-
-
-@pytest_cases.fixture(scope='session')
-def topology_vdev_loopback(request, require_root, option_vdevs):
-    """Fixture creating virtual loopback topology. Internally, it adds
-    veth network interfaces pair (testing-vdev0p0 and testing-vdev0p1).
-    The first interface is used to build the Device object, the second
-    is used to build the Generator object.
-    """
-
-    vethpeers = ('testing-vdev0p0', 'testing-vdev0p1')
-
-    ipconf.add_link(vethpeers[0], kind='veth', peer=vethpeers[1])
-    request.addfinalizer(lambda: ipconf.delete_link(vethpeers[0]))
-
-    ipconf.ifc_up(vethpeers[0])
-    request.addfinalizer(lambda: ipconf.ifc_down(vethpeers[0]))
-
-    sysctl_set(f'net.ipv6.conf.{vethpeers[0]}.disable_ipv6', '1')
-    sysctl_set(f'net.ipv6.conf.{vethpeers[1]}.disable_ipv6', '1')
-
-    device = PcapLiveDevice(vethpeers[0])
-    generator = NetdevGenerator(vethpeers[1])
-
-    return Topology(device, generator)
-
-
-@pytest_cases.fixture(scope='session')
-def topology_vdev_ring(option_vdevs):
-    """Fixture creating virtual ring topology. Internally, the topology
-    is build only on top of RingDevice object without any traffic
-    generator (Generator object). Packets transmitted on the device are
-    received again.
-    """
-
-    device = RingDevice()
-    return Topology(device)
-
-
-registration.topology_register('virtual-devices', 'vdevs')
 
 
 # Select the default topology for all the tests
