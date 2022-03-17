@@ -39,7 +39,7 @@ def _init():
         )
     ))
 
-    registration.topology_register('wired_loopback')
+    registration.topology_option_register('wired_loopback')
 
 
 @pytest_cases.fixture(scope='session')
