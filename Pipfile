@@ -12,15 +12,15 @@ name = "liberouter-pypi"
 pyroute2 = "<1.,>=0.6.2"
 lbr-trex-client = "*"
 stcrestclient = "*"
+pytest = ">=6.1,<7.0"
+pytest-cases = "~=3.2.0"
 
 [dev-packages]
 twine = "*"
 Sphinx = ">=4.4.0"
 sphinx-rtd-theme = "*"
-pytest = ">=6.1,<7.0"
 pytest-flake8 = "*"
 flake8 = "~=3.7.0"
-pytest-cases = "~=3.2.0"
 pytest-instafail = "*"
 wheel = "*"
 
