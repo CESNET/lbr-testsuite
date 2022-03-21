@@ -26,6 +26,13 @@ def pytest_addoption(parser):
     for args, kwargs in _options.options():
         parser.addoption(*args, **kwargs)
 
+    parser.addini(
+        'default_topology',
+        type='linelist',
+        default=[],
+        help='Set default topology (or topologies).'
+    )
+
 
 def _define_pseudofixture(metafunc, pseudofixture, options):
     """Generate parametrized pseudo-fixture from options passed. A pseudo-
@@ -120,9 +127,20 @@ def pytest_collection_modifyitems(session, config, items):
     config.hook.pytest_deselected(items=filtered)
 
 
-# Select the default topology for all the tests
-# if it is not directly overridden by the test module.
-select_topologies(['topology_wired_loopback'])
+def pytest_sessionstart(session):
+    """Standard pytest hook called when a session is started.
+    It manages selection of the default topology for all tests
+    This selection can be overridden by the test module for its
+    tests.
+    """
+
+    default = session.config.getini('default_topology')
+
+    if not default:
+        # Our library default topology
+        select_topologies(['wired_loopback'])
+    else:
+        select_topologies(default)
 
 
 @pytest_cases.fixture(scope='module')
