@@ -14,7 +14,7 @@ import time
 
 import pytest
 
-from lbr_testsuite.executable import executable, coredump, strace
+from lbr_testsuite.executable import coredump, executable, strace
 
 from .conftest import match_syscalls
 
