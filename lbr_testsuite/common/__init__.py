@@ -1,15 +1,11 @@
 from .common import (
-    wait_until_condition,
+    case_name_contains,
     compose_output_path,
     local_tests,
-    case_name_contains,
+    wait_until_condition,
 )
+from .sysctl import sysctl_get, sysctl_set, sysctl_set_with_restore
 
-from .sysctl import (
-    sysctl_set,
-    sysctl_get,
-    sysctl_set_with_restore,
-)
 
 __all__ = [
     'sysctl_set',

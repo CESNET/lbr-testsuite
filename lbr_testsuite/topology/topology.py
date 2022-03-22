@@ -10,8 +10,8 @@ from warnings import warn
 
 import pytest
 from pytest_cases.common_pytest import extract_parameterset_info, get_fixture_name
-from pytest_cases.fixture_core1_unions import UnionFixtureAlternative, _fixture_union
 from pytest_cases.fixture__creation import get_caller_module
+from pytest_cases.fixture_core1_unions import UnionFixtureAlternative, _fixture_union
 
 from .device import Device
 from .generator import Generator

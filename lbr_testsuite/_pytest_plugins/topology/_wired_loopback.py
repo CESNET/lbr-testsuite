@@ -13,11 +13,10 @@ import pytest
 import pytest_cases
 
 from ...common.sysctl import sysctl_set_with_restore
+from ...topology import registration
 from ...topology.device import PciDevice
 from ...topology.generator import NetdevGenerator
 from ...topology.topology import Topology
-from ...topology import registration
-
 from . import _options
 
 

@@ -11,15 +11,15 @@ Base TRex test module. Provides a common frame for tests using Cisco TRex.
     | `Python Automation API <https://trex-tgn.cisco.com/trex/doc/>`_.
 """
 
+import logging
 from functools import partial
 
-import logging
+
 global_logger = logging.getLogger(__name__)
 
 import lbr_trex_client.paths  # noqa: F401
-
-from trex.stl.api import *
 from trex.astf.api import *
+from trex.stl.api import *
 from trex.utils.parsing_opts import decode_multiplier
 from trex_client import CTRexClient
 from trex_exceptions import TRexInUseError

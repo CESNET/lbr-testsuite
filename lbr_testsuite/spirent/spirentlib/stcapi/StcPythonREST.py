@@ -8,6 +8,7 @@ Spirent REST API wrapper class.
 
 import os
 
+
 try:
     from stcrestclient.stcpythonrest import StcPythonRest
 except ImportError:

@@ -1,6 +1,5 @@
-from . import _wired_loopback
-from . import _virtual_devices
-from . import _spirent
+from . import _spirent, _virtual_devices, _wired_loopback
+
 
 _wired_loopback._init()
 _virtual_devices._init()

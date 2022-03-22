@@ -1,6 +1,7 @@
-from .executable import Tool, Daemon
-from .strace import Strace
 from .coredump import Coredump
+from .executable import Daemon, Tool
+from .strace import Strace
+
 
 __all__ = [
     'Tool',

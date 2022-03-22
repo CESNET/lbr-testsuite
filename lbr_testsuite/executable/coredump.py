@@ -8,11 +8,12 @@ Helper code for collection of core dumps when running child processes.
 
 import logging
 import os
+import resource
 import shutil
 import signal
-import resource
 
 from lbr_testsuite.executable import executable
+
 
 global_logger = logging.getLogger(__name__)
 

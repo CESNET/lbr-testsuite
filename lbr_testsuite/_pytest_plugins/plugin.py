@@ -7,6 +7,7 @@ Pytest plugin with common fixtures.
 """
 
 import os
+
 import pytest
 from pytest_cases import fixture
 

@@ -3,10 +3,10 @@ Author(s): Jan Kucera <jan.kucera@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.
 Copyright: (C) 2019 CESNET, z.s.p.o.
 """
 
+import re
+
 from .stcapi.StcPythonREST import StcPythonREST
 from .stcapi.StcPythonTCP import StcPythonTCP
-
-import re
 
 
 STC_API_PROPRIETARY = 0

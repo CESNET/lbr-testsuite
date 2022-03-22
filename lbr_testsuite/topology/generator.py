@@ -8,7 +8,6 @@ should extend base Generator class.
 """
 
 import errno
-
 from os import listdir
 from os.path import isdir
 

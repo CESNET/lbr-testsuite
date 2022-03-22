@@ -9,7 +9,6 @@ TRex stateful traffic profiles.
 
 
 import lbr_trex_client.paths  # noqa: F401
-
 from trex.astf.api import *
 
 

@@ -12,7 +12,6 @@ import pprint
 import re
 import sys
 import time
-
 from tkinter import Tcl
 
 

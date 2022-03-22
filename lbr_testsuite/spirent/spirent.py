@@ -30,9 +30,8 @@ used until it is unbound manually.
 import logging
 import time
 
-from .spirentlib.spirentlib import StcHandler, STC_API_PROPRIETARY, STC_API_OFFICIAL
-
 from ..topology.generator import Generator
+from .spirentlib.spirentlib import STC_API_OFFICIAL, STC_API_PROPRIETARY, StcHandler
 
 
 STC_API_PROPRIETARY = STC_API_PROPRIETARY

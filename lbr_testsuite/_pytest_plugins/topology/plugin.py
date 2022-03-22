@@ -10,14 +10,13 @@ Topology plugin implementation.
 import pytest
 import pytest_cases
 
+from ...topology import registration
 from ...topology.devices_args import DevicesArgs
 from ...topology.topology import Topology, select_topologies
-from ...topology import registration
-
 from . import _options
-from ._wired_loopback import topology_wired_loopback  # noqa
-from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
 from ._spirent import topology_wired_spirent  # noqa
+from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
+from ._wired_loopback import topology_wired_loopback  # noqa
 
 
 def pytest_addoption(parser):

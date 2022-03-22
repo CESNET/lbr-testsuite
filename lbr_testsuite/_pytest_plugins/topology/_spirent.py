@@ -11,11 +11,10 @@ generator.
 
 import pytest_cases
 
+from ...spirent.spirent import STC_API_OFFICIAL, STC_API_PROPRIETARY, Spirent
+from ...topology import registration
 from ...topology.device import PciDevice
 from ...topology.topology import Topology
-from ...topology import registration
-from ...spirent.spirent import Spirent, STC_API_OFFICIAL, STC_API_PROPRIETARY
-
 from . import _options
 
 

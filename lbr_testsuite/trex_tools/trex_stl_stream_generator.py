@@ -8,14 +8,16 @@ packet streams and their packet checking methods.
 """
 
 
-from ipaddress import IPv4Address, IPv6Address
 import logging
+from ipaddress import IPv4Address, IPv6Address
+
+
 global_logger = logging.getLogger(__name__)
 
 import lbr_trex_client.paths  # noqa: F401
-
-from trex.stl.api import *
 from scapy.layers.dns import *
+from trex.stl.api import *
+
 from .trex_instances import TRex_Instances as TRex
 
 

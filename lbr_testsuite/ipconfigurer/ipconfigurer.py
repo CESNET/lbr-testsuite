@@ -14,8 +14,8 @@ import time
 
 from pr2modules import netns
 from pr2modules.iproute import IPRoute
-from pr2modules.nslink.nslink import NetNS
 from pr2modules.netlink.exceptions import NetlinkError
+from pr2modules.nslink.nslink import NetNS
 
 
 IFA_F_SECONDARY = 0x01

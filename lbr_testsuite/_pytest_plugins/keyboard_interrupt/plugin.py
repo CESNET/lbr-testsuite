@@ -20,9 +20,10 @@ pressing CTRL+C. In "normal" mode exceptions are raised as expected
 to be handled traditionally by pytest itself.
 """
 
-import pytest
-import _pytest
 import logging
+
+import _pytest
+import pytest
 
 
 global_logger = logging.getLogger(__name__)

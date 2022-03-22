@@ -12,11 +12,10 @@ import pytest_cases
 
 from ...common.sysctl import sysctl_set
 from ...ipconfigurer import ipconfigurer as ipconf
-from ...topology.device import RingDevice, PcapLiveDevice
+from ...topology import registration
+from ...topology.device import PcapLiveDevice, RingDevice
 from ...topology.generator import NetdevGenerator
 from ...topology.topology import Topology
-from ...topology import registration
-
 from . import _options
 
 

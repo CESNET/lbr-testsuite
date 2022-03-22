@@ -6,8 +6,8 @@ Copyright: (C) 2020-2021 CESNET, z.s.p.o.
 Common function for all components.
 """
 
-from pathlib import Path
 import time
+from pathlib import Path
 
 
 def wait_until_condition(condition, timeout=1.0, sleep_step=1):
