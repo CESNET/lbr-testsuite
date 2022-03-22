@@ -36,10 +36,10 @@ setuptools.setup(
     python_requires='>=3.6',
     entry_points={
         "pytest11": [
-            "lbr_testsuite = lbr_testsuite.pytest.plugin",
-            "lbr_keyboard_interrupt = lbr_testsuite.pytest.keyboard_interrupt.plugin",
-            "lbr_renamer = lbr_testsuite.pytest.renamer.plugin",
-            "lbr_topology = lbr_testsuite.pytest.topology.plugin",
+            "lbr_testsuite = lbr_testsuite._pytest_plugins.plugin",
+            "lbr_keyboard_interrupt = lbr_testsuite._pytest_plugins.keyboard_interrupt.plugin",
+            "lbr_renamer = lbr_testsuite._pytest_plugins.renamer.plugin",
+            "lbr_topology = lbr_testsuite._pytest_plugins.topology.plugin",
         ],
     },
 )
