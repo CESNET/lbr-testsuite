@@ -24,6 +24,7 @@ flake8 = "~=3.7.0"
 pytest-instafail = "*"
 wheel = "*"
 isort = "*"
+black = "*"
 
 [requires]
 python_version = "3.6"
