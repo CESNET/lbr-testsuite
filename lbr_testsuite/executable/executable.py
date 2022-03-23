@@ -56,12 +56,7 @@ class Executable:
     - silent: a failure does not provide any output nor raises
     an exception.
     """
-    FAILURE_VERBOSITY_LEVELS = (
-        'normal',
-        'no-error',
-        'no-exception',
-        'silent'
-    )
+    FAILURE_VERBOSITY_LEVELS = ('normal', 'no-error', 'no-exception', 'silent')
 
     def __init__(
         self,
@@ -126,8 +121,7 @@ class Executable:
             self._options['env'] = os.environ.copy()
 
     def _cmd_str(self):
-        """Convert command to string representation.
-        """
+        """Convert command to string representation."""
 
         if isinstance(self._cmd, str):
             return self._cmd
@@ -174,8 +168,7 @@ class Executable:
         self._options['env'][key] = value
 
     def clear_env(self):
-        """Clear all environment variables mapping.
-        """
+        """Clear all environment variables mapping."""
 
         self._options['env'] = {}
 
@@ -203,8 +196,7 @@ class Executable:
         self._post_exec_fn = coredump.popen_postexec
 
     def _set_output(self, output_type, output):
-        """Set output for a command (stdout or stderr).
-        """
+        """Set output for a command (stdout or stderr)."""
 
         assert output_type in ['stdout', 'stderr']
 
@@ -214,9 +206,7 @@ class Executable:
         if isinstance(output, str):
             self._options[output_type] = open(output, 'w')
             self._output_files[output_type] = self._options[output_type]
-            self._logger.info(
-                f'{output_type} for command {self._cmd_str()} set to: {output}.'
-            )
+            self._logger.info(f'{output_type} for command {self._cmd_str()} set to: {output}.')
         else:
             self._options[output_type] = output
 
@@ -244,8 +234,7 @@ class Executable:
             self._set_output('stderr', stderr)
 
     def _close_output_files(self):
-        """Close output files opened withing setting of outputs.
-        """
+        """Close output files opened withing setting of outputs."""
 
         for f in self._output_files.values():
             if f is not None:
@@ -267,7 +256,9 @@ class Executable:
         if self._failure_verbosity == 'normal':
             self._logger.error(fail_msg)
         else:
-            assert self._failure_verbosity == 'no-error' or self._failure_verbosity == 'no-exception'
+            assert (
+                self._failure_verbosity == 'no-error' or self._failure_verbosity == 'no-exception'
+            )
             self._logger.debug(fail_msg)
 
         self._logger.debug(f'Captured stdout:\n{stdout}')
@@ -382,8 +373,7 @@ class Daemon(Executable):
         self._terminated = True
 
     def start(self):
-        """Start the command on background.
-        """
+        """Start the command on background."""
 
         if self._process is not None and not self._terminated:
             raise RuntimeError('start called on a started process')

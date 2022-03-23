@@ -74,7 +74,7 @@ class Spirent(Generator):
         port,
         api_version=STC_API_OFFICIAL,
         api_session_start_timeout=120,
-        server_port=None
+        server_port=None,
     ):
         """
         Parameters
@@ -117,15 +117,15 @@ class Spirent(Generator):
         self._spirent_config = config_path
 
     def connect(self):
-        """Establishes a connection to spirentlib server application.
-        """
+        """Establishes a connection to spirentlib server application."""
 
-        self._logger.debug(f'Connecting to STC terminal server: {self._server}:{self._server_port}.')
+        self._logger.debug(
+            f'Connecting to STC terminal server: {self._server}:{self._server_port}.'
+        )
         self._stc_handler.stc_api_connect(self._server, self._server_port)
 
     def _load_config(self):
-        """Configure STC using the configuration file.
-        """
+        """Configure STC using the configuration file."""
 
         assert not self._port_reserved
         assert self._spirent_config, 'Configuration file not set. Use set_config_file() to set it.'
@@ -158,8 +158,7 @@ class Spirent(Generator):
         self._connect_chassis_port()
 
     def disconnect_chassis(self):
-        """Disconnect from spirent chassis and unbound spirent port.
-        """
+        """Disconnect from spirent chassis and unbound spirent port."""
 
         self._logger.debug('Disconnecting from Spirent Test Center chassis.')
         self._stc_handler.stc_disconnect()
@@ -172,7 +171,9 @@ class Spirent(Generator):
             obj_names = [obj_names]
 
         if not isinstance(obj_names, list):
-            err_msg = f'Object names must be defined as a list of strings but passed "{type(obj_names)}".'
+            err_msg = (
+                f'Object names must be defined as a list of strings but passed "{type(obj_names)}".'
+            )
             raise TypeError(err_msg)
 
         return obj_names
@@ -180,7 +181,9 @@ class Spirent(Generator):
     @staticmethod
     def _stream_blocks_presence_check(sb_handler, sb_names):
         if len(sb_handler) != len(sb_names):
-            err_msg = f'Some of defined stream blocks "{sb_names}" are not defined in STC configuration.'
+            err_msg = (
+                f'Some of defined stream blocks "{sb_names}" are not defined in STC configuration.'
+            )
             raise ValueError(err_msg)
 
         for index, sb in enumerate(sb_handler):
@@ -285,7 +288,9 @@ class Spirent(Generator):
         device_names = self._object_name_list(device_names)
         devices = self._stc_handler.stc_device(device_names)
         vlan = self._stc_handler.stc_attribute(devices, 'children-VlanIf')
-        upper_layer = [self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Sources')[0][0].split()]
+        upper_layer = [
+            self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Sources')[0][0].split()
+        ]
         lower_layer = [self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Targets')[0][0]]
         self._stc_handler.stc_attribute(upper_layer, 'StackedOnEndpoint-Targets', lower_layer)
         self._stc_handler.stc_delete(vlan)
@@ -354,10 +359,10 @@ class Spirent(Generator):
             pl_value *= 1000
             pl_type = 'bps'
         elif pl_type == 'mbps':
-            pl_value *= 1000*1000
+            pl_value *= 1000 * 1000
             pl_type = 'bps'
         elif pl_type == 'gbps':
-            pl_value *= 1000*1000*1000
+            pl_value *= 1000 * 1000 * 1000
             pl_type = 'bps'
 
         if pl_type == 'perc':
@@ -459,8 +464,7 @@ class Spirent(Generator):
         return flat_results
 
     def filter_ipv4_destination_address(self):
-        """Configure STC analyzer to filter destination IPv4 addresses.
-        """
+        """Configure STC analyzer to filter destination IPv4 addresses."""
 
         self._logger.debug('Configure STC analyzer to filter destination IPv4 addresses.')
         IPV4_DEST_ADDR_FILTER = '''
@@ -479,8 +483,7 @@ class Spirent(Generator):
         self._stc_handler.stc_analyzer_filter([IPV4_DEST_ADDR_FILTER])
 
     def filter_ipv6_destination_address(self):
-        """Configure STC analyzer to filter destination IPv6 addresses.
-        """
+        """Configure STC analyzer to filter destination IPv6 addresses."""
 
         self._logger.debug('Configure STC analyzer to filter destination IPv6 addresses.')
         IPV6_DEST_ADDR_FILTER = '''
@@ -500,8 +503,7 @@ class Spirent(Generator):
         self._stc_handler.stc_analyzer_filter([IPV6_DEST_ADDR_FILTER])
 
     def filter_ttl_in_ipv4_packets(self):
-        """Configure STC analyzer to filter TTL values in IPv4 packets.
-        """
+        """Configure STC analyzer to filter TTL values in IPv4 packets."""
 
         self._logger.debug('Configure STC analyzer to filter TTL values is IPv4 packets.')
         IPV4_TTL_FILTER = '''
@@ -519,10 +521,11 @@ class Spirent(Generator):
         self._stc_handler.stc_analyzer_filter([IPV4_TTL_FILTER])
 
     def filter_ttl_in_ipv6_packets(self):
-        """Configure STC analyzer to filter TTL (hopLimit) values in IPv6 packets.
-        """
+        """Configure STC analyzer to filter TTL (hopLimit) values in IPv6 packets."""
 
-        self._logger.debug('Configure STC analyzer to filter TTL (hopLimit) values is IPv6 packets.')
+        self._logger.debug(
+            'Configure STC analyzer to filter TTL (hopLimit) values is IPv6 packets.'
+        )
         IPV6_TTL_FILTER = '''
             <frame>
                 <config>
@@ -538,8 +541,7 @@ class Spirent(Generator):
         self._stc_handler.stc_analyzer_filter([IPV6_TTL_FILTER])
 
     def filter_vlan(self):
-        """Configure STC analyzer to filter VLANs.
-        """
+        """Configure STC analyzer to filter VLANs."""
 
         self._logger.debug('Configure STC analyzer to filter VLANs.')
         VLAN_FILTER = '''

@@ -26,8 +26,7 @@ class Device:
     """
 
     def __init__(self):
-        """Device constructor expects to be extended.
-        """
+        """Device constructor expects to be extended."""
 
         self._dpdk_args = []
         self._dpdk_devargs = {}
@@ -136,23 +135,20 @@ class PciDevice(Device):
 
 
 class VdevDevice(Device):
-    """Derived class representing a virtual device.
-    """
+    """Derived class representing a virtual device."""
 
     def _dpdk_device(self):
         return f'--vdev={self._dpdk_name}'
 
     def __init__(self):
-        """The DPDK virtual device object.
-        """
+        """The DPDK virtual device object."""
 
         super().__init__()
         self._dpdk_args.extend(['--no-pci'])
 
 
 class RingDevice(VdevDevice):
-    """Derived class representing a ring device.
-    """
+    """Derived class representing a ring device."""
 
     def __init__(self, id=0):
         """The DPDK ring device object.

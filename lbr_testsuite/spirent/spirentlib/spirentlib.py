@@ -32,7 +32,9 @@ class StcHandler:
 
     def stc_api_connect(self, host: str, port: int):
         if self._stc_api_version == STC_API_OFFICIAL:
-            self._stc = StcPythonREST(host, port, session_start_timeout=self._stc_api_session_start_timeout)
+            self._stc = StcPythonREST(
+                host, port, session_start_timeout=self._stc_api_session_start_timeout
+            )
         else:
             self._stc = StcPythonTCP(host, port)
 
@@ -109,7 +111,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return generator_port_results
 
@@ -121,7 +123,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return analyzer_port_results
 
@@ -135,7 +137,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return filtered_stream_results
 
@@ -148,7 +150,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return rx_stream_block_results
 
@@ -162,7 +164,7 @@ class StcHandler:
             disablePaging='true',
             recordsPerPage=256,
             viewAttributeList='framecount framerate bitrate',
-            interval=1
+            interval=1,
         )
         return tx_stream_block_results
 
@@ -176,7 +178,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return overflow_results
 
@@ -190,7 +192,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return tx_port_pair_results
 
@@ -204,7 +206,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return rx_port_pair_results
 
@@ -218,7 +220,7 @@ class StcHandler:
             filterList='',
             disablePaging='true',
             recordsPerPage=256,
-            interval=1
+            interval=1,
         )
         return arpnd_results
 
@@ -404,7 +406,8 @@ class StcHandler:
             return
 
         stc_port_objects = self._stc.perform(
-            'getObjects', classname='Port', condition='isVirtual=false')
+            'getObjects', classname='Port', condition='isVirtual=false'
+        )
         stc_port_object_list = stc_port_objects['ObjectList']
         stc_port_object_list = stc_port_object_list.split(' ')
 
@@ -441,7 +444,8 @@ class StcHandler:
         continuous_generators = []
         for generator in generators:
             gen_duration_mode = self._stc.get(
-                '{}.generatorConfig'.format(generator), 'durationMode')
+                '{}.generatorConfig'.format(generator), 'durationMode'
+            )
             if gen_duration_mode == 'CONTINUOUS':
                 continuous_generators.append(generator)
 
@@ -460,7 +464,8 @@ class StcHandler:
         continuous_generators = []
         for generator in generators:
             gen_duration_mode = self._stc.get(
-                '{}.generatorConfig'.format(generator), 'durationMode')
+                '{}.generatorConfig'.format(generator), 'durationMode'
+            )
             if gen_duration_mode == 'CONTINUOUS':
                 continuous_generators.append(generator)
 
@@ -618,13 +623,19 @@ class StcHandler:
 
         scheduling_mode = self.stc_attribute(gen_config_handler, 'SchedulingMode')[0][0]
         if scheduling_mode != "PORT_BASED":
-            raise RuntimeError("Invalid port load mode in the STC configuration. Port-based mode is requested.")
+            raise RuntimeError(
+                "Invalid port load mode in the STC configuration. Port-based mode is requested."
+            )
 
         # Set port load unit according to requested port load type
         if port_load_type == 'perc':
-            self.stc_attribute(gen_config_handler, 'LoadUnit', 'PERCENT_LINE_RATE', call_apply=False)
+            self.stc_attribute(
+                gen_config_handler, 'LoadUnit', 'PERCENT_LINE_RATE', call_apply=False
+            )
         elif port_load_type == 'fps':
-            self.stc_attribute(gen_config_handler, 'LoadUnit', 'FRAMES_PER_SECOND', call_apply=False)
+            self.stc_attribute(
+                gen_config_handler, 'LoadUnit', 'FRAMES_PER_SECOND', call_apply=False
+            )
         elif port_load_type == 'bps':
             self.stc_attribute(gen_config_handler, 'LoadUnit', 'BITS_PER_SECOND', call_apply=False)
         else:

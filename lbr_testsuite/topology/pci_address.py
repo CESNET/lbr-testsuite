@@ -51,8 +51,7 @@ class PciAddress:
 
     @classmethod
     def from_string(cls, address):
-        """Initialize PciAddress from a string.
-        """
+        """Initialize PciAddress from a string."""
 
         match = cls._parse(address)
         if not match:
@@ -79,7 +78,6 @@ class PciAddress:
         return cls._parse(address) is not None
 
     def __str__(self):
-        """Convert PciAddress to string.
-        """
+        """Convert PciAddress to string."""
 
         return f'{self.domain:04x}:{self.bus:02x}:{self.devid:02x}.{self.function:x}'

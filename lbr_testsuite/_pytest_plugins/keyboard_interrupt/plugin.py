@@ -42,7 +42,7 @@ def pytest_addoption(parser):
         help=(
             'Convenience flag which allows user to explicitly enable/disable activation '
             'of this plugin.'
-        )
+        ),
     )
 
 
@@ -87,7 +87,6 @@ def pytest_sessionstart(session):
     addfinalizer_old = _pytest.fixtures.FixtureRequest.addfinalizer
 
     def addfinalizer_new(self, finalizer):
-
         def finalizer_wrapped():
             try:
                 finalizer()

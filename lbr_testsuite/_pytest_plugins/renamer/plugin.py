@@ -24,9 +24,7 @@ def pytest_addoption(parser):
     parser.addoption(
         '--renamer-prefix',
         default=None,
-        help=(
-            'Prefix each test by a specified string.'
-        )
+        help=('Prefix each test by a specified string.'),
     )
 
 

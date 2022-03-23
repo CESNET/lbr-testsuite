@@ -39,6 +39,7 @@ class IpConfigurerError(NetlinkError):
     also can easily catch such exceptions and distinguish them
     from other unexpected errors.
     """
+
     pass
 
 
@@ -83,7 +84,7 @@ def _link_lookup_first(ifc_name, namespace=None):
     if not links:
         raise IpConfigurerError(
             errno.ENODEV,
-            f"No such interface '{ifc_name}' in namespace '{namespace}'."
+            f"No such interface '{ifc_name}' in namespace '{namespace}'.",
         )
     return links[0]
 
@@ -98,7 +99,7 @@ def _manipulate_ip_addr(
     mask,
     family=socket.AF_INET,
     ifa_flags=None,
-    namespace=None
+    namespace=None,
 ):
     assert cmd == 'add' or cmd == 'del'
 
@@ -122,7 +123,7 @@ def add_ip_addr(
     family=socket.AF_INET,
     ifa_flags=None,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Add an IP address to the interface.
 
@@ -168,7 +169,7 @@ def delete_ip_addr(
     mask,
     family=socket.AF_INET,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Delete an IP address from the interface
 
@@ -301,7 +302,7 @@ def ifc_status(ifc_name, namespace=None):
     if not links:
         raise IpConfigurerError(
             errno.ENODEV,
-            f"No such interface '{ifc_name}' in namespace '{namespace}'."
+            f"No such interface '{ifc_name}' in namespace '{namespace}'.",
         )
 
     return _extract_attr_tuples(links[0])
@@ -396,7 +397,7 @@ def wait_until_ifc_carrier(ifc_name, namespace=None, timeout=1):
         if now - started > timeout:
             raise IpConfigurerError(
                 errno.ETIME,
-                f"No carrier on interface '{ifc_name}' (waited {timeout} seconds)."
+                f"No carrier on interface '{ifc_name}' (waited {timeout} seconds).",
             )
 
         time.sleep(1)
@@ -413,7 +414,7 @@ def _manipulate_route(
     table,
     family=socket.AF_INET,
     prefsrc=None,
-    namespace=None
+    namespace=None,
 ):
     assert cmd == 'add' or cmd == 'del'
 
@@ -437,7 +438,7 @@ def add_route(
     family=socket.AF_INET,
     prefsrc=None,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Add a route.
 
@@ -485,7 +486,7 @@ def delete_route(
     family=socket.AF_INET,
     prefsrc=None,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Delete a route.
 
@@ -583,7 +584,7 @@ def add_link(
     master_link_namespace=None,
     vlan_id=None,
     peer=None,
-    safe=False
+    safe=False,
 ):
     """Add a link.
 
@@ -657,7 +658,7 @@ def delete_link(
     link=None,
     namespace=None,
     vlan_id=None,
-    safe=False
+    safe=False,
 ):
     """Add a link.
 
@@ -742,7 +743,7 @@ def _manipulate_ip_neigh(
     lladdr,
     family=socket.AF_INET,
     state='permanent',
-    namespace=None
+    namespace=None,
 ):
     assert cmd == 'add' or cmd == 'del' or cmd == 'change'
 
@@ -766,7 +767,7 @@ def add_ip_neigh(
     family=socket.AF_INET,
     state='permanent',
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Add an IP neighbour (ARP/NDP cache entry).
 
@@ -813,7 +814,7 @@ def change_ip_neigh(
     family=socket.AF_INET,
     state='permanent',
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Change an existing IP neighbour (ARP/NDP cache entry). If the
     record does not exist, fail.
@@ -861,7 +862,7 @@ def delete_ip_neigh(
     family=socket.AF_INET,
     state='permanent',
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Delete an IP neighbour (ARP/NDP cache entry).
 
@@ -1001,13 +1002,24 @@ def _rule_match(rule, table, iif=None, oif=None, priority=None):
             return False
 
     if iif is not None and oif is not None:
-        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and _rule_match_attr(rule, 'FRA_OIFNAME', oif)
+        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and _rule_match_attr(
+            rule, 'FRA_OIFNAME', oif
+        )
+
     elif iif is not None:
-        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and not _rule_contains_attr(rule, 'FRA_OIFNAME')
+        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and not _rule_contains_attr(
+            rule, 'FRA_OIFNAME'
+        )
+
     elif oif is not None:
-        return _rule_match_attr(rule, 'FRA_OIFNAME', oif) and not _rule_contains_attr(rule, 'FRA_IIFNAME')
+        return _rule_match_attr(rule, 'FRA_OIFNAME', oif) and not _rule_contains_attr(
+            rule, 'FRA_IIFNAME'
+        )
+
     else:
-        return not _rule_contains_attr(rule, 'FRA_IIFNAME') and not _rule_contains_attr(rule, 'FRA_OIFNAME')
+        return not _rule_contains_attr(rule, 'FRA_IIFNAME') and not _rule_contains_attr(
+            rule, 'FRA_OIFNAME'
+        )
 
 
 def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, priority=None):
@@ -1080,16 +1092,16 @@ def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priorit
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
             family=family,
-            match=lambda x: _rule_match(x, table, **kwargs)
+            match=lambda x: _rule_match(x, table, **kwargs),
         )
 
     if curr_rules:
         if safe:
             return False
         raise IpConfigurerError(
-                errno.EEXIST,
-                f"The rule already exists for table '{table}'" + _format_rule_match_errmsg(**kwargs) + "."
-            )
+            errno.EEXIST,
+            f"The rule already exists for table '{table}' {_format_rule_match_errmsg(**kwargs)}.",
+        )
 
     kwargs['family'] = family
 
@@ -1100,11 +1112,19 @@ def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priorit
 def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _add_rule wrapper to enable API changes"""
     from warnings import warn
+
     warn('function add_rule_iif() is deprecated, use add_rule()')
     return add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
 
 
-def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
+def delete_rule(
+    table,
+    iif_name=None,
+    oif_name=None,
+    family=socket.AF_INET,
+    priority=None,
+    safe=False,
+):
     """Delete a rule.
 
     Parameters
@@ -1150,5 +1170,6 @@ def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, prio
 def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _delete_rule wrapper to enable API changes"""
     from warnings import warn
+
     warn('function delete_rule_iif() is deprecated, use delete_rule()')
     return delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)

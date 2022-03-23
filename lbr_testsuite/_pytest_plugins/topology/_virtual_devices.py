@@ -20,18 +20,20 @@ from . import _options
 
 
 def _init():
-    _options.add_option((
-        ['--vdevs'],
-        dict(
-            action='store_true',
-            default=None,
-            help=(
-                'Enable virtual topologies, e.g., vdev_loopback and vdev_ring. This collects '
-                'also tests that supports these virtual topologies. By default virtual '
-                'topologies are disabled.'
-            )
+    _options.add_option(
+        (
+            ['--vdevs'],
+            dict(
+                action='store_true',
+                default=None,
+                help=(
+                    'Enable virtual topologies, e.g., vdev_loopback and vdev_ring. This collects '
+                    'also tests that supports these virtual topologies. By default virtual '
+                    'topologies are disabled.'
+                ),
+            ),
         )
-    ))
+    )
 
     registration.topology_option_register('vdevs')
 

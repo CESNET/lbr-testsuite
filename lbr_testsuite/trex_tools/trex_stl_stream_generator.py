@@ -21,7 +21,7 @@ from trex.stl.api import *
 from .trex_instances import TRex_Instances as TRex
 
 
-class TRex_Stl_Stream_Generator():
+class TRex_Stl_Stream_Generator:
     """Class containing definition of commonly used packet streams
     and their packet checking methods.
 
@@ -178,7 +178,6 @@ class TRex_Stl_Stream_Generator():
         dst_ipv4_to='10.0.1.62',
         src_ipv4_op='random',
         dst_ipv4_op='random',
-
         ipv6_msb='2001:db8::',
         src_ipv6_from='0.0.0.1',
         src_ipv6_to='0.0.0.254',
@@ -186,7 +185,6 @@ class TRex_Stl_Stream_Generator():
         dst_ipv6_to='0.0.1.62',
         src_ipv6_op='random',
         dst_ipv6_op='random',
-
         src_port_from=1025,
         src_port_to=65000,
         dst_port_from=1025,
@@ -194,17 +192,18 @@ class TRex_Stl_Stream_Generator():
         src_port_op='random',
         dst_port_op='random',
         tcp_flags='S',
-
         stream_mode="STLTXCont",
         stream_pps=None,
         stream_bps_L2=None,
         stream_percentage=None,
         total_pkts=None,
-        **kwargs
+        **kwargs,
     ):
 
         if not isinstance(trex_handler, STLClient):
-            raise ValueError(f'TRex_handler parameter needs to be STLClient type! Instead got {type(trex_handler)}')
+            raise ValueError(
+                f'TRex_handler parameter needs to be STLClient type! Instead got {type(trex_handler)}'
+            )
 
         # Define all parameters as class attributes
         for param, value in locals().items():
@@ -220,7 +219,9 @@ class TRex_Stl_Stream_Generator():
 
         if packet_padding:
             if packet_size < 60:
-                raise ValueError('Minimum allowed packet_size is 60B (+4B FCS automatically added by HW).')
+                raise ValueError(
+                    'Minimum allowed packet_size is 60B (+4B FCS automatically added by HW).'
+                )
 
         self.tcp_flags_s2i = {
             'F': 0x01,
@@ -230,7 +231,7 @@ class TRex_Stl_Stream_Generator():
             'A': 0x10,
             'U': 0x20,
             'E': 0x40,
-            'C': 0x80
+            'C': 0x80,
         }
 
     def _create_frame(self):
@@ -250,7 +251,7 @@ class TRex_Stl_Stream_Generator():
 
         if self.packet_padding and self.packet_size > len(packet):
             padding = "TRexPadding" * 140  # Enough to pad 1500B
-            padding = padding[:(self.packet_size - len(packet))]
+            padding = padding[: (self.packet_size - len(packet))]
 
         return padding
 
@@ -270,9 +271,13 @@ class TRex_Stl_Stream_Generator():
             elif self.stream_bps_L2:
                 mode = STLTXSingleBurst(bps_L2=self.stream_bps_L2, total_pkts=self.total_pkts)
             elif self.stream_percentage:
-                mode = STLTXSingleBurst(percentage=self.stream_percentage, total_pkts=self.total_pkts)
+                mode = STLTXSingleBurst(
+                    percentage=self.stream_percentage, total_pkts=self.total_pkts
+                )
 
-        return STLStream(packet=STLPktBuilder(pkt=packet / self._add_padding(packet), vm=vm), mode=mode)
+        return STLStream(
+            packet=STLPktBuilder(pkt=packet / self._add_padding(packet), vm=vm), mode=mode
+        )
 
     def _get_expected_packet_size(self, base_packet):
 
@@ -288,29 +293,33 @@ class TRex_Stl_Stream_Generator():
     def _v4_to_v6(self, ip):
 
         numbers = list(map(int, ip.split('.')))
-        return (self.ipv6_msb + '{:02x}{:02x}:{:02x}{:02x}'.format(*numbers))
+        return self.ipv6_msb + '{:02x}{:02x}:{:02x}{:02x}'.format(*numbers)
 
     def _ips_in_range(self, src_ip, dst_ip, ipv6=False):
 
         if not ipv6:
-            return (IPv4Address(self.src_ipv4_from) <= IPv4Address(src_ip) <= IPv4Address(self.src_ipv4_to) and
-                    IPv4Address(self.dst_ipv4_from) <= IPv4Address(dst_ip) <= IPv4Address(self.dst_ipv4_to))
+            return IPv4Address(self.src_ipv4_from) <= IPv4Address(src_ip) <= IPv4Address(
+                self.src_ipv4_to
+            ) and IPv4Address(self.dst_ipv4_from) <= IPv4Address(dst_ip) <= IPv4Address(
+                self.dst_ipv4_to
+            )
         else:
             src_from = self._v4_to_v6(self.src_ipv6_from)
             dst_from = self._v4_to_v6(self.dst_ipv6_from)
             src_to = self._v4_to_v6(self.src_ipv6_to)
             dst_to = self._v4_to_v6(self.dst_ipv6_to)
 
-            return (IPv6Address(src_from) <= IPv6Address(src_ip) <= IPv6Address(src_to) and
-                    IPv6Address(dst_from) <= IPv6Address(dst_ip) <= IPv6Address(dst_to))
+            return IPv6Address(src_from) <= IPv6Address(src_ip) <= IPv6Address(
+                src_to
+            ) and IPv6Address(dst_from) <= IPv6Address(dst_ip) <= IPv6Address(dst_to)
 
     def _ports_in_range(self, src_port=None, dst_port=None):
 
         ret = True
         if src_port:
-            ret &= (self.src_port_from <= src_port <= self.src_port_to)
+            ret &= self.src_port_from <= src_port <= self.src_port_to
         if dst_port:
-            ret &= (self.dst_port_from <= dst_port <= self.dst_port_to)
+            ret &= self.dst_port_from <= dst_port <= self.dst_port_to
 
         return ret
 
@@ -329,20 +338,48 @@ class TRex_Stl_Stream_Generator():
         # TRex's Field Engine (FE) - change packet fields (IPs, ports, ...) per packet during traffic generation
         # For more info see https://trex-tgn.cisco.com/trex/doc/cp_stl_docs/api/field_engine.html
         # or https://trex-tgn.cisco.com/trex/doc/trex_stateless.html#_tutorial_field_engine_syn_attack
-        vm = STLScVmRaw([
-            # Define values
-            STLVmFlowVar("ip_src", min_value=self.src_ipv4_from, max_value=self.src_ipv4_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv4_from, max_value=self.dst_ipv4_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="sport", min_value=self.src_port_from, max_value=self.src_port_to, size=2, op=self.src_port_op),
-            STLVmFlowVar(name="dport", min_value=self.dst_port_from, max_value=self.dst_port_to, size=2, op=self.dst_port_op),
-            # Write values to packet
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
-            STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
-            STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
-            # Let HW recompute checksum
-            STLVmFixChecksumHw(l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP)
-        ])
+        vm = STLScVmRaw(
+            [
+                # Define values
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv4_from,
+                    max_value=self.src_ipv4_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv4_from,
+                    max_value=self.dst_ipv4_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="sport",
+                    min_value=self.src_port_from,
+                    max_value=self.src_port_to,
+                    size=2,
+                    op=self.src_port_op,
+                ),
+                STLVmFlowVar(
+                    name="dport",
+                    min_value=self.dst_port_from,
+                    max_value=self.dst_port_to,
+                    size=2,
+                    op=self.dst_port_op,
+                ),
+                # Write values to packet
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
+                STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
+                STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
+                # Let HW recompute checksum
+                STLVmFixChecksumHw(
+                    l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -354,9 +391,11 @@ class TRex_Stl_Stream_Generator():
         pkt = Ether(packet['binary'])
 
         if IP in pkt and UDP in pkt:
-            if (self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and
-                    self._ports_in_range(pkt['UDP'].sport, pkt['UDP'].dport) and
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / UDP())):
+            if (
+                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
+                and self._ports_in_range(pkt['UDP'].sport, pkt['UDP'].dport)
+                and len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / UDP())
+            ):
                 return True
 
         return False
@@ -380,17 +419,47 @@ class TRex_Stl_Stream_Generator():
 
         packet = self._create_frame() / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb) / UDP()
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv6_from, max_value=self.src_ipv6_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv6_from, max_value=self.dst_ipv6_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="sport", min_value=self.src_port_from, max_value=self.src_port_to, size=2, op=self.src_port_op),
-            STLVmFlowVar(name="dport", min_value=self.dst_port_from, max_value=self.dst_port_to, size=2, op=self.dst_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),  # Write only lowest 32 bits of address
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
-            STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
-            STLVmFixChecksumHw(l3_offset="IPv6", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv6_from,
+                    max_value=self.src_ipv6_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv6_from,
+                    max_value=self.dst_ipv6_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="sport",
+                    min_value=self.src_port_from,
+                    max_value=self.src_port_to,
+                    size=2,
+                    op=self.src_port_op,
+                ),
+                STLVmFlowVar(
+                    name="dport",
+                    min_value=self.dst_port_from,
+                    max_value=self.dst_port_to,
+                    size=2,
+                    op=self.dst_port_op,
+                ),
+                STLVmWrFlowVar(
+                    fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12
+                ),  # Write only lowest 32 bits of address
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
+                STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IPv6", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -402,9 +471,12 @@ class TRex_Stl_Stream_Generator():
         pkt = Ether(packet['binary'])
 
         if IPv6 in pkt and UDP in pkt:
-            if (self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True) and
-                    self._ports_in_range(pkt['UDP'].sport, pkt['UDP'].dport) and
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IPv6() / UDP())):
+            if (
+                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
+                and self._ports_in_range(pkt['UDP'].sport, pkt['UDP'].dport)
+                and len(pkt)
+                == self._get_expected_packet_size(self._create_frame() / IPv6() / UDP())
+            ):
                 return True
 
         return False
@@ -420,17 +492,45 @@ class TRex_Stl_Stream_Generator():
 
         packet = self._create_frame() / IP() / TCP(flags=self.tcp_flags)
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv4_from, max_value=self.src_ipv4_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv4_from, max_value=self.dst_ipv4_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="sport", min_value=self.src_port_from, max_value=self.src_port_to, size=2, op=self.src_port_op),
-            STLVmFlowVar(name="dport", min_value=self.dst_port_from, max_value=self.dst_port_to, size=2, op=self.dst_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
-            STLVmWrFlowVar(fv_name="sport", pkt_offset="TCP.sport"),
-            STLVmWrFlowVar(fv_name="dport", pkt_offset="TCP.dport"),
-            STLVmFixChecksumHw(l3_offset="IP", l4_offset="TCP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_TCP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv4_from,
+                    max_value=self.src_ipv4_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv4_from,
+                    max_value=self.dst_ipv4_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="sport",
+                    min_value=self.src_port_from,
+                    max_value=self.src_port_to,
+                    size=2,
+                    op=self.src_port_op,
+                ),
+                STLVmFlowVar(
+                    name="dport",
+                    min_value=self.dst_port_from,
+                    max_value=self.dst_port_to,
+                    size=2,
+                    op=self.dst_port_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
+                STLVmWrFlowVar(fv_name="sport", pkt_offset="TCP.sport"),
+                STLVmWrFlowVar(fv_name="dport", pkt_offset="TCP.dport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IP", l4_offset="TCP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_TCP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -446,10 +546,12 @@ class TRex_Stl_Stream_Generator():
             flags_value += self.tcp_flags_s2i[i]
 
         if IP in pkt and TCP in pkt:
-            if (self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and
-                    self._ports_in_range(pkt['TCP'].sport, pkt['TCP'].dport) and
-                    pkt['TCP'].flags == flags_value and
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / TCP())):
+            if (
+                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
+                and self._ports_in_range(pkt['TCP'].sport, pkt['TCP'].dport)
+                and pkt['TCP'].flags == flags_value
+                and len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / TCP())
+            ):
                 return True
 
         return False
@@ -463,19 +565,51 @@ class TRex_Stl_Stream_Generator():
             TRex stream.
         """
 
-        packet = self._create_frame() / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb) / TCP(flags=self.tcp_flags)
+        packet = (
+            self._create_frame()
+            / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb)
+            / TCP(flags=self.tcp_flags)
+        )
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv6_from, max_value=self.src_ipv6_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv6_from, max_value=self.dst_ipv6_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="sport", min_value=self.src_port_from, max_value=self.src_port_to, size=2, op=self.src_port_op),
-            STLVmFlowVar(name="dport", min_value=self.dst_port_from, max_value=self.dst_port_to, size=2, op=self.dst_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="sport", pkt_offset="TCP.sport"),
-            STLVmWrFlowVar(fv_name="dport", pkt_offset="TCP.dport"),
-            STLVmFixChecksumHw(l3_offset="IPv6", l4_offset="TCP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_TCP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv6_from,
+                    max_value=self.src_ipv6_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv6_from,
+                    max_value=self.dst_ipv6_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="sport",
+                    min_value=self.src_port_from,
+                    max_value=self.src_port_to,
+                    size=2,
+                    op=self.src_port_op,
+                ),
+                STLVmFlowVar(
+                    name="dport",
+                    min_value=self.dst_port_from,
+                    max_value=self.dst_port_to,
+                    size=2,
+                    op=self.dst_port_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="sport", pkt_offset="TCP.sport"),
+                STLVmWrFlowVar(fv_name="dport", pkt_offset="TCP.dport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IPv6", l4_offset="TCP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_TCP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -491,10 +625,13 @@ class TRex_Stl_Stream_Generator():
             flags_value += self.tcp_flags_s2i[i]
 
         if IPv6 in pkt and TCP in pkt:
-            if (self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True) and
-                    self._ports_in_range(pkt['TCP'].sport, pkt['TCP'].dport) and
-                    pkt['TCP'].flags == flags_value and
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IPv6() / TCP())):
+            if (
+                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
+                and self._ports_in_range(pkt['TCP'].sport, pkt['TCP'].dport)
+                and pkt['TCP'].flags == flags_value
+                and len(pkt)
+                == self._get_expected_packet_size(self._create_frame() / IPv6() / TCP())
+            ):
                 return True
 
         return False
@@ -510,13 +647,27 @@ class TRex_Stl_Stream_Generator():
 
         packet = self._create_frame() / IP() / ICMP()
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv4_from, max_value=self.src_ipv4_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv4_from, max_value=self.dst_ipv4_to, size=4, op=self.dst_ipv4_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
-            STLVmFixIpv4(offset="IP")
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv4_from,
+                    max_value=self.src_ipv4_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv4_from,
+                    max_value=self.dst_ipv4_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
+                STLVmFixIpv4(offset="IP"),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -528,9 +679,11 @@ class TRex_Stl_Stream_Generator():
         pkt = Ether(packet['binary'])
 
         if IP in pkt and ICMP in pkt:
-            if (self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and
-                    pkt['ICMP'] and
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / ICMP())):
+            if (
+                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
+                and pkt['ICMP']
+                and len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / ICMP())
+            ):
                 return True
 
         return False
@@ -544,15 +697,31 @@ class TRex_Stl_Stream_Generator():
             TRex stream.
         """
 
-        packet = self._create_frame() / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb) / ICMPv6EchoRequest()
+        packet = (
+            self._create_frame() / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb) / ICMPv6EchoRequest()
+        )
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv6_from, max_value=self.src_ipv6_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv6_from, max_value=self.dst_ipv6_to, size=4, op=self.dst_ipv4_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
-            STLVmFixIcmpv6(l3_offset='IPv6', l4_offset=ICMPv6EchoRequest().name)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv6_from,
+                    max_value=self.src_ipv6_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv6_from,
+                    max_value=self.dst_ipv6_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
+                STLVmFixIcmpv6(l3_offset='IPv6', l4_offset=ICMPv6EchoRequest().name),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -564,9 +733,12 @@ class TRex_Stl_Stream_Generator():
         pkt = Ether(packet['binary'])
 
         if IPv6 in pkt:
-            if (self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True) and
-                    pkt['IPv6'].nh == 58 and
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IPv6() / ICMP())):
+            if (
+                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
+                and pkt['IPv6'].nh == 58
+                and len(pkt)
+                == self._get_expected_packet_size(self._create_frame() / IPv6() / ICMP())
+            ):
                 return True
 
         return False
@@ -580,17 +752,44 @@ class TRex_Stl_Stream_Generator():
             TRex stream.
         """
 
-        packet = self._create_frame() / IP() / UDP(dport=53) / DNS(qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"))
+        packet = (
+            self._create_frame()
+            / IP()
+            / UDP(dport=53)
+            / DNS(qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"))
+        )
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv4_from, max_value=self.src_ipv4_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv4_from, max_value=self.dst_ipv4_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="sport", min_value=self.src_port_from, max_value=self.src_port_to, size=2, op=self.src_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
-            STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
-            STLVmFixChecksumHw(l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv4_from,
+                    max_value=self.src_ipv4_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv4_from,
+                    max_value=self.dst_ipv4_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="sport",
+                    min_value=self.src_port_from,
+                    max_value=self.src_port_to,
+                    size=2,
+                    op=self.src_port_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
+                STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -610,12 +809,19 @@ class TRex_Stl_Stream_Generator():
         if IP in pkt and UDP in pkt and DNS in pkt and DNSQR in pkt:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
-            if (self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and
-                    self._ports_in_range(src_port=pkt['UDP'].sport) and pkt['UDP'].dport == 53 and
-                    # For type value see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4
-                    pkt['DNS'].qd.qtype == 255 and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.' and  # Dot after .com
-                    len(pkt) == self._get_expected_packet_size(
-                    self._create_frame() / IP() / UDP() / DNS(qd=DNSQR(qname="trex-tgn.cisco.com")))):
+            if (
+                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
+                and self._ports_in_range(src_port=pkt['UDP'].sport)
+                and pkt['UDP'].dport == 53
+                and
+                # For type value see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4
+                pkt['DNS'].qd.qtype == 255
+                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                and len(pkt)  # Dot after .com
+                == self._get_expected_packet_size(
+                    self._create_frame() / IP() / UDP() / DNS(qd=DNSQR(qname="trex-tgn.cisco.com"))
+                )
+            ):
                 return True
 
         logging.getLogger("scapy.runtime").setLevel(prev_level)
@@ -630,20 +836,48 @@ class TRex_Stl_Stream_Generator():
             TRex stream.
         """
 
-        packet = self._create_frame() / IP() / UDP(sport=53) / DNS(
-            qr=1,
-            qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-            an=DNSRR(rrname="trex-tgn.cisco.com", type='A', rdata='10.10.10.10'))
+        packet = (
+            self._create_frame()
+            / IP()
+            / UDP(sport=53)
+            / DNS(
+                qr=1,
+                qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
+                an=DNSRR(rrname="trex-tgn.cisco.com", type='A', rdata='10.10.10.10'),
+            )
+        )
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv4_from, max_value=self.src_ipv4_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv4_from, max_value=self.dst_ipv4_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="dport", min_value=self.dst_port_from, max_value=self.dst_port_to, size=2, op=self.dst_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
-            STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
-            STLVmFixChecksumHw(l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv4_from,
+                    max_value=self.src_ipv4_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv4_from,
+                    max_value=self.dst_ipv4_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="dport",
+                    min_value=self.dst_port_from,
+                    max_value=self.dst_port_to,
+                    size=2,
+                    op=self.dst_port_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
+                STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -660,14 +894,26 @@ class TRex_Stl_Stream_Generator():
         if IP in pkt and UDP in pkt and DNS in pkt and DNSQR in pkt and DNSRR in pkt:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
-            if (self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and
-                    self._ports_in_range(dst_port=pkt['UDP'].dport) and pkt['UDP'].sport == 53 and
-                    pkt['DNS'].qd.qtype == 255 and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.' and
-                    pkt['DNS'].an.type == 1 and pkt['DNS'].an.rrname == b'trex-tgn.cisco.com.' and
-                    pkt['DNS'].an.rdata == '10.10.10.10' and
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / UDP() / DNS(
-                    qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-                    an=DNSRR(rrname="trex-tgn.cisco.com", rdata='10.10.10.10')))):
+            if (
+                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
+                and self._ports_in_range(dst_port=pkt['UDP'].dport)
+                and pkt['UDP'].sport == 53
+                and pkt['DNS'].qd.qtype == 255
+                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                and pkt['DNS'].an.type == 1
+                and pkt['DNS'].an.rrname == b'trex-tgn.cisco.com.'
+                and pkt['DNS'].an.rdata == '10.10.10.10'
+                and len(pkt)
+                == self._get_expected_packet_size(
+                    self._create_frame()
+                    / IP()
+                    / UDP()
+                    / DNS(
+                        qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
+                        an=DNSRR(rrname="trex-tgn.cisco.com", rdata='10.10.10.10'),
+                    )
+                )
+            ):
                 return True
 
         logging.getLogger("scapy.runtime").setLevel(prev_level)
@@ -682,20 +928,48 @@ class TRex_Stl_Stream_Generator():
             TRex stream.
         """
 
-        packet = self._create_frame() / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb) / UDP(sport=53) / DNS(
-            qr=1,
-            qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-            an=DNSRR(rrname="trex-tgn.cisco.com", type='AAAA', rdata='AAAA::B'))
+        packet = (
+            self._create_frame()
+            / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb)
+            / UDP(sport=53)
+            / DNS(
+                qr=1,
+                qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
+                an=DNSRR(rrname="trex-tgn.cisco.com", type='AAAA', rdata='AAAA::B'),
+            )
+        )
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv6_from, max_value=self.src_ipv6_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv6_from, max_value=self.dst_ipv6_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="dport", min_value=self.dst_port_from, max_value=self.dst_port_to, size=2, op=self.dst_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
-            STLVmFixChecksumHw(l3_offset="IPv6", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv6_from,
+                    max_value=self.src_ipv6_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv6_from,
+                    max_value=self.dst_ipv6_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="dport",
+                    min_value=self.dst_port_from,
+                    max_value=self.dst_port_to,
+                    size=2,
+                    op=self.dst_port_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IPv6", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -712,14 +986,26 @@ class TRex_Stl_Stream_Generator():
         if IPv6 in pkt and UDP in pkt and DNS in pkt and DNSQR in pkt and DNSRR in pkt:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
-            if (self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True) and
-                    self._ports_in_range(dst_port=pkt['UDP'].dport) and pkt['UDP'].sport == 53 and
-                    pkt['DNS'].qd.qtype == 255 and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.' and
-                    pkt['DNS'].an.type == 28 and pkt['DNS'].an.rrname == b'trex-tgn.cisco.com.' and
-                    pkt['DNS'].an.rdata == 'aaaa::b' and  # rdata must be lowercase
-                    len(pkt) == self._get_expected_packet_size(self._create_frame() / IPv6() / UDP() / DNS(
-                    qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-                    an=DNSRR(rrname="trex-tgn.cisco.com", type='AAAA', rdata='AAAA::B')))):
+            if (
+                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
+                and self._ports_in_range(dst_port=pkt['UDP'].dport)
+                and pkt['UDP'].sport == 53
+                and pkt['DNS'].qd.qtype == 255
+                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                and pkt['DNS'].an.type == 28
+                and pkt['DNS'].an.rrname == b'trex-tgn.cisco.com.'
+                and pkt['DNS'].an.rdata == 'aaaa::b'
+                and len(pkt)  # rdata must be lowercase
+                == self._get_expected_packet_size(
+                    self._create_frame()
+                    / IPv6()
+                    / UDP()
+                    / DNS(
+                        qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
+                        an=DNSRR(rrname="trex-tgn.cisco.com", type='AAAA', rdata='AAAA::B'),
+                    )
+                )
+            ):
                 return True
 
         logging.getLogger("scapy.runtime").setLevel(prev_level)
@@ -734,18 +1020,44 @@ class TRex_Stl_Stream_Generator():
             TRex stream.
         """
 
-        packet = self._create_frame() / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb) / UDP(dport=53) / DNS(
-            qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"))
+        packet = (
+            self._create_frame()
+            / IPv6(src=self.ipv6_msb, dst=self.ipv6_msb)
+            / UDP(dport=53)
+            / DNS(qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"))
+        )
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv6_from, max_value=self.src_ipv6_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv6_from, max_value=self.dst_ipv6_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="sport", min_value=self.src_port_from, max_value=self.src_port_to, size=2, op=self.src_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
-            STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
-            STLVmFixChecksumHw(l3_offset="IPv6", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv6_from,
+                    max_value=self.src_ipv6_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv6_from,
+                    max_value=self.dst_ipv6_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="sport",
+                    min_value=self.src_port_from,
+                    max_value=self.src_port_to,
+                    size=2,
+                    op=self.src_port_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
+                STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IPv6", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -762,11 +1074,20 @@ class TRex_Stl_Stream_Generator():
         if IPv6 in pkt and UDP in pkt and DNS in pkt and DNSQR in pkt:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
-            if (self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True) and
-                    self._ports_in_range(src_port=pkt['UDP'].sport) and pkt['UDP'].dport == 53 and
-                    pkt['DNS'].qd.qtype == 255 and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.' and
-                    len(pkt) == self._get_expected_packet_size(
-                    self._create_frame() / IPv6() / UDP() / DNS(qd=DNSQR(qname="trex-tgn.cisco.com")))):
+            if (
+                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
+                and self._ports_in_range(src_port=pkt['UDP'].sport)
+                and pkt['UDP'].dport == 53
+                and pkt['DNS'].qd.qtype == 255
+                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                and len(pkt)
+                == self._get_expected_packet_size(
+                    self._create_frame()
+                    / IPv6()
+                    / UDP()
+                    / DNS(qd=DNSQR(qname="trex-tgn.cisco.com"))
+                )
+            ):
                 return True
 
         logging.getLogger("scapy.runtime").setLevel(prev_level)
@@ -783,19 +1104,52 @@ class TRex_Stl_Stream_Generator():
             TRex stream.
         """
 
-        packet = self._create_frame() / IP() / UDP() / DNS(qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"))
+        packet = (
+            self._create_frame()
+            / IP()
+            / UDP()
+            / DNS(qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"))
+        )
 
-        vm = STLScVmRaw([
-            STLVmFlowVar("ip_src", min_value=self.src_ipv4_from, max_value=self.src_ipv4_to, size=4, op=self.src_ipv4_op),
-            STLVmFlowVar("ip_dst", min_value=self.dst_ipv4_from, max_value=self.dst_ipv4_to, size=4, op=self.dst_ipv4_op),
-            STLVmFlowVar(name="sport", min_value=self.src_port_from, max_value=self.src_port_to, size=2, op=self.src_port_op),
-            STLVmFlowVar(name="dport", min_value=self.dst_port_from, max_value=self.dst_port_to, size=2, op=self.dst_port_op),
-            STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
-            STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
-            STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
-            STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
-            STLVmFixChecksumHw(l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP)
-        ])
+        vm = STLScVmRaw(
+            [
+                STLVmFlowVar(
+                    "ip_src",
+                    min_value=self.src_ipv4_from,
+                    max_value=self.src_ipv4_to,
+                    size=4,
+                    op=self.src_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    "ip_dst",
+                    min_value=self.dst_ipv4_from,
+                    max_value=self.dst_ipv4_to,
+                    size=4,
+                    op=self.dst_ipv4_op,
+                ),
+                STLVmFlowVar(
+                    name="sport",
+                    min_value=self.src_port_from,
+                    max_value=self.src_port_to,
+                    size=2,
+                    op=self.src_port_op,
+                ),
+                STLVmFlowVar(
+                    name="dport",
+                    min_value=self.dst_port_from,
+                    max_value=self.dst_port_to,
+                    size=2,
+                    op=self.dst_port_op,
+                ),
+                STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IP.src"),
+                STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IP.dst"),
+                STLVmWrFlowVar(fv_name="sport", pkt_offset="UDP.sport"),
+                STLVmWrFlowVar(fv_name="dport", pkt_offset="UDP.dport"),
+                STLVmFixChecksumHw(
+                    l3_offset="IP", l4_offset="UDP", l4_type=CTRexVmInsFixHwCs.L4_TYPE_UDP
+                ),
+            ]
+        )
 
         return self._create_stl_stream(packet, vm)
 
@@ -807,8 +1161,9 @@ class TRex_Stl_Stream_Generator():
         pkt = Ether(packet['binary'])
 
         if IP in pkt and UDP in pkt:
-            if (self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and
-                    self._ports_in_range(pkt['UDP'].sport, pkt['UDP'].dport)):
+            if self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and self._ports_in_range(
+                pkt['UDP'].sport, pkt['UDP'].dport
+            ):
 
                 # DNS header must be parsed from Raw data, Scapy doesn't parse it if source or destination port isn't 53 or 5353
                 if Raw in pkt:
@@ -824,9 +1179,17 @@ class TRex_Stl_Stream_Generator():
                     if DNS in dns_hdr and DNSQR in dns_hdr:
                         logging.getLogger("scapy.runtime").setLevel(prev_level)
 
-                        if (dns_hdr['DNS'].qd.qtype == 255 and dns_hdr['DNS'].qd.qname == b'trex-tgn.cisco.com.' and
-                                len(pkt) == self._get_expected_packet_size(
-                                self._create_frame() / IP() / UDP() / DNS(qd=DNSQR(qname="trex-tgn.cisco.com")))):
+                        if (
+                            dns_hdr['DNS'].qd.qtype == 255
+                            and dns_hdr['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                            and len(pkt)
+                            == self._get_expected_packet_size(
+                                self._create_frame()
+                                / IP()
+                                / UDP()
+                                / DNS(qd=DNSQR(qname="trex-tgn.cisco.com"))
+                            )
+                        ):
                             return True
 
                     else:

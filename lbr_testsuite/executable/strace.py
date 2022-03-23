@@ -26,13 +26,13 @@ class Strace:
         self._output_file = None
         self._expr = set()
         self._args = (
-            '-DDD',     # avoid killing strace too early
-            '-C',       # include syscalls summary on exit
-            '-i',       # print instruction pointer
-            '-f',       # follow forks
-            '-tt',      # include absolute timestamps with us
-            '-T',       # time spent in system calls
-            '-y',       # print paths to file descriptors
+            '-DDD',  # avoid killing strace too early
+            '-C',  # include syscalls summary on exit
+            '-i',  # print instruction pointer
+            '-f',  # follow forks
+            '-tt',  # include absolute timestamps with us
+            '-T',  # time spent in system calls
+            '-y',  # print paths to file descriptors
         )
 
     def add_expression(self, expr):
@@ -89,7 +89,7 @@ class Strace:
         args = list(self._args)
 
         if self._output_file is not None:
-            args.append('-o')   # redirect strace to file
+            args.append('-o')  # redirect strace to file
             args.append(self._output_file)
 
         if self._expr:

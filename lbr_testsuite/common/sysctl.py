@@ -92,8 +92,8 @@ def sysctl_set_with_restore(pyt_request, variables, values):
     sysctl_set(variables, values)
 
     def restore_original_values():
-        """ Cleanup function for restoring of original variables values.
-        """
+        """Cleanup function for restoring of original variables values."""
 
         sysctl_set(variables, original_values)
+
     pyt_request.addfinalizer(restore_original_values)

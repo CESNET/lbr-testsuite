@@ -21,19 +21,21 @@ from . import _options
 
 
 def _init():
-    _options.add_option((
-        ['--wired-loopback'],
-        dict(
-            action='append',
-            default=[],
-            type=str,
-            help=(
-                'Add wired loopback topology of two ports, the first is a kernel interface '
-                '(its name or its PCI address) the second is PCI address. (Example: '
-                'tge3,0000:01:00.0 or 0000:04:00.0,0000:04:00.1).'
-            )
+    _options.add_option(
+        (
+            ['--wired-loopback'],
+            dict(
+                action='append',
+                default=[],
+                type=str,
+                help=(
+                    'Add wired loopback topology of two ports, the first is a kernel interface '
+                    '(its name or its PCI address) the second is PCI address. (Example: '
+                    'tge3,0000:01:00.0 or 0000:04:00.0,0000:04:00.1).'
+                ),
+            ),
         )
-    ))
+    )
 
     registration.topology_option_register('wired_loopback')
 
@@ -60,7 +62,7 @@ def topology_wired_loopback(request, devices_args, option_wired_loopback):
 
     # Workaroud for a weird bug in pytest_cases similar to
     # https://github.com/smarie/python-pytest-cases/issues/37
-    if (option_wired_loopback == pytest_cases.NOT_USED):
+    if option_wired_loopback == pytest_cases.NOT_USED:
         return  # skip the fixture if its parameter not used
 
     wlpbk = option_wired_loopback.split(",")

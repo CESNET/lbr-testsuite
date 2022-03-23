@@ -12,7 +12,7 @@ import lbr_trex_client.paths  # noqa: F401
 from trex.astf.api import *
 
 
-class TRex_Astf_Profile_Generator():
+class TRex_Astf_Profile_Generator:
     """Class containing definition of commonly used traffic profiles.
 
     Profiles can be costumized according to input arguments.
@@ -118,7 +118,6 @@ class TRex_Astf_Profile_Generator():
         server_ipv4_from='10.0.1.1',
         server_ipv4_to='10.0.1.62',
         server_ipv4_op='rand',
-
         ipv6_msb='2001:db8::',
         client_ipv6_from='0.0.0.1',
         client_ipv6_to='0.0.0.254',
@@ -126,17 +125,15 @@ class TRex_Astf_Profile_Generator():
         server_ipv6_from='0.0.1.1',
         server_ipv6_to='0.0.1.62',
         server_ipv6_op='rand',
-
         server_port=80,
         cps=1,
-
         gi_ip_dont_use_inbound_mac=0,
         gi_tcp_rxbufsize=32768,
         gi_tcp_txbufsize=32768,
         gi_tcp_blackhole=0,
         gi_tcp_keepinit=10,
         gi_tcp_keepidle=10,
-        gi_tcp_keepintvl=10
+        gi_tcp_keepintvl=10,
     ):
 
         # Define all parameters as class attributes
@@ -146,13 +143,13 @@ class TRex_Astf_Profile_Generator():
 
         # Taken from TRex docs to have somewhat realistic HTTP request/response
         self.http_req = (
-            b'GET /3384 HTTP/1.1\r\nHost: 22.0.0.3\r\nConnection: Keep-Alive\r\nUser-Agent: Mozilla/4.0' +
-            b'(compatible; MSIE 7.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)\r\nAccept: */*\r\n' +
-            b'Accept-Language: en-us\r\nAccept-Encoding: gzip, deflate, compress\r\n\r\n'
+            b'GET /3384 HTTP/1.1\r\nHost: 22.0.0.3\r\nConnection: Keep-Alive\r\nUser-Agent: Mozilla/4.0'
+            + b'(compatible; MSIE 7.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)\r\nAccept: */*\r\n'
+            + b'Accept-Language: en-us\r\nAccept-Encoding: gzip, deflate, compress\r\n\r\n'
         )
         self.http_response = (
-            'HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/6.0\r\nContent-Type: text/html\r\nContent-Length: ' +
-            '32000\r\n\r\n<html><pre>**********</pre></html>'
+            'HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/6.0\r\nContent-Type: text/html\r\nContent-Length: '
+            + '32000\r\n\r\n<html><pre>**********</pre></html>'
         )
 
         self.udp_req = 128 * 'x'
@@ -178,23 +175,47 @@ class TRex_Astf_Profile_Generator():
 
     def _create_profile(self, prog_c, prog_s, c_glob_info, s_glob_info, ipv6=False):
         if ipv6:
-            ip_gen_c = ASTFIPGenDist(ip_range=[self.client_ipv6_from, self.client_ipv6_to], distribution=self.client_ipv6_op)
-            ip_gen_s = ASTFIPGenDist(ip_range=[self.server_ipv6_from, self.server_ipv6_to], distribution=self.server_ipv6_op)
-            ip_gen = ASTFIPGen(glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"), dist_client=ip_gen_c, dist_server=ip_gen_s)
+            ip_gen_c = ASTFIPGenDist(
+                ip_range=[self.client_ipv6_from, self.client_ipv6_to],
+                distribution=self.client_ipv6_op,
+            )
+            ip_gen_s = ASTFIPGenDist(
+                ip_range=[self.server_ipv6_from, self.server_ipv6_to],
+                distribution=self.server_ipv6_op,
+            )
+            ip_gen = ASTFIPGen(
+                glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"),
+                dist_client=ip_gen_c,
+                dist_server=ip_gen_s,
+            )
         else:
-            ip_gen_c = ASTFIPGenDist(ip_range=[self.client_ipv4_from, self.client_ipv4_to], distribution=self.client_ipv4_op)
-            ip_gen_s = ASTFIPGenDist(ip_range=[self.server_ipv4_from, self.server_ipv4_to], distribution=self.server_ipv4_op)
-            ip_gen = ASTFIPGen(glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"), dist_client=ip_gen_c, dist_server=ip_gen_s)
+            ip_gen_c = ASTFIPGenDist(
+                ip_range=[self.client_ipv4_from, self.client_ipv4_to],
+                distribution=self.client_ipv4_op,
+            )
+            ip_gen_s = ASTFIPGenDist(
+                ip_range=[self.server_ipv4_from, self.server_ipv4_to],
+                distribution=self.server_ipv4_op,
+            )
+            ip_gen = ASTFIPGen(
+                glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"),
+                dist_client=ip_gen_c,
+                dist_server=ip_gen_s,
+            )
 
-        temp_c = ASTFTCPClientTemplate(program=prog_c, ip_gen=ip_gen, port=self.server_port, cps=self.cps)
-        temp_s = ASTFTCPServerTemplate(program=prog_s, assoc=ASTFAssociationRule(port=self.server_port))
+        temp_c = ASTFTCPClientTemplate(
+            program=prog_c, ip_gen=ip_gen, port=self.server_port, cps=self.cps
+        )
+        temp_s = ASTFTCPServerTemplate(
+            program=prog_s, assoc=ASTFAssociationRule(port=self.server_port)
+        )
         template = ASTFTemplate(client_template=temp_c, server_template=temp_s)
 
         return ASTFProfile(
             default_ip_gen=ip_gen,
             templates=template,
             default_c_glob_info=c_glob_info,
-            default_s_glob_info=s_glob_info
+            default_s_glob_info=s_glob_info,
         )
 
     def _profile(self, prog_c, prog_s, ipv6=False):
@@ -239,14 +260,14 @@ class TRex_Astf_Profile_Generator():
 
         # Client
         prog_c = ASTFProgram(side='c')
-        prog_c.connect()    # Establish TCP connection
+        prog_c.connect()  # Establish TCP connection
         prog_c.send(self.http_req)
         prog_c.recv(len(self.http_response))
         # Implicit TCP close()
 
         # Server
         prog_s = ASTFProgram(side='s')
-        prog_s.accept()    # Wait for TCP connection
+        prog_s.accept()  # Wait for TCP connection
         prog_s.recv(len(self.http_req))
         prog_s.send(self.http_response)
 
@@ -286,7 +307,7 @@ class TRex_Astf_Profile_Generator():
 
         prog_c = ASTFProgram(side='c', stream=False)
         prog_c.send_msg(self.udp_req)
-        prog_c.recv_msg(1)    # Receive 1 packet
+        prog_c.recv_msg(1)  # Receive 1 packet
 
         prog_s = ASTFProgram(side='s', stream=False)
         prog_s.recv_msg(1)
@@ -334,12 +355,34 @@ class TRex_Astf_Profile_Generator():
         """
 
         if ipv6:
-            ip_gen_c = ASTFIPGenDist(ip_range=[self.client_ipv6_from, self.client_ipv6_to], distribution=self.client_ipv6_op)
-            ip_gen_s = ASTFIPGenDist(ip_range=[self.server_ipv6_from, self.server_ipv6_to], distribution=self.server_ipv6_op)
-            ip_gen = ASTFIPGen(glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"), dist_client=ip_gen_c, dist_server=ip_gen_s)
+            ip_gen_c = ASTFIPGenDist(
+                ip_range=[self.client_ipv6_from, self.client_ipv6_to],
+                distribution=self.client_ipv6_op,
+            )
+            ip_gen_s = ASTFIPGenDist(
+                ip_range=[self.server_ipv6_from, self.server_ipv6_to],
+                distribution=self.server_ipv6_op,
+            )
+            ip_gen = ASTFIPGen(
+                glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"),
+                dist_client=ip_gen_c,
+                dist_server=ip_gen_s,
+            )
         else:
-            ip_gen_c = ASTFIPGenDist(ip_range=[self.client_ipv4_from, self.client_ipv4_to], distribution=self.client_ipv4_op)
-            ip_gen_s = ASTFIPGenDist(ip_range=[self.server_ipv4_from, self.server_ipv4_to], distribution=self.server_ipv4_op)
-            ip_gen = ASTFIPGen(glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"), dist_client=ip_gen_c, dist_server=ip_gen_s)
+            ip_gen_c = ASTFIPGenDist(
+                ip_range=[self.client_ipv4_from, self.client_ipv4_to],
+                distribution=self.client_ipv4_op,
+            )
+            ip_gen_s = ASTFIPGenDist(
+                ip_range=[self.server_ipv4_from, self.server_ipv4_to],
+                distribution=self.server_ipv4_op,
+            )
+            ip_gen = ASTFIPGen(
+                glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"),
+                dist_client=ip_gen_c,
+                dist_server=ip_gen_s,
+            )
 
-        return ASTFProfile(default_ip_gen=ip_gen, cap_list=[ASTFCapInfo(file=pcap_file, cps=self.cps)])
+        return ASTFProfile(
+            default_ip_gen=ip_gen, cap_list=[ASTFCapInfo(file=pcap_file, cps=self.cps)]
+        )

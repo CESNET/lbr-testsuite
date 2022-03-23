@@ -25,7 +25,7 @@ from trex_client import CTRexClient
 from trex_exceptions import TRexInUseError
 
 
-class TRex_Instances():
+class TRex_Instances:
     """Base TRex class.
 
     Tests should call :meth:`~trex_tools.trex_instances.TRex_Instances.setup_trex_instance`
@@ -62,7 +62,7 @@ class TRex_Instances():
         statefulness,
         force_use=False,
         pyt_request=None,
-        **trex_cmd_options
+        **trex_cmd_options,
     ):
         """Create, start and connect to a new TRex instance.
 
@@ -198,7 +198,9 @@ class TRex_Instances():
                 self._trex_daemon_handlers.append(trex_daemon_handler)
 
         except TRexInUseError as e:
-            global_logger.error('TRex is already running. Call this method with force_use=True to kill TRex.')
+            global_logger.error(
+                'TRex is already running. Call this method with force_use=True to kill TRex.'
+            )
             # It is recommended to catch this exception and raise additional message to inform user
             # about solutions based on your testing framework. Eg. launching test again with command
             # line parameter like --trex-force-use that will ensure calling this method with force_use=True.
@@ -209,8 +211,10 @@ class TRex_Instances():
         else:
             trex_handler = ASTFClient(server=server, sync_port=sync_port, async_port=async_port)
 
-        global_logger.debug(f'Connecting to TRex ({trex_handler.ctx.server}:' +
-                            f'[{trex_handler.ctx.async_port},{trex_handler.ctx.sync_port}]) ...')
+        global_logger.debug(
+            f'Connecting to TRex ({trex_handler.ctx.server}:'
+            + f'[{trex_handler.ctx.async_port},{trex_handler.ctx.sync_port}]) ...'
+        )
         trex_handler.connect()
         self._trex_handlers.append(trex_handler)
         global_logger.debug('Acquiring all available physical ports ...')
@@ -220,7 +224,9 @@ class TRex_Instances():
         # to use one 'dummy' port, which cannot be acquired.
         trex_handler.reset()
         for port in trex_handler.get_all_ports():
-            global_logger.debug(f'Port {port} speed: {trex_handler.get_port_attr(port)["speed"]} GB.')
+            global_logger.debug(
+                f'Port {port} speed: {trex_handler.get_port_attr(port)["speed"]} GB.'
+            )
 
         # Can be used only in pytest framework, otherwise see disconnect() method
         def finalizer(self, trex_handler):
@@ -241,15 +247,19 @@ class TRex_Instances():
             Specifies instance of TRex.
         """
 
-        global_logger.debug(f'Disconnecting from TRex ({handler.ctx.server}:' +
-                            f'[{handler.ctx.async_port},{handler.ctx.sync_port}]) ...')
+        global_logger.debug(
+            f'Disconnecting from TRex ({handler.ctx.server}:'
+            + f'[{handler.ctx.async_port},{handler.ctx.sync_port}]) ...'
+        )
         handler.disconnect()
 
         # Daemon handler has same index in _TDH array as TRex handler has in _TH array, so it can be used to find it
         trex_daemon_handler = self._trex_daemon_handlers[self._trex_handlers.index(handler)]
 
-        global_logger.debug(f'Terminating TRex (via its daemon {trex_daemon_handler.trex_host}:' +
-                            f'{trex_daemon_handler.trex_daemon_port}) ...')
+        global_logger.debug(
+            f'Terminating TRex (via its daemon {trex_daemon_handler.trex_host}:'
+            + f'{trex_daemon_handler.trex_daemon_port}) ...'
+        )
         trex_daemon_handler.stop_trex()
 
         self._trex_handlers.remove(handler)
@@ -437,7 +447,9 @@ class TRex_Instances():
         elif isinstance(handler, ASTFClient):
             return handler.get_stats(skip_zero=False)
         else:
-            raise ValueError(f'Bad handler. Expected STLClient or ASTFClient type, got "{type(handler)}"')
+            raise ValueError(
+                f'Bad handler. Expected STLClient or ASTFClient type, got "{type(handler)}"'
+            )
 
     @staticmethod
     def u2i(unit):
@@ -495,7 +507,9 @@ class TRex_Instances():
 
         if isinstance(bps_l3, str):
             if bps_l3[-3:].lower() == "pps":
-                raise ValueError('Expected "bps" (bits per second) unit, but got "pps" (packets per second) unit.')
+                raise ValueError(
+                    'Expected "bps" (bits per second) unit, but got "pps" (packets per second) unit.'
+                )
             bps_l3 = TRex_Instances.u2i(bps_l3)
 
         L2_header_size = 18

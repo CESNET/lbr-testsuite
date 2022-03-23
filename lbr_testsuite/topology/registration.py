@@ -29,7 +29,7 @@ def topology_option_register(option_name):
     pseudofixture_name = f'option_{option_name}'
     _REGISTERED_OPTIONS[option_name] = dict(
         option_name=option_name,
-        pseudofixture=pseudofixture_name
+        pseudofixture=pseudofixture_name,
     )
 
 

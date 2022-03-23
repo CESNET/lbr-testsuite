@@ -21,8 +21,7 @@ class Generator:
     """
 
     def wait_until_ready(self):
-        """Wait for the generator to be ready.
-        """
+        """Wait for the generator to be ready."""
 
         pass
 

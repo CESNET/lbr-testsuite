@@ -145,5 +145,5 @@ class Coredump:
         # extract coredump using coredumpctl if core.<pid> file is not present
         executable.Tool(
             ['coredumpctl', 'dump', str(process.pid), '-o', self._output_file],
-            failure_verbosity='no-exception'
+            failure_verbosity='no-exception',
         ).run()

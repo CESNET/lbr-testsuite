@@ -39,7 +39,7 @@ def pytest_addoption(parser):
         'default_topology',
         type='linelist',
         default=[],
-        help='Set default topology (or topologies).'
+        help='Set default topology (or topologies).',
     )
 
 
@@ -117,7 +117,7 @@ def pytest_generate_tests(metafunc):
         _define_pseudofixture(
             metafunc,
             topology['pseudofixture'],
-            config.getoption(topology['option_name'])
+            config.getoption(topology['option_name']),
         )
 
 
@@ -128,11 +128,11 @@ def pytest_collection_modifyitems(session, config, items):
     runs that uses undefined pseudofixtures.
     """
 
-    pseudofixtures = [t['pseudofixture'] for t in registration.registered_topology_options().values()]
+    pseudofixs = [t['pseudofixture'] for t in registration.registered_topology_options().values()]
     filtered = []
 
     # Deselect all the test runs having any pseudofixture not defined
-    _filter_undefined_pseudofixtures(items, filtered, pseudofixtures)
+    _filter_undefined_pseudofixtures(items, filtered, pseudofixs)
     config.hook.pytest_deselected(items=filtered)
 
 

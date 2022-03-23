@@ -114,7 +114,7 @@ def topology_union(
     fixtures,
     name='topology',
     scope='module',
-    **kwargs
+    **kwargs,
 ):
     """Our pytest-cases fixture_union wrapper for topology unions.
     Unfortunately it is necessary to duplicate a part of the original
@@ -215,7 +215,7 @@ def topology_union(
         raise TypeError("topology_union: the `fixtures` argument should be a tuple, set or list")
 
     # Unpack the pytest.param marks
-    custom_pids, p_marks, fixtures = extract_parameterset_info((name, ), fixtures)
+    custom_pids, p_marks, fixtures = extract_parameterset_info((name,), fixtures)
 
     # Inject name prefixes if not already present
     prefix = f'{name}_'
@@ -230,7 +230,11 @@ def topology_union(
 
     for _idx, (_name, _id, _mark) in enumerate(zip(f_names, custom_pids, p_marks)):
         # Create the alternative object
-        alternative = UnionFixtureAlternative(union_name=name, alternative_name=_name, alternative_index=_idx)
+        alternative = UnionFixtureAlternative(
+            union_name=name,
+            alternative_name=_name,
+            alternative_index=_idx,
+        )
 
         # Remove duplicates in the fixture arguments
         if _name in f_names_args:
@@ -249,7 +253,7 @@ def topology_union(
 
     # Remove name prefixes from default ids if any specific ids set
     if kwargs.get('ids', None) is None:
-        kwargs['ids'] = lambda ufix: ufix.alternative_name[len(prefix):]
+        kwargs['ids'] = lambda ufix: ufix.alternative_name[len(prefix) :]  # noqa: E203
 
     union_fix = _fixture_union(
         caller_module,
@@ -257,7 +261,8 @@ def topology_union(
         fix_alternatives=f_alternatives,
         unique_fix_alt_names=f_names_args,
         scope=scope,
-        **kwargs)
+        **kwargs,
+    )
 
     return union_fix
 
