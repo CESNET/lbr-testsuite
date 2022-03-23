@@ -79,7 +79,7 @@ def _init():
         )
     ))
 
-    registration.topology_register('wired-spirent', 'wired_spirent')
+    registration.topology_option_register('wired_spirent')
 
 
 @pytest_cases.fixture(scope='session')

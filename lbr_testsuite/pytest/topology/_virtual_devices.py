@@ -34,7 +34,7 @@ def _init():
         )
     ))
 
-    registration.topology_register('virtual-devices', 'vdevs')
+    registration.topology_option_register('vdevs')
 
 
 @pytest_cases.fixture(scope='session')

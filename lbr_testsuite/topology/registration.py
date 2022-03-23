@@ -7,11 +7,11 @@ Registration of implemented topologies.
 """
 
 
-_REGISTERED_TOPOLOGIES = dict()
+_REGISTERED_OPTIONS = dict()
 
 
-def topology_register(name, option_name):
-    """Register a topology implementation in topology module.
+def topology_option_register(option_name):
+    """Register a topology option in topology module.
 
     Registration ensures creation of a fixture named
     'option_``option_name``'. Such fixture is needed in a topology
@@ -19,30 +19,28 @@ def topology_register(name, option_name):
 
     Parameters
     ----------
-    name: str
-        Unique topology identification.
     option_name: str
         Name of topology option.
     """
 
-    global _REGISTERED_TOPOLOGIES
-    assert name not in _REGISTERED_TOPOLOGIES, 'Topology already implemented.'
+    global _REGISTERED_OPTIONS
+    assert option_name not in _REGISTERED_OPTIONS, 'Topology option already registered.'
 
     pseudofixture_name = f'option_{option_name}'
-    _REGISTERED_TOPOLOGIES[name] = dict(
+    _REGISTERED_OPTIONS[option_name] = dict(
         option_name=option_name,
         pseudofixture=pseudofixture_name
     )
 
 
-def registered_topologies():
-    """Get global dictionary of registered topologies.
+def registered_topology_options():
+    """Get global dictionary of registered topology options.
 
     Return
     ------
     dict
-        Dictionary of registered topologies.
+        Dictionary of registered topology options.
     """
 
-    global _REGISTERED_TOPOLOGIES
-    return _REGISTERED_TOPOLOGIES
+    global _REGISTERED_OPTIONS
+    return _REGISTERED_OPTIONS

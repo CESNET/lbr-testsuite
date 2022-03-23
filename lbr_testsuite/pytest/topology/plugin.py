@@ -104,7 +104,7 @@ def pytest_generate_tests(metafunc):
     """
 
     config = metafunc.config
-    for topology in registration.registered_topologies().values():
+    for topology in registration.registered_topology_options().values():
         _define_pseudofixture(
             metafunc,
             topology['pseudofixture'],
@@ -119,7 +119,7 @@ def pytest_collection_modifyitems(session, config, items):
     runs that uses undefined pseudofixtures.
     """
 
-    pseudofixtures = [t['pseudofixture'] for t in registration.registered_topologies().values()]
+    pseudofixtures = [t['pseudofixture'] for t in registration.registered_topology_options().values()]
     filtered = []
 
     # Deselect all the test runs having any pseudofixture not defined
