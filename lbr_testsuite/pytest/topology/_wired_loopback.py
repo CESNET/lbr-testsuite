@@ -11,14 +11,11 @@ interconnected by a physical link.
 
 import pytest
 import pytest_cases
-from pathlib import Path
 
-from ...executable import executable
 from ...common.sysctl import sysctl_set_with_restore
 from ...topology.device import PciDevice
 from ...topology.generator import NetdevGenerator
 from ...topology.topology import Topology
-from ...topology.pci_address import PciAddress
 from ...topology import registration
 
 from . import _options
@@ -70,11 +67,6 @@ def topology_wired_loopback(request, devices_args, option_wired_loopback):
     wlpbk = option_wired_loopback.split(",")
     if len(wlpbk) < 2:
         pytest.skip("wired loopback is missing PCI address (see --wired-loopback)")
-
-    if PciAddress.is_valid(wlpbk[0]):
-        root_dir = Path(request.config.getoption('repository_root')).resolve()
-        utility = root_dir / request.config.getoption('dcpro_autobind_exec')
-        executable.Tool([str(utility), '-d', wlpbk[0], '-m', 'kernel']).run()
 
     device_address = wlpbk[1]
     device_args = devices_args[device_address]
