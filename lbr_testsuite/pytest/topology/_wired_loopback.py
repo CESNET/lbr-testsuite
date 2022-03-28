@@ -43,7 +43,7 @@ def _init():
 
 
 @pytest_cases.fixture(scope='session')
-def topology_wired_loopback(request, option_wired_loopback):
+def topology_wired_loopback(request, devices_args, option_wired_loopback):
     """Fixture creating wired loopback topology. Unlike vdev_loopback,
     it is uses real NIC interfaces to build Device and Generator objects
     on top of a real NIC.
@@ -52,6 +52,9 @@ def topology_wired_loopback(request, option_wired_loopback):
     ----------
     request : FixtureRequest
         Special pytest fixture
+    devices_args : DevicesArgs
+        Devices arguments fixture
+
 
     Returns
     -------
@@ -73,7 +76,9 @@ def topology_wired_loopback(request, option_wired_loopback):
         utility = root_dir / request.config.getoption('dcpro_autobind_exec')
         executable.Tool([str(utility), '-d', wlpbk[0], '-m', 'kernel']).run()
 
-    device = PciDevice(wlpbk[1])
+    device_address = wlpbk[1]
+    device_args = devices_args[device_address]
+    device = PciDevice(device_address, device_args)
     generator = NetdevGenerator(wlpbk[0])
 
     sysctl_set_with_restore(request, f'net.ipv6.conf.{generator.get_netdev()}.disable_ipv6', '1')

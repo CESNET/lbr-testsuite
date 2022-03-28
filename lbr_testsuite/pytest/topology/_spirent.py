@@ -83,7 +83,7 @@ def _init():
 
 
 @pytest_cases.fixture(scope='session')
-def topology_wired_spirent(request, option_wired_spirent):
+def topology_wired_spirent(request, devices_args, option_wired_spirent):
     """Fixture creating spirent topology. It is uses real NIC
     interfaces to build Device and spirent as a Generator connected
     to the NIC.
@@ -92,6 +92,8 @@ def topology_wired_spirent(request, option_wired_spirent):
     ----------
     request : FixtureRequest
         Special pytest fixture
+    devices_args : DevicesArgs
+        Devices arguments fixture
     option_wired_spirent : pseudofixture
         Dynamically defined fixture holding --wired-spirent
         argument values.
@@ -114,7 +116,8 @@ def topology_wired_spirent(request, option_wired_spirent):
 
     spirent_chassis_port, device_address = option_wired_spirent.split(",")
 
-    device = PciDevice(device_address)
+    device_args = devices_args[device_address]
+    device = PciDevice(device_address, device_args)
 
     spirent_server = request.config.getoption('spirent_server')
     spirent_chassis = request.config.getoption('spirent_chassis')
