@@ -97,13 +97,15 @@ class PciDevice(Device):
     def _dpdk_device(self):
         return f'--allow={self._address}'
 
-    def __init__(self, address):
+    def __init__(self, address, devargs=None):
         """The device object based on a real PCIe device.
 
         Parameters
         ----------
         address : str
             address of PCIe device
+        devargs : dict[str], optional
+            device arguments
 
         Raises
         ------
@@ -118,6 +120,8 @@ class PciDevice(Device):
 
         self._address = PciAddress.from_string(address)
         self._dpdk_name = str(address)
+        if devargs:
+            self._dpdk_devargs = devargs
 
     def get_address(self):
         """Gets PCIe address of the device.
