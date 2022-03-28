@@ -123,7 +123,7 @@ class RingDevice(VdevDevice):
         """
 
         super().__init__()
-        self._dpdk_args.extend(['--vdev=net_ring0'])
+        self._dpdk_args.extend([f'--vdev=net_ring{id}'])
         self._dpdk_name = f'net_ring{id}'
 
 
@@ -158,5 +158,5 @@ class PcapLiveDevice(VdevDevice):
             raise RuntimeError(f"no such network interface '{netdev}'")
 
         self._netdev = str(netdev)
-        self._dpdk_args.extend([f'--vdev=net_pcap0,iface={self._netdev}'])
+        self._dpdk_args.extend([f'--vdev=net_pcap{id},iface={self._netdev}'])
         self._dpdk_name = f'net_pcap{id}'
