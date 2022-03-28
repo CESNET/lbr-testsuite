@@ -1,7 +1,7 @@
 """
 Author(s): Jan Kucera <jan.kucera@cesnet.cz>
 
-Copyright: (C) 2021 CESNET
+Copyright: (C) 2022 CESNET
 
 Class representation of PCI address.
 """

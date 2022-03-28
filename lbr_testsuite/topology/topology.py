@@ -1,7 +1,7 @@
 """
 Author(s): Jan Kucera <jan.kucera@cesnet.cz>
 
-Copyright: (C) 2020-2021 CESNET
+Copyright: (C) 2020-2022 CESNET
 
 Topology class and topology helpers.
 """
