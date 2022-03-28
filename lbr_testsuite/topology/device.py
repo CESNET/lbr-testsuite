@@ -19,6 +19,8 @@ class Device:
     ----------
     _dpdk_args : list[str]
         List of DPDK EAL (Environment Abstraction Layer) parameters.
+    _dpdk_devargs : dict[str]
+        Dictionary of DPDK device arguments.
     _dpdk_name : str
         Name of the device in DPDK runtime.
     """
@@ -28,6 +30,7 @@ class Device:
         """
 
         self._dpdk_args = []
+        self._dpdk_devargs = {}
         self._dpdk_name = None
 
     def _dpdk_device(self):
@@ -55,8 +58,21 @@ class Device:
         if not device:
             return self._dpdk_args
 
+        for key, val in self._dpdk_devargs.items():
+            device = device + f',{key}={val}'
+
         return [device] + self._dpdk_args
 
+    def get_dpdk_devargs(self):
+        """Gets dictionary of DPDK device arguments.
+
+        Returns
+        -------
+        dict[str]
+            Dictionary of DPDK device arguments.
+        """
+
+        return self._dpdk_devargs
 
     def get_dpdk_name(self):
         """Gets name of the device in DPDK runtime.
@@ -156,9 +172,6 @@ class PcapLiveDevice(VdevDevice):
         Net device interface name.
     """
 
-    def _dpdk_device(self):
-        return f'--vdev={self._dpdk_name},iface={self._netdev}'
-
     def __init__(self, netdev, id=0):
         """The PCAP device object based on a kernel network interface.
 
@@ -181,4 +194,5 @@ class PcapLiveDevice(VdevDevice):
             raise RuntimeError(f"no such network interface '{netdev}'")
 
         self._netdev = str(netdev)
+        self._dpdk_devargs['iface'] = self._netdev
         self._dpdk_name = f'net_pcap{id}'
