@@ -6,16 +6,16 @@ from .topology import Topology, select_topologies
 
 
 __all__ = [
-    'Generator',
-    'NetdevGenerator',
-    'Device',
-    'PciDevice',
-    'VdevDevice',
-    'RingDevice',
-    'PcapLiveDevice',
-    'PciAddress',
-    'Topology',
-    'select_topologies',
-    'topology_option_register',
-    'registered_topology_options',
+    "Generator",
+    "NetdevGenerator",
+    "Device",
+    "PciDevice",
+    "VdevDevice",
+    "RingDevice",
+    "PcapLiveDevice",
+    "PciAddress",
+    "Topology",
+    "select_topologies",
+    "topology_option_register",
+    "registered_topology_options",
 ]

@@ -30,7 +30,7 @@ def sysctl_set(variables, values):
     assert len(variables) == len(values)
 
     for var, val in zip(variables, values):
-        executable.Tool(['sysctl', '-w', f'{var}={val}']).run()
+        executable.Tool(["sysctl", "-w", f"{var}={val}"]).run()
 
 
 def sysctl_get(variables):
@@ -58,14 +58,14 @@ def sysctl_get(variables):
     values = []
 
     for var in variables:
-        var_re = var.replace('.', '\\.')
-        var_re = rf'^{var_re}\s*=\s*([0-9])+$'
+        var_re = var.replace(".", "\\.")
+        var_re = rf"^{var_re}\s*=\s*([0-9])+$"
 
-        stdout, _ = executable.Tool(['sysctl', var]).run()
+        stdout, _ = executable.Tool(["sysctl", var]).run()
 
         match = re.match(var_re, stdout)
         if not match:
-            raise RuntimeError(f'Unable to match {var} kernel variable.')
+            raise RuntimeError(f"Unable to match {var} kernel variable.")
         values.append(match[1])
 
     return values

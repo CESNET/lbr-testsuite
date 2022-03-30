@@ -40,7 +40,7 @@ def wait_until_condition(condition, timeout=1.0, sleep_step=1):
         now = time.monotonic()
 
 
-def compose_output_path(pyt_request, target, suffix='', dir=''):
+def compose_output_path(pyt_request, target, suffix="", dir=""):
     """Compose output path for a file or a directory.
 
     A path is composed from an optional directory, a target name (or
@@ -63,10 +63,10 @@ def compose_output_path(pyt_request, target, suffix='', dir=''):
         Composed path to the object (file or directory).
     """
 
-    valid_file_name = pyt_request.node.name.replace('/', '-')
-    suffix = f'__{valid_file_name}{suffix}'
+    valid_file_name = pyt_request.node.name.replace("/", "-")
+    suffix = f"__{valid_file_name}{suffix}"
 
-    target_path = f'{target}{suffix}'
+    target_path = f"{target}{suffix}"
     return Path(dir) / target_path
 
 

@@ -26,13 +26,13 @@ class Strace:
         self._output_file = None
         self._expr = set()
         self._args = (
-            '-DDD',  # avoid killing strace too early
-            '-C',  # include syscalls summary on exit
-            '-i',  # print instruction pointer
-            '-f',  # follow forks
-            '-tt',  # include absolute timestamps with us
-            '-T',  # time spent in system calls
-            '-y',  # print paths to file descriptors
+            "-DDD",  # avoid killing strace too early
+            "-C",  # include syscalls summary on exit
+            "-i",  # print instruction pointer
+            "-f",  # follow forks
+            "-tt",  # include absolute timestamps with us
+            "-T",  # time spent in system calls
+            "-y",  # print paths to file descriptors
         )
 
     def add_expression(self, expr):
@@ -49,7 +49,7 @@ class Strace:
             for e in expr:
                 self._expr.add(e)
         else:
-            assert isinstance(expr, str), 'argument has to be string or tuple'
+            assert isinstance(expr, str), "argument has to be string or tuple"
             self._expr.add(expr)
 
     def set_output_file(self, file):
@@ -89,14 +89,14 @@ class Strace:
         args = list(self._args)
 
         if self._output_file is not None:
-            args.append('-o')  # redirect strace to file
+            args.append("-o")  # redirect strace to file
             args.append(self._output_file)
 
         if self._expr:
-            args.append('-e')
-            trace_expr = ''
+            args.append("-e")
+            trace_expr = ""
             for expr in self._expr:
-                trace_expr = f'{trace_expr}{expr},'
+                trace_expr = f"{trace_expr}{expr},"
             trace_expr = trace_expr[:-1]  # Remove last comma
             args.append(trace_expr)
 
@@ -117,7 +117,7 @@ class Strace:
             list to be passed into Popen-like calls
         """
 
-        strace = ['strace']
+        strace = ["strace"]
 
         if isinstance(command, str):
             command = [command]

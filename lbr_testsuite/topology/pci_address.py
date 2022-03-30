@@ -46,7 +46,7 @@ class PciAddress:
 
     @classmethod
     def _parse(cls, address):
-        regexp = r'([0-9a-fA-F]{4}):([0-9a-fA-F]{2}):([0-9a-fA-F]{2}).([0-9a-fA-F]{1})'
+        regexp = r"([0-9a-fA-F]{4}):([0-9a-fA-F]{2}):([0-9a-fA-F]{2}).([0-9a-fA-F]{1})"
         return re.match(regexp, address)
 
     @classmethod
@@ -55,7 +55,7 @@ class PciAddress:
 
         match = cls._parse(address)
         if not match:
-            raise RuntimeError('Not a valid PCI address ({address})')
+            raise RuntimeError("Not a valid PCI address ({address})")
 
         groups = [int(x, 16) for x in match.groups()]
         return cls(*groups)
@@ -80,4 +80,4 @@ class PciAddress:
     def __str__(self):
         """Convert PciAddress to string."""
 
-        return f'{self.domain:04x}:{self.bus:02x}:{self.devid:02x}.{self.function:x}'
+        return f"{self.domain:04x}:{self.bus:02x}:{self.devid:02x}.{self.function:x}"

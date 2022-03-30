@@ -4,7 +4,7 @@ from .trex_stl_stream_generator import TRex_Stl_Stream_Generator
 
 
 __all__ = [
-    'TRex_Instances',
-    'TRex_Stl_Stream_Generator',
-    'TRex_Astf_Profile_Generator',
+    "TRex_Instances",
+    "TRex_Stl_Stream_Generator",
+    "TRex_Astf_Profile_Generator",
 ]

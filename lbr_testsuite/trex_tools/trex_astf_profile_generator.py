@@ -112,19 +112,19 @@ class TRex_Astf_Profile_Generator:
 
     def __init__(
         self,
-        client_ipv4_from='10.0.0.1',
-        client_ipv4_to='10.0.0.254',
-        client_ipv4_op='rand',
-        server_ipv4_from='10.0.1.1',
-        server_ipv4_to='10.0.1.62',
-        server_ipv4_op='rand',
-        ipv6_msb='2001:db8::',
-        client_ipv6_from='0.0.0.1',
-        client_ipv6_to='0.0.0.254',
-        client_ipv6_op='rand',
-        server_ipv6_from='0.0.1.1',
-        server_ipv6_to='0.0.1.62',
-        server_ipv6_op='rand',
+        client_ipv4_from="10.0.0.1",
+        client_ipv4_to="10.0.0.254",
+        client_ipv4_op="rand",
+        server_ipv4_from="10.0.1.1",
+        server_ipv4_to="10.0.1.62",
+        server_ipv4_op="rand",
+        ipv6_msb="2001:db8::",
+        client_ipv6_from="0.0.0.1",
+        client_ipv6_to="0.0.0.254",
+        client_ipv6_op="rand",
+        server_ipv6_from="0.0.1.1",
+        server_ipv6_to="0.0.1.62",
+        server_ipv6_op="rand",
         server_port=80,
         cps=1,
         gi_ip_dont_use_inbound_mac=0,
@@ -138,22 +138,22 @@ class TRex_Astf_Profile_Generator:
 
         # Define all parameters as class attributes
         for param, value in locals().items():
-            if param != 'self':
+            if param != "self":
                 setattr(self, param, value)
 
         # Taken from TRex docs to have somewhat realistic HTTP request/response
         self.http_req = (
-            b'GET /3384 HTTP/1.1\r\nHost: 22.0.0.3\r\nConnection: Keep-Alive\r\nUser-Agent: Mozilla/4.0'
-            + b'(compatible; MSIE 7.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)\r\nAccept: */*\r\n'
-            + b'Accept-Language: en-us\r\nAccept-Encoding: gzip, deflate, compress\r\n\r\n'
+            b"GET /3384 HTTP/1.1\r\nHost: 22.0.0.3\r\nConnection: Keep-Alive\r\nUser-Agent: Mozilla/4.0"
+            + b"(compatible; MSIE 7.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)\r\nAccept: */*\r\n"
+            + b"Accept-Language: en-us\r\nAccept-Encoding: gzip, deflate, compress\r\n\r\n"
         )
         self.http_response = (
-            'HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/6.0\r\nContent-Type: text/html\r\nContent-Length: '
-            + '32000\r\n\r\n<html><pre>**********</pre></html>'
+            "HTTP/1.1 200 OK\r\nServer: Microsoft-IIS/6.0\r\nContent-Type: text/html\r\nContent-Length: "
+            + "32000\r\n\r\n<html><pre>**********</pre></html>"
         )
 
-        self.udp_req = 128 * 'x'
-        self.udp_response = 256 * 'x'
+        self.udp_req = 128 * "x"
+        self.udp_response = 256 * "x"
 
     def _create_global_info(self, server_side=False, ipv6=False):
         glob_info = ASTFGlobalInfo()
@@ -259,14 +259,14 @@ class TRex_Astf_Profile_Generator:
         """
 
         # Client
-        prog_c = ASTFProgram(side='c')
+        prog_c = ASTFProgram(side="c")
         prog_c.connect()  # Establish TCP connection
         prog_c.send(self.http_req)
         prog_c.recv(len(self.http_response))
         # Implicit TCP close()
 
         # Server
-        prog_s = ASTFProgram(side='s')
+        prog_s = ASTFProgram(side="s")
         prog_s.accept()  # Wait for TCP connection
         prog_s.recv(len(self.http_req))
         prog_s.send(self.http_response)
@@ -283,12 +283,12 @@ class TRex_Astf_Profile_Generator:
             TRex profile.
         """
 
-        prog_c = ASTFProgram(side='c')
+        prog_c = ASTFProgram(side="c")
         prog_c.connect()
         prog_c.send(self.http_req)
         prog_c.recv(len(self.http_response))
 
-        prog_s = ASTFProgram(side='s')
+        prog_s = ASTFProgram(side="s")
         prog_s.accept()
         prog_s.recv(len(self.http_req))
         prog_s.send(self.http_response)
@@ -305,11 +305,11 @@ class TRex_Astf_Profile_Generator:
             TRex profile.
         """
 
-        prog_c = ASTFProgram(side='c', stream=False)
+        prog_c = ASTFProgram(side="c", stream=False)
         prog_c.send_msg(self.udp_req)
         prog_c.recv_msg(1)  # Receive 1 packet
 
-        prog_s = ASTFProgram(side='s', stream=False)
+        prog_s = ASTFProgram(side="s", stream=False)
         prog_s.recv_msg(1)
         prog_s.send_msg(self.udp_response)
 
@@ -325,11 +325,11 @@ class TRex_Astf_Profile_Generator:
             TRex profile.
         """
 
-        prog_c = ASTFProgram(side='c', stream=False)
+        prog_c = ASTFProgram(side="c", stream=False)
         prog_c.send_msg(self.udp_req)
         prog_c.recv_msg(1)
 
-        prog_s = ASTFProgram(side='s', stream=False)
+        prog_s = ASTFProgram(side="s", stream=False)
         prog_s.recv_msg(1)
         prog_s.send_msg(self.udp_response)
 

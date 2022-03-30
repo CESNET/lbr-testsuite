@@ -22,9 +22,9 @@ def pytest_addoption(parser):
     """
 
     parser.addoption(
-        '--renamer-prefix',
+        "--renamer-prefix",
         default=None,
-        help=('Prefix each test by a specified string.'),
+        help=("Prefix each test by a specified string."),
     )
 
 
@@ -35,10 +35,10 @@ def pytest_collection_modifyitems(session, config, items):
     line arguments.
     """
 
-    prefix = config.getoption('renamer_prefix')
+    prefix = config.getoption("renamer_prefix")
 
     if not prefix or len(prefix) == 0:
         return
 
     for item in items:
-        item._nodeid = prefix + '/' + item._nodeid
+        item._nodeid = prefix + "/" + item._nodeid

@@ -3,8 +3,8 @@ from .spirentlib.spirentlib import STC_API_OFFICIAL, STC_API_PROPRIETARY, StcHan
 
 
 __all__ = [
-    'STC_API_PROPRIETARY',
-    'STC_API_OFFICIAL',
-    'StcHandler',
-    'Spirent',
+    "STC_API_PROPRIETARY",
+    "STC_API_OFFICIAL",
+    "StcHandler",
+    "Spirent",
 ]

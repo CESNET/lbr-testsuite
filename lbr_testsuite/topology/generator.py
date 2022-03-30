@@ -56,10 +56,10 @@ class NetdevGenerator(Generator):
             Interface name.
         """
 
-        if not isdir(f'/sys/bus/pci/devices/{address}'):
+        if not isdir(f"/sys/bus/pci/devices/{address}"):
             raise OSError(errno.ENODEV, f"no such PCIe device '{address}'")
 
-        netdevs = [f for f in listdir(f'/sys/bus/pci/devices/{address}/net')]
+        netdevs = [f for f in listdir(f"/sys/bus/pci/devices/{address}/net")]
         if len(netdevs) <= 0:
             raise OSError(errno.ENOENT, f"no network interface related to '{address}' found")
 
@@ -84,7 +84,7 @@ class NetdevGenerator(Generator):
         if PciAddress.is_valid(netdev):
             netdev = self._convert_pci_to_netdev(netdev)
 
-        if not isdir(f'/sys/class/net/{netdev}'):
+        if not isdir(f"/sys/class/net/{netdev}"):
             raise OSError(errno.ENODEV, f"no such network interface '{netdev}'")
 
         self._netdev = str(netdev)

@@ -172,26 +172,26 @@ class TRex_Stl_Stream_Generator:
         port=0,
         packet_size=222,
         packet_padding=True,
-        src_ipv4_from='10.0.0.1',
-        src_ipv4_to='10.0.0.254',
-        dst_ipv4_from='10.0.1.1',
-        dst_ipv4_to='10.0.1.62',
-        src_ipv4_op='random',
-        dst_ipv4_op='random',
-        ipv6_msb='2001:db8::',
-        src_ipv6_from='0.0.0.1',
-        src_ipv6_to='0.0.0.254',
-        dst_ipv6_from='0.0.1.1',
-        dst_ipv6_to='0.0.1.62',
-        src_ipv6_op='random',
-        dst_ipv6_op='random',
+        src_ipv4_from="10.0.0.1",
+        src_ipv4_to="10.0.0.254",
+        dst_ipv4_from="10.0.1.1",
+        dst_ipv4_to="10.0.1.62",
+        src_ipv4_op="random",
+        dst_ipv4_op="random",
+        ipv6_msb="2001:db8::",
+        src_ipv6_from="0.0.0.1",
+        src_ipv6_to="0.0.0.254",
+        dst_ipv6_from="0.0.1.1",
+        dst_ipv6_to="0.0.1.62",
+        src_ipv6_op="random",
+        dst_ipv6_op="random",
         src_port_from=1025,
         src_port_to=65000,
         dst_port_from=1025,
         dst_port_to=65000,
-        src_port_op='random',
-        dst_port_op='random',
-        tcp_flags='S',
+        src_port_op="random",
+        dst_port_op="random",
+        tcp_flags="S",
         stream_mode="STLTXCont",
         stream_pps=None,
         stream_bps_L2=None,
@@ -202,12 +202,12 @@ class TRex_Stl_Stream_Generator:
 
         if not isinstance(trex_handler, STLClient):
             raise ValueError(
-                f'TRex_handler parameter needs to be STLClient type! Instead got {type(trex_handler)}'
+                f"TRex_handler parameter needs to be STLClient type! Instead got {type(trex_handler)}"
             )
 
         # Define all parameters as class attributes
         for param, value in locals().items():
-            if param != 'self':
+            if param != "self":
                 setattr(self, param, value)
 
         if isinstance(stream_pps, str):
@@ -220,18 +220,18 @@ class TRex_Stl_Stream_Generator:
         if packet_padding:
             if packet_size < 60:
                 raise ValueError(
-                    'Minimum allowed packet_size is 60B (+4B FCS automatically added by HW).'
+                    "Minimum allowed packet_size is 60B (+4B FCS automatically added by HW)."
                 )
 
         self.tcp_flags_s2i = {
-            'F': 0x01,
-            'S': 0x02,
-            'R': 0x04,
-            'P': 0x08,
-            'A': 0x10,
-            'U': 0x20,
-            'E': 0x40,
-            'C': 0x80,
+            "F": 0x01,
+            "S": 0x02,
+            "R": 0x04,
+            "P": 0x08,
+            "A": 0x10,
+            "U": 0x20,
+            "E": 0x40,
+            "C": 0x80,
         }
 
     def _create_frame(self):
@@ -240,14 +240,14 @@ class TRex_Stl_Stream_Generator:
         frame = Ether()
 
         # Automatically add VLAN if needed
-        if self.trex_handler.get_port_attr(self.port)['vlan'] != "-":
-            frame = frame / Dot1Q(vlan=self.trex_handler.get_port_attr(self.port)['vlan'])
+        if self.trex_handler.get_port_attr(self.port)["vlan"] != "-":
+            frame = frame / Dot1Q(vlan=self.trex_handler.get_port_attr(self.port)["vlan"])
 
         return frame
 
     def _add_padding(self, packet):
 
-        padding = ''
+        padding = ""
 
         if self.packet_padding and self.packet_size > len(packet):
             padding = "TRexPadding" * 140  # Enough to pad 1500B
@@ -292,8 +292,8 @@ class TRex_Stl_Stream_Generator:
 
     def _v4_to_v6(self, ip):
 
-        numbers = list(map(int, ip.split('.')))
-        return self.ipv6_msb + '{:02x}{:02x}:{:02x}{:02x}'.format(*numbers)
+        numbers = list(map(int, ip.split(".")))
+        return self.ipv6_msb + "{:02x}{:02x}:{:02x}{:02x}".format(*numbers)
 
     def _ips_in_range(self, src_ip, dst_ip, ipv6=False):
 
@@ -388,12 +388,12 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.udp4_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         if IP in pkt and UDP in pkt:
             if (
-                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
-                and self._ports_in_range(pkt['UDP'].sport, pkt['UDP'].dport)
+                self._ips_in_range(pkt["IP"].src, pkt["IP"].dst)
+                and self._ports_in_range(pkt["UDP"].sport, pkt["UDP"].dport)
                 and len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / UDP())
             ):
                 return True
@@ -468,12 +468,12 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.udp6_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         if IPv6 in pkt and UDP in pkt:
             if (
-                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
-                and self._ports_in_range(pkt['UDP'].sport, pkt['UDP'].dport)
+                self._ips_in_range(pkt["IPv6"].src, pkt["IPv6"].dst, True)
+                and self._ports_in_range(pkt["UDP"].sport, pkt["UDP"].dport)
                 and len(pkt)
                 == self._get_expected_packet_size(self._create_frame() / IPv6() / UDP())
             ):
@@ -539,7 +539,7 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.tcp4_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         flags_value = 0
         for i in self.tcp_flags:
@@ -547,9 +547,9 @@ class TRex_Stl_Stream_Generator:
 
         if IP in pkt and TCP in pkt:
             if (
-                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
-                and self._ports_in_range(pkt['TCP'].sport, pkt['TCP'].dport)
-                and pkt['TCP'].flags == flags_value
+                self._ips_in_range(pkt["IP"].src, pkt["IP"].dst)
+                and self._ports_in_range(pkt["TCP"].sport, pkt["TCP"].dport)
+                and pkt["TCP"].flags == flags_value
                 and len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / TCP())
             ):
                 return True
@@ -618,7 +618,7 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.tcp6_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         flags_value = 0
         for i in self.tcp_flags:
@@ -626,9 +626,9 @@ class TRex_Stl_Stream_Generator:
 
         if IPv6 in pkt and TCP in pkt:
             if (
-                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
-                and self._ports_in_range(pkt['TCP'].sport, pkt['TCP'].dport)
-                and pkt['TCP'].flags == flags_value
+                self._ips_in_range(pkt["IPv6"].src, pkt["IPv6"].dst, True)
+                and self._ports_in_range(pkt["TCP"].sport, pkt["TCP"].dport)
+                and pkt["TCP"].flags == flags_value
                 and len(pkt)
                 == self._get_expected_packet_size(self._create_frame() / IPv6() / TCP())
             ):
@@ -676,12 +676,12 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.icmp4_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         if IP in pkt and ICMP in pkt:
             if (
-                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
-                and pkt['ICMP']
+                self._ips_in_range(pkt["IP"].src, pkt["IP"].dst)
+                and pkt["ICMP"]
                 and len(pkt) == self._get_expected_packet_size(self._create_frame() / IP() / ICMP())
             ):
                 return True
@@ -719,7 +719,7 @@ class TRex_Stl_Stream_Generator:
                 ),
                 STLVmWrFlowVar(fv_name="ip_src", pkt_offset="IPv6.src", offset_fixup=12),
                 STLVmWrFlowVar(fv_name="ip_dst", pkt_offset="IPv6.dst", offset_fixup=12),
-                STLVmFixIcmpv6(l3_offset='IPv6', l4_offset=ICMPv6EchoRequest().name),
+                STLVmFixIcmpv6(l3_offset="IPv6", l4_offset=ICMPv6EchoRequest().name),
             ]
         )
 
@@ -730,12 +730,12 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.icmp6_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         if IPv6 in pkt:
             if (
-                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
-                and pkt['IPv6'].nh == 58
+                self._ips_in_range(pkt["IPv6"].src, pkt["IPv6"].dst, True)
+                and pkt["IPv6"].nh == 58
                 and len(pkt)
                 == self._get_expected_packet_size(self._create_frame() / IPv6() / ICMP())
             ):
@@ -798,7 +798,7 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.dns4_query_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         # Sometimes padding of non-DNS packet can be parsed as DNS header (when src/dst
         # port is 53 or 5353), this can lead to WARNING messages like
@@ -810,13 +810,13 @@ class TRex_Stl_Stream_Generator:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
             if (
-                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
-                and self._ports_in_range(src_port=pkt['UDP'].sport)
-                and pkt['UDP'].dport == 53
+                self._ips_in_range(pkt["IP"].src, pkt["IP"].dst)
+                and self._ports_in_range(src_port=pkt["UDP"].sport)
+                and pkt["UDP"].dport == 53
                 and
                 # For type value see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4
-                pkt['DNS'].qd.qtype == 255
-                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                pkt["DNS"].qd.qtype == 255
+                and pkt["DNS"].qd.qname == b"trex-tgn.cisco.com."
                 and len(pkt)  # Dot after .com
                 == self._get_expected_packet_size(
                     self._create_frame() / IP() / UDP() / DNS(qd=DNSQR(qname="trex-tgn.cisco.com"))
@@ -843,7 +843,7 @@ class TRex_Stl_Stream_Generator:
             / DNS(
                 qr=1,
                 qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-                an=DNSRR(rrname="trex-tgn.cisco.com", type='A', rdata='10.10.10.10'),
+                an=DNSRR(rrname="trex-tgn.cisco.com", type="A", rdata="10.10.10.10"),
             )
         )
 
@@ -886,7 +886,7 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.dns4_response_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         prev_level = logging.getLogger("scapy.runtime").getEffectiveLevel()
         logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -895,14 +895,14 @@ class TRex_Stl_Stream_Generator:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
             if (
-                self._ips_in_range(pkt['IP'].src, pkt['IP'].dst)
-                and self._ports_in_range(dst_port=pkt['UDP'].dport)
-                and pkt['UDP'].sport == 53
-                and pkt['DNS'].qd.qtype == 255
-                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
-                and pkt['DNS'].an.type == 1
-                and pkt['DNS'].an.rrname == b'trex-tgn.cisco.com.'
-                and pkt['DNS'].an.rdata == '10.10.10.10'
+                self._ips_in_range(pkt["IP"].src, pkt["IP"].dst)
+                and self._ports_in_range(dst_port=pkt["UDP"].dport)
+                and pkt["UDP"].sport == 53
+                and pkt["DNS"].qd.qtype == 255
+                and pkt["DNS"].qd.qname == b"trex-tgn.cisco.com."
+                and pkt["DNS"].an.type == 1
+                and pkt["DNS"].an.rrname == b"trex-tgn.cisco.com."
+                and pkt["DNS"].an.rdata == "10.10.10.10"
                 and len(pkt)
                 == self._get_expected_packet_size(
                     self._create_frame()
@@ -910,7 +910,7 @@ class TRex_Stl_Stream_Generator:
                     / UDP()
                     / DNS(
                         qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-                        an=DNSRR(rrname="trex-tgn.cisco.com", rdata='10.10.10.10'),
+                        an=DNSRR(rrname="trex-tgn.cisco.com", rdata="10.10.10.10"),
                     )
                 )
             ):
@@ -935,7 +935,7 @@ class TRex_Stl_Stream_Generator:
             / DNS(
                 qr=1,
                 qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-                an=DNSRR(rrname="trex-tgn.cisco.com", type='AAAA', rdata='AAAA::B'),
+                an=DNSRR(rrname="trex-tgn.cisco.com", type="AAAA", rdata="AAAA::B"),
             )
         )
 
@@ -978,7 +978,7 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.dns6_response_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         prev_level = logging.getLogger("scapy.runtime").getEffectiveLevel()
         logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -987,14 +987,14 @@ class TRex_Stl_Stream_Generator:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
             if (
-                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
-                and self._ports_in_range(dst_port=pkt['UDP'].dport)
-                and pkt['UDP'].sport == 53
-                and pkt['DNS'].qd.qtype == 255
-                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
-                and pkt['DNS'].an.type == 28
-                and pkt['DNS'].an.rrname == b'trex-tgn.cisco.com.'
-                and pkt['DNS'].an.rdata == 'aaaa::b'
+                self._ips_in_range(pkt["IPv6"].src, pkt["IPv6"].dst, True)
+                and self._ports_in_range(dst_port=pkt["UDP"].dport)
+                and pkt["UDP"].sport == 53
+                and pkt["DNS"].qd.qtype == 255
+                and pkt["DNS"].qd.qname == b"trex-tgn.cisco.com."
+                and pkt["DNS"].an.type == 28
+                and pkt["DNS"].an.rrname == b"trex-tgn.cisco.com."
+                and pkt["DNS"].an.rdata == "aaaa::b"
                 and len(pkt)  # rdata must be lowercase
                 == self._get_expected_packet_size(
                     self._create_frame()
@@ -1002,7 +1002,7 @@ class TRex_Stl_Stream_Generator:
                     / UDP()
                     / DNS(
                         qd=DNSQR(qname="trex-tgn.cisco.com", qtype="ALL"),
-                        an=DNSRR(rrname="trex-tgn.cisco.com", type='AAAA', rdata='AAAA::B'),
+                        an=DNSRR(rrname="trex-tgn.cisco.com", type="AAAA", rdata="AAAA::B"),
                     )
                 )
             ):
@@ -1066,7 +1066,7 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.dns6_query_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         prev_level = logging.getLogger("scapy.runtime").getEffectiveLevel()
         logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -1075,11 +1075,11 @@ class TRex_Stl_Stream_Generator:
             logging.getLogger("scapy.runtime").setLevel(prev_level)
 
             if (
-                self._ips_in_range(pkt['IPv6'].src, pkt['IPv6'].dst, True)
-                and self._ports_in_range(src_port=pkt['UDP'].sport)
-                and pkt['UDP'].dport == 53
-                and pkt['DNS'].qd.qtype == 255
-                and pkt['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                self._ips_in_range(pkt["IPv6"].src, pkt["IPv6"].dst, True)
+                and self._ports_in_range(src_port=pkt["UDP"].sport)
+                and pkt["UDP"].dport == 53
+                and pkt["DNS"].qd.qtype == 255
+                and pkt["DNS"].qd.qname == b"trex-tgn.cisco.com."
                 and len(pkt)
                 == self._get_expected_packet_size(
                     self._create_frame()
@@ -1158,11 +1158,11 @@ class TRex_Stl_Stream_Generator:
         :meth:`~trex_tools.trex_stl_stream_generator.TRex_Stl_Stream_Generator.dns4_query_rand_dst_port_stream`.
         """
 
-        pkt = Ether(packet['binary'])
+        pkt = Ether(packet["binary"])
 
         if IP in pkt and UDP in pkt:
-            if self._ips_in_range(pkt['IP'].src, pkt['IP'].dst) and self._ports_in_range(
-                pkt['UDP'].sport, pkt['UDP'].dport
+            if self._ips_in_range(pkt["IP"].src, pkt["IP"].dst) and self._ports_in_range(
+                pkt["UDP"].sport, pkt["UDP"].dport
             ):
 
                 # DNS header must be parsed from Raw data, Scapy doesn't parse it if source or destination port isn't 53 or 5353
@@ -1180,8 +1180,8 @@ class TRex_Stl_Stream_Generator:
                         logging.getLogger("scapy.runtime").setLevel(prev_level)
 
                         if (
-                            dns_hdr['DNS'].qd.qtype == 255
-                            and dns_hdr['DNS'].qd.qname == b'trex-tgn.cisco.com.'
+                            dns_hdr["DNS"].qd.qtype == 255
+                            and dns_hdr["DNS"].qd.qname == b"trex-tgn.cisco.com."
                             and len(pkt)
                             == self._get_expected_packet_size(
                                 self._create_frame()

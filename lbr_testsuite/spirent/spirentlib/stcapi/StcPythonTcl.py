@@ -27,56 +27,56 @@ class StcPythonTcl:
         self._load_library()
 
     def _load_library(self):
-        command = 'package require SpirentTestCenter'
+        command = "package require SpirentTestCenter"
         self._tcl.eval(command)
 
     def apply(self):
-        return self._tcl.eval('stc::apply')
+        return self._tcl.eval("stc::apply")
 
     def config(self, _object, **kwargs):
         svec = []
         StcPythonTcl._packKeyVal(svec, kwargs)
-        svec_string = ' '.join(svec)
-        return self._tcl.eval('stc::config {} {}'.format(_object, svec_string))
+        svec_string = " ".join(svec)
+        return self._tcl.eval("stc::config {} {}".format(_object, svec_string))
 
     def connect(self, *hosts):
         svec = StcPythonTcl._unpackArgs(*hosts)
-        svec_string = ' '.join(svec)
-        return self._tcl.eval('stc::connect {}'.format(svec_string))
+        svec_string = " ".join(svec)
+        return self._tcl.eval("stc::connect {}".format(svec_string))
 
     def create(self, _type, **kwargs):
         svec = []
-        if _type.lower() != 'project':
-            svec.append('-under')
-            svec.append(kwargs.pop('under'))
+        if _type.lower() != "project":
+            svec.append("-under")
+            svec.append(kwargs.pop("under"))
 
         StcPythonTcl._packKeyVal(svec, kwargs)
-        svec_string = ' '.join(svec)
-        return self._tcl.eval('stc::create {} {}'.format(_type, svec_string))
+        svec_string = " ".join(svec)
+        return self._tcl.eval("stc::create {} {}".format(_type, svec_string))
 
     def delete(self, handle):
-        return self._tcl.eval('stc::delete {}'.format(handle))
+        return self._tcl.eval("stc::delete {}".format(handle))
 
     def disconnect(self, *hosts):
         svec = StcPythonTcl._unpackArgs(*hosts)
-        svec_string = ' '.join(svec)
-        return self._tcl.eval('stc::disconnect {}'.format(svec_string))
+        svec_string = " ".join(svec)
+        return self._tcl.eval("stc::disconnect {}".format(svec_string))
 
     def get(self, handle, *args):
         svec = StcPythonTcl._unpackArgs(*args)
         svec_dashes = []
 
         for _, att_name in enumerate(svec):
-            svec_dashes.append('-' + att_name)
+            svec_dashes.append("-" + att_name)
 
-        svec_string = ' '.join(svec_dashes)
+        svec_string = " ".join(svec_dashes)
         tcl_output = self._tcl.eval("stc::get {} {}".format(handle, svec_string))
         # print('[StcPythonTcl DEBUG] Printing tcl get output:')
         # pprint.pprint(tcl_output)
         # print('-------------------------------------------------------------')
         # print(tcl_output)
-        if len(tcl_output.split(' ')) == 1:
-            print('<Single output>')
+        if len(tcl_output.split(" ")) == 1:
+            print("<Single output>")
             return tcl_output
         else:
             parsed_output = StcPythonTcl._parse_tcl_output(tcl_output)
@@ -91,46 +91,46 @@ class StcPythonTcl:
             # print(ret)
             return ret
 
-    def help(self, topic=''):
-        if topic == '' or topic.find(' ') != -1:
+    def help(self, topic=""):
+        if topic == "" or topic.find(" ") != -1:
             return (
-                'Usage: \n'
-                + '  stc.help(\'commands\')\n'
-                + '  stc.help(<handle>)\n'
-                + '  stc.help(<className>)\n'
-                + '  stc.help(<subClassName>)'
+                "Usage: \n"
+                + "  stc.help('commands')\n"
+                + "  stc.help(<handle>)\n"
+                + "  stc.help(<className>)\n"
+                + "  stc.help(<subClassName>)"
             )
 
-        if topic == 'commands':
+        if topic == "commands":
             allCommands = []
             for commandHelp in StcIntPythonHelp.HELP_INFO.values():
-                allCommands.append(commandHelp['desc'])
+                allCommands.append(commandHelp["desc"])
             allCommands.sort()
-            return '\n'.join(allCommands)
+            return "\n".join(allCommands)
 
         info = StcIntPythonHelp.HELP_INFO.get(topic)
         if info:
             return (
-                'Desc: '
-                + info['desc']
-                + '\n'
-                + 'Usage: '
-                + info['usage']
-                + '\n'
-                + 'Example: '
-                + info['example']
-                + '\n'
+                "Desc: "
+                + info["desc"]
+                + "\n"
+                + "Usage: "
+                + info["usage"]
+                + "\n"
+                + "Example: "
+                + info["example"]
+                + "\n"
             )
 
     def log(self, level, msg):
-        return self._tcl.eval('stc::log {} {}'.format(level, msg))
+        return self._tcl.eval("stc::log {} {}".format(level, msg))
 
     def perform(self, _cmd, **kwargs):
         svec = []
         StcPythonTcl._packKeyVal(svec, kwargs)
-        svec_string = ' '.join(svec)
+        svec_string = " ".join(svec)
 
-        tcl_output = self._tcl.eval('stc::perform {} {}'.format(_cmd, svec_string))
+        tcl_output = self._tcl.eval("stc::perform {} {}".format(_cmd, svec_string))
         # print('[StcPythonTcl DEBUG] Printing tcl get output:')
         # pprint.pprint(tcl_output)
         # print('-------------------------------------------------------------')
@@ -150,13 +150,13 @@ class StcPythonTcl:
 
     def release(self, *csps):
         svec = StcPythonTcl._unpackArgs(*csps)
-        svec_string = ' '.join(svec)
-        return self._tcl.eval('stc::release {}'.format(svec_string))
+        svec_string = " ".join(svec)
+        return self._tcl.eval("stc::release {}".format(svec_string))
 
     def reserve(self, *csps):
         svec = StcPythonTcl._unpackArgs(*csps)
-        svec_string = ' '.join(svec)
-        return self._tcl.eval('stc::reserve {}'.format(svec_string))
+        svec_string = " ".join(svec)
+        return self._tcl.eval("stc::reserve {}".format(svec_string))
 
     def sleep(self, seconds):
         time.sleep(seconds)
@@ -164,41 +164,41 @@ class StcPythonTcl:
     def subscribe(self, **kwargs):
         svec = []
         StcPythonTcl._packKeyVal(svec, kwargs)
-        svec_string = ' '.join(svec)
+        svec_string = " ".join(svec)
 
-        return self._tcl.eval('stc::subscribe {}'.format(svec_string))
+        return self._tcl.eval("stc::subscribe {}".format(svec_string))
 
     def unsubscribe(self, rdsHandle):
-        return self._tcl.eval('stc::unsubscribe {}'.format(rdsHandle))
+        return self._tcl.eval("stc::unsubscribe {}".format(rdsHandle))
 
     def waitUntilComplete(self, **kwargs):
         timeout = 0
-        if 'timeout' in kwargs:
-            timeout = int(kwargs['timeout'])
+        if "timeout" in kwargs:
+            timeout = int(kwargs["timeout"])
 
-        sequencer = self.get('system1', 'children-sequencer')
+        sequencer = self.get("system1", "children-sequencer")
 
         timer = 0
 
         while True:
-            curTestState = self.get(sequencer, 'state')
-            if 'PAUSE' in curTestState or 'IDLE' in curTestState:
+            curTestState = self.get(sequencer, "state")
+            if "PAUSE" in curTestState or "IDLE" in curTestState:
                 break
 
             time.sleep(1)
             timer += 1
 
             if timeout > 0 and timer > timeout:
-                raise Exception('ERROR: Stc.waitUntilComplete timed out after ' '%s sec' % timeout)
+                raise Exception("ERROR: Stc.waitUntilComplete timed out after " "%s sec" % timeout)
 
         if (
-            'STC_SESSION_SYNCFILES_ON_SEQ_COMPLETE' in os.environ
-            and os.environ['STC_SESSION_SYNCFILES_ON_SEQ_COMPLETE'] == '1'
-            and self.perform('CSGetBllInfo')['ConnectionType'] == 'SESSION'
+            "STC_SESSION_SYNCFILES_ON_SEQ_COMPLETE" in os.environ
+            and os.environ["STC_SESSION_SYNCFILES_ON_SEQ_COMPLETE"] == "1"
+            and self.perform("CSGetBllInfo")["ConnectionType"] == "SESSION"
         ):
-            self.perform('CSSynchronizeFiles')
+            self.perform("CSSynchronizeFiles")
 
-        return self.get(sequencer, 'testState')
+        return self.get(sequencer, "testState")
 
     @staticmethod
     def _parse_tcl_output(tcl_output: str):
@@ -219,10 +219,10 @@ class StcPythonTcl:
                 value = match.group(4)
             # Group 1 matches key and single-value pair
             else:
-                key_val = match.group(2).split(' ')
+                key_val = match.group(2).split(" ")
                 key = key_val[0]
                 # This is a hack used to prevent XML string configuration from crashing
-                value = ''
+                value = ""
                 if len(key_val) > 1:
                     value = key_val[1]
 
@@ -235,16 +235,16 @@ class StcPythonTcl:
     def _packKeyVal(svec, hash):
         """Modified for empty value and multi-value"""
         for key, val in sorted(hash.items()):
-            svec.append('-' + str(key))
+            svec.append("-" + str(key))
             if isinstance(val, list):
-                svec.append(' '.join(map(str, val)))
+                svec.append(" ".join(map(str, val)))
             else:
                 if isinstance(val, bytes):
-                    val = val.decode('ascii')
+                    val = val.decode("ascii")
                 if not val:
-                    val = '\"\"'
-                elif len(str(val).split(' ')) > 1:
-                    val = '{' + str(val) + '}'
+                    val = '""'
+                elif len(str(val).split(" ")) > 1:
+                    val = "{" + str(val) + "}"
                 svec.append(str(val))
 
     @staticmethod
@@ -296,7 +296,7 @@ class StcIntPythonHelp(object):
         create=dict(
             desc="create: -Creates an object in a test hierarchy",
             usage="stc.create( className, under = parentObjectHandle, propertyName1 = propertyValue1, ... )",
-            example='stc.create( \'port\', under=\'project1\', location = "#{mychassis1}/1/2" )',
+            example="stc.create( 'port', under='project1', location = \"#{mychassis1}/1/2\" )",
         ),
         config=dict(
             desc="config: -Sets or modifies the value of an attribute",

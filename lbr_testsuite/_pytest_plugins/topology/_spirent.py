@@ -21,79 +21,79 @@ from . import _options
 def _init():
     _options.add_option(
         (
-            ['--wired-spirent'],
+            ["--wired-spirent"],
             dict(
-                action='append',
+                action="append",
                 default=[],
                 type=str,
                 help=(
-                    'Add wired connection to the spirent traffic generator. '
-                    'An argument is spirent test center chassis port followed by comma '
-                    'and PCI address of the interface connected to the spirent. '
-                    'Example: --wired-spirent=7/1,0000:01:00.0'
+                    "Add wired connection to the spirent traffic generator. "
+                    "An argument is spirent test center chassis port followed by comma "
+                    "and PCI address of the interface connected to the spirent. "
+                    "Example: --wired-spirent=7/1,0000:01:00.0"
                 ),
             ),
         )
     )
     _options.add_option(
         (
-            ['--spirent-server'],
+            ["--spirent-server"],
             dict(
                 type=str,
-                default='termit.liberouter.org',
-                help='Spirent Test Center server address',
+                default="termit.liberouter.org",
+                help="Spirent Test Center server address",
             ),
         )
     )
     _options.add_option(
         (
-            ['--spirent-chassis'],
+            ["--spirent-chassis"],
             dict(
                 type=str,
-                default='spirent.liberouter.org',
-                help='Spirent Test Center chassis address',
+                default="spirent.liberouter.org",
+                help="Spirent Test Center chassis address",
             ),
         )
     )
     _options.add_option(
         (
-            ['--spirent-chassis-port'],
+            ["--spirent-chassis-port"],
             dict(
                 type=str,
-                default='7/1',
-                help='Spirent port',
+                default="7/1",
+                help="Spirent port",
             ),
         )
     )
     _options.add_option(
         (
-            ['--spirent-api-version'],
+            ["--spirent-api-version"],
             dict(
                 type=str,
-                choices=['spirent', 'liberouter'],
-                default='liberouter',
-                help='Spirent Test Center API version',
+                choices=["spirent", "liberouter"],
+                default="liberouter",
+                help="Spirent Test Center API version",
             ),
         )
     )
     _options.add_option(
         (
-            ['--spirent-stc-server-port'],
+            ["--spirent-stc-server-port"],
             dict(
                 type=int,
                 default=None,
                 help=(
-                    'Spirent Test Center server port used for communication '
-                    'with STC control application.'
+                    "Spirent Test Center server port used for communication "
+                    "with STC control application."
                 ),
             ),
         )
     )
 
-    registration.topology_option_register('wired_spirent')
+    registration.topology_option_register("wired_spirent")
 
 
-@pytest_cases.fixture(scope='session')
+@pytest_cases.fixture(scope="session")
 def topology_wired_spirent(request, devices_args, option_wired_spirent):
     """Fixture creating spirent topology. It is uses real NIC
     interfaces to build Device and spirent as a Generator connected
@@ -130,10 +130,10 @@ def topology_wired_spirent(request, devices_args, option_wired_spirent):
     device_args = devices_args[device_address]
     device = PciDevice(device_address, device_args)
 
-    spirent_server = request.config.getoption('spirent_server')
-    spirent_chassis = request.config.getoption('spirent_chassis')
-    spirent_api_version = SPIRENT_API_VERSION_CONV[request.config.getoption('spirent_api_version')]
-    spirent_stc_server_port = request.config.getoption('spirent_stc_server_port')
+    spirent_server = request.config.getoption("spirent_server")
+    spirent_chassis = request.config.getoption("spirent_chassis")
+    spirent_api_version = SPIRENT_API_VERSION_CONV[request.config.getoption("spirent_api_version")]
+    spirent_stc_server_port = request.config.getoption("spirent_stc_server_port")
     generator = Spirent(
         spirent_server,
         spirent_chassis,

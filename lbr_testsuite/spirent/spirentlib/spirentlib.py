@@ -48,42 +48,42 @@ class StcHandler:
         self.subscribe_to_results()
 
         # Always delete streams from analyzers
-        xpath = self.stc_object_xpath('StcSystem/Project/ResultOptions')
-        self.stc_attribute(xpath, 'DeleteAllAnalyzerStreams', 'TRUE')
+        xpath = self.stc_object_xpath("StcSystem/Project/ResultOptions")
+        self.stc_attribute(xpath, "DeleteAllAnalyzerStreams", "TRUE")
 
         # Apply config
         self._stc.apply()
 
-    def logging_config(self, level='error', file='stdout'):
+    def logging_config(self, level="error", file="stdout"):
         """
         Possible logLevel values are: DEBUG, INFO, WARN, and ERROR
         Possible values for logTo are "stdout" or a file name (can include
         the path). Use forward slashes between directory names.
         """
-        self._stc.config('automationoptions', logLevel=level, logTo=file)
+        self._stc.config("automationoptions", logLevel=level, logTo=file)
 
     def load_xml(self, xml_config_file: str):
         """Load XML config using string format"""
         if self._stc_api_version == STC_API_OFFICIAL:
-            return self._stc.perform('loadfromxml', FileName=xml_config_file)
+            return self._stc.perform("loadfromxml", FileName=xml_config_file)
         else:
-            with open(xml_config_file, 'rb') as file:
+            with open(xml_config_file, "rb") as file:
                 config_string = file.read()
-            return self._stc.perform('loadfromxml', FileName='', InputConfigString=config_string)
+            return self._stc.perform("loadfromxml", FileName="", InputConfigString=config_string)
 
     def set_sequencer(self):
-        sequencer = self._stc.get('system1', 'children-sequencer')
-        self._stc.config(sequencer, errorHandler='stop_on_error')
+        sequencer = self._stc.get("system1", "children-sequencer")
+        self._stc.config(sequencer, errorHandler="stop_on_error")
 
     def stc_get_stream_block_load(self, sb_name):
-        xpath = ['StcSystem/Project/Port/StreamBlock[@Name={}]'.format(sb_name)]
+        xpath = ["StcSystem/Project/Port/StreamBlock[@Name={}]".format(sb_name)]
         sb_handler = self.stc_object_xpath(xpath)
 
-        load_handler = self.stc_get_attributes(sb_handler, 'AffiliationStreamBlockLoadProfile')
-        return self.stc_attribute(load_handler, 'Load')
+        load_handler = self.stc_get_attributes(sb_handler, "AffiliationStreamBlockLoadProfile")
+        return self.stc_attribute(load_handler, "Load")
 
     def subscribe_to_results(self):
-        project = self._stc.get('system1', 'children-Project')
+        project = self._stc.get("system1", "children-Project")
 
         # Port Traffic -> Basic Traffic Results
         self._generator_port_results = self.sub_generator_port_results(project)
@@ -106,10 +106,10 @@ class StcHandler:
         generator_port_results = self._stc.subscribe(
             parent=parent,
             resultParent=parent,
-            configType='generator',
-            resultType='generatorportresults',
-            filterList='',
-            disablePaging='true',
+            configType="generator",
+            resultType="generatorportresults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
@@ -118,24 +118,24 @@ class StcHandler:
     def sub_analyzer_port_results(self, parent: str):
         analyzer_port_results = self._stc.subscribe(
             parent=parent,
-            configType='analyzer',
-            resultType='analyzerportresults',
-            filterList='',
-            disablePaging='true',
+            configType="analyzer",
+            resultType="analyzerportresults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
         return analyzer_port_results
 
     def sub_filtered_stream_results(self, parent: str):
-        port = self._stc.get('system1.Project(1)', 'children-Port')
+        port = self._stc.get("system1.Project(1)", "children-Port")
         filtered_stream_results = self._stc.subscribe(
             parent=parent,
             resultParent=port,
-            configType='analyzer',
-            resultType='filteredstreamresults',
-            filterList='',
-            disablePaging='true',
+            configType="analyzer",
+            resultType="filteredstreamresults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
@@ -145,10 +145,10 @@ class StcHandler:
         rx_stream_block_results = self._stc.subscribe(
             parent=parent,
             resultParent=parent,
-            configType='streamblock',
-            resultType='rxstreamblockresults',
-            filterList='',
-            disablePaging='true',
+            configType="streamblock",
+            resultType="rxstreamblockresults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
@@ -158,67 +158,67 @@ class StcHandler:
         tx_stream_block_results = self._stc.subscribe(
             parent=parent,
             resultParent=parent,
-            configType='streamblock',
-            resultType='txstreamblockresults',
-            filterList='',
-            disablePaging='true',
+            configType="streamblock",
+            resultType="txstreamblockresults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
-            viewAttributeList='framecount framerate bitrate',
+            viewAttributeList="framecount framerate bitrate",
             interval=1,
         )
         return tx_stream_block_results
 
     def sub_overflow_results(self, parent: str):
-        port = self._stc.get('system1.Project(1)', 'children-Port')
+        port = self._stc.get("system1.Project(1)", "children-Port")
         overflow_results = self._stc.subscribe(
             parent=parent,
             resultParent=port,
-            configType='analyzer',
-            resultType='OverflowResults',
-            filterList='',
-            disablePaging='true',
+            configType="analyzer",
+            resultType="OverflowResults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
         return overflow_results
 
     def sub_tx_port_pair_results(self, parent: str):
-        port = self._stc.get('system1.Project(1)', 'children-Port')
+        port = self._stc.get("system1.Project(1)", "children-Port")
         tx_port_pair_results = self._stc.subscribe(
             parent=parent,
             resultParent=port,
-            configType='port',
-            resultType='TxPortPairResults',
-            filterList='',
-            disablePaging='true',
+            configType="port",
+            resultType="TxPortPairResults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
         return tx_port_pair_results
 
     def sub_rx_port_pair_results(self, parent: str):
-        port = self._stc.get('system1.Project(1)', 'children-Port')
+        port = self._stc.get("system1.Project(1)", "children-Port")
         rx_port_pair_results = self._stc.subscribe(
             parent=parent,
             resultParent=port,
-            configType='port',
-            resultType='RxPortPairResults',
-            filterList='',
-            disablePaging='true',
+            configType="port",
+            resultType="RxPortPairResults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
         return rx_port_pair_results
 
     def sub_arpnd_results(self, parent: str):
-        port = self._stc.get('system1.Project(1)', 'children-Port')
+        port = self._stc.get("system1.Project(1)", "children-Port")
         arpnd_results = self._stc.subscribe(
             parent=parent,
             resultParent=port,
-            configType='port',
-            resultType='ArpNdResults',
-            filterList='',
-            disablePaging='true',
+            configType="port",
+            resultType="ArpNdResults",
+            filterList="",
+            disablePaging="true",
             recordsPerPage=256,
             interval=1,
         )
@@ -235,7 +235,7 @@ class StcHandler:
         for xpath in xpaths:
             # print('Processing xpath: {}'.format(xpath))
             heap = []
-            elements = xpath.split('/')
+            elements = xpath.split("/")
 
             for element in elements:
                 # print('Processing element: {}'.format(element))
@@ -246,8 +246,8 @@ class StcHandler:
                 # Find children
                 if len(heap) == 0:
                     # print('Heap_len is 0: getting object {}'.format(name))
-                    result = self._stc.perform('GetObjects', classname=name)
-                    object_list = result['ObjectList']
+                    result = self._stc.perform("GetObjects", classname=name)
+                    object_list = result["ObjectList"]
                     # print('Printing object list')
                     # pprint.pprint(object_list)
                     # Handle string result as a list with 1 member
@@ -260,7 +260,7 @@ class StcHandler:
                     childheap = []
                     for item in heap:
                         # print("stc_get item '{}' children-{}".format(item, name))
-                        child = self._stc.get(item, 'children-' + name)
+                        child = self._stc.get(item, "children-" + name)
                         # print('Got children: ')
                         # pprint.pprint(child)
                         if len(child.split()) == 1:
@@ -278,12 +278,12 @@ class StcHandler:
                     for part in parts:
                         # print("Processing part '{}'".format(part))
                         # Split condition
-                        condition = part.split('=')
+                        condition = part.split("=")
                         left_val = condition[0]
                         right_val = condition[1]
 
                         # Attribute value condition
-                        if left_val[0] == '@':
+                        if left_val[0] == "@":
                             # Wildcard test
                             if right_val == "*":
                                 continue
@@ -315,8 +315,8 @@ class StcHandler:
         # print('--------------')
         return handles
 
-    def stc_attribute(self, handles, attributes, values='', call_apply=True):
-        if values == '':
+    def stc_attribute(self, handles, attributes, values="", call_apply=True):
+        if values == "":
             return self.stc_get_attributes(handles, attributes)
         else:
             self.stc_set_attributes(handles, attributes, values, call_apply)
@@ -336,7 +336,7 @@ class StcHandler:
             if len(attributes) > 1:
                 name = attributes[i]
             for subhandle in handle:
-                if name == '*':
+                if name == "*":
                     values.append(self._stc.get(subhandle))
                 else:
                     values.append(self._stc.get(subhandle, name))
@@ -380,7 +380,7 @@ class StcHandler:
         if call_apply:
             self._stc.apply()
 
-    def stc_attribute_xpath(self, xpaths, values=''):
+    def stc_attribute_xpath(self, xpaths, values=""):
         # Handle single xpath as a list with 1 member
         if type(xpaths) == str:
             xpaths = xpaths.split()
@@ -389,7 +389,7 @@ class StcHandler:
         object_xpaths = []
 
         for xpath in xpaths:
-            object_xpath, attribute = xpath.rsplit('/', 1)
+            object_xpath, attribute = xpath.rsplit("/", 1)
             object_xpaths.append(object_xpath)
             attributes.append(attribute)
 
@@ -400,20 +400,20 @@ class StcHandler:
         return self.stc_attribute(handles, attributes, values)
 
     def stc_connect(self, host: str, ports: str):
-        port_list = ports.split(' ')
+        port_list = ports.split(" ")
 
         if len(port_list) == 0:
             return
 
         stc_port_objects = self._stc.perform(
-            'getObjects', classname='Port', condition='isVirtual=false'
+            "getObjects", classname="Port", condition="isVirtual=false"
         )
-        stc_port_object_list = stc_port_objects['ObjectList']
-        stc_port_object_list = stc_port_object_list.split(' ')
+        stc_port_object_list = stc_port_objects["ObjectList"]
+        stc_port_object_list = stc_port_object_list.split(" ")
 
         for stc_port in stc_port_object_list:
             # Set proper //host/slot/port format
-            location_string = '//{}/{}'.format(host, port_list.pop(0))
+            location_string = "//{}/{}".format(host, port_list.pop(0))
             self._stc.config(stc_port, location=location_string)
             self._stc.config(stc_port, name=location_string)
 
@@ -421,90 +421,90 @@ class StcHandler:
         self._stc.apply()
 
         # Perform the logical to physical port mapping, connect to the chassis and reserve the ports
-        project_ports = self._stc.get('project1', 'children-Port')
-        self._stc.perform('attachPorts', autoconnect='true', portlist=project_ports)
+        project_ports = self._stc.get("project1", "children-Port")
+        self._stc.perform("attachPorts", autoconnect="true", portlist=project_ports)
 
     def stc_disconnect(self):
-        self._stc.perform('chassisDisconnectAll')
-        self._stc.perform('resetConfig')
+        self._stc.perform("chassisDisconnectAll")
+        self._stc.perform("resetConfig")
 
     def stc_start_arpnd(self):
-        project_ports = self._stc.get('project1', 'children-Port')
-        self._stc.perform('ArpNdStartCommand', handleList=project_ports)
+        project_ports = self._stc.get("project1", "children-Port")
+        self._stc.perform("ArpNdStartCommand", handleList=project_ports)
 
     def stc_start_generators(self):
         # Set logging
         self.logging_config()
 
         # Get all generator handles
-        generator_objects = self._stc.perform('getObjects', classname='Generator')
-        generators = generator_objects['ObjectList'].split(' ')
+        generator_objects = self._stc.perform("getObjects", classname="Generator")
+        generators = generator_objects["ObjectList"].split(" ")
 
         # Get continuous generators handles only
         continuous_generators = []
         for generator in generators:
             gen_duration_mode = self._stc.get(
-                '{}.generatorConfig'.format(generator), 'durationMode'
+                "{}.generatorConfig".format(generator), "durationMode"
             )
-            if gen_duration_mode == 'CONTINUOUS':
+            if gen_duration_mode == "CONTINUOUS":
                 continuous_generators.append(generator)
 
         # Start generators and wait 1 second
-        self._stc.perform('generatorStart', generatorList=generators)
+        self._stc.perform("generatorStart", generatorList=generators)
         if len(continuous_generators) != 0:
-            self._stc.perform('generatorWaitForStart', generatorList=continuous_generators)
-        self._stc.perform('wait', waitTime=1)
+            self._stc.perform("generatorWaitForStart", generatorList=continuous_generators)
+        self._stc.perform("wait", waitTime=1)
 
     def stc_stop_generators(self):
         # Get all generator handles
-        generator_objects = self._stc.perform('getObjects', classname='Generator')
-        generators = generator_objects['ObjectList'].split(' ')
+        generator_objects = self._stc.perform("getObjects", classname="Generator")
+        generators = generator_objects["ObjectList"].split(" ")
 
         # Get continuous generators handles only
         continuous_generators = []
         for generator in generators:
             gen_duration_mode = self._stc.get(
-                '{}.generatorConfig'.format(generator), 'durationMode'
+                "{}.generatorConfig".format(generator), "durationMode"
             )
-            if gen_duration_mode == 'CONTINUOUS':
+            if gen_duration_mode == "CONTINUOUS":
                 continuous_generators.append(generator)
 
         # Stop generators and wait 1 second
         if len(continuous_generators) != 0:
-            self._stc.perform('generatorStop', generatorList=continuous_generators)
-        self._stc.perform('generatorWaitForStop', generatorList=generators)
-        self._stc.perform('wait', waitTime=1)
+            self._stc.perform("generatorStop", generatorList=continuous_generators)
+        self._stc.perform("generatorWaitForStop", generatorList=generators)
+        self._stc.perform("wait", waitTime=1)
 
     def stc_start_analyzers(self):
         # Get all analyzer handles
-        analyzer_objects = self._stc.perform('getObjects', className='Analyzer')
-        analyzers = analyzer_objects['ObjectList'].split(' ')
+        analyzer_objects = self._stc.perform("getObjects", className="Analyzer")
+        analyzers = analyzer_objects["ObjectList"].split(" ")
 
         # Start analyzers and wait 1 second
-        self._stc.perform('analyzerStart', analyzerList=analyzers)
-        self._stc.perform('wait', waitTime=1)
+        self._stc.perform("analyzerStart", analyzerList=analyzers)
+        self._stc.perform("wait", waitTime=1)
 
     def stc_stop_analyzers(self):
         # Get all analyzer handles
-        analyzer_objects = self._stc.perform('getObjects', className='Analyzer')
-        analyzers = analyzer_objects['ObjectList'].split(' ')
+        analyzer_objects = self._stc.perform("getObjects", className="Analyzer")
+        analyzers = analyzer_objects["ObjectList"].split(" ")
 
         # Stop analyzers and wait 1 second
-        self._stc.perform('analyzerStop', analyzerList=analyzers)
-        self._stc.perform('wait', waitTime=1)
+        self._stc.perform("analyzerStop", analyzerList=analyzers)
+        self._stc.perform("wait", waitTime=1)
 
     def stc_refresh_results(self):
-        self._stc.perform('RefreshResultView', resultDataSet=self._rx_stream_block_results)
-        self._stc.perform('RefreshResultView', resultDataSet=self._tx_stream_block_results)
+        self._stc.perform("RefreshResultView", resultDataSet=self._rx_stream_block_results)
+        self._stc.perform("RefreshResultView", resultDataSet=self._tx_stream_block_results)
 
     def stc_clear_results(self):
-        ports = self._stc.get('project1', 'children-Port')
-        self._stc.perform('ResultsClearAll', portList=ports)
+        ports = self._stc.get("project1", "children-Port")
+        self._stc.perform("ResultsClearAll", portList=ports)
 
-    def stc_stream_block(self, names='*'):
+    def stc_stream_block(self, names="*"):
         # HACK: This line handles strange behavior of STC API where
         # stream block is not accessible before its parent is accessed.
-        self._stc.get(self.stc_object_xpath('StcSystem/Project/Port')[0][0])
+        self._stc.get(self.stc_object_xpath("StcSystem/Project/Port")[0][0])
 
         # Handle default input
         if type(names) == str:
@@ -517,7 +517,7 @@ class StcHandler:
 
         return self.stc_object_xpath(xpaths)
 
-    def stc_device(self, names='*'):
+    def stc_device(self, names="*"):
         # Handle default input
         if type(names) == str:
             names = [x for x in names.split()]
@@ -530,11 +530,11 @@ class StcHandler:
         return self.stc_object_xpath(xpaths)
 
     def stc_get_stream_block_load_unit(self, sb_name):
-        xpath = ['StcSystem/Project/Port/StreamBlock[@Name={}]'.format(sb_name)]
+        xpath = ["StcSystem/Project/Port/StreamBlock[@Name={}]".format(sb_name)]
         sb_handler = self.stc_object_xpath(xpath)
 
-        load_handler = self.stc_get_attributes(sb_handler, 'AffiliationStreamBlockLoadProfile')
-        return self.stc_attribute(load_handler, 'LoadUnit')[0][0]
+        load_handler = self.stc_get_attributes(sb_handler, "AffiliationStreamBlockLoadProfile")
+        return self.stc_attribute(load_handler, "LoadUnit")[0][0]
 
     def stc_get_line_speed_mbps(self):
         _LINE_SPEEDS_TABLE = dict(
@@ -552,10 +552,10 @@ class StcHandler:
             SPEED_200G=200_000,
             SPEED_400G=400_000,
         )
-        xpath = ['StcSystem/Project/Port']
+        xpath = ["StcSystem/Project/Port"]
         port_handler = self.stc_object_xpath(xpath)
-        phy_handler = self.stc_get_attributes(port_handler, 'ActivePhy')
-        line_speed = self.stc_attribute(phy_handler, 'LineSpeed')[0][0]
+        phy_handler = self.stc_get_attributes(port_handler, "ActivePhy")
+        line_speed = self.stc_attribute(phy_handler, "LineSpeed")[0][0]
         return _LINE_SPEEDS_TABLE[line_speed]
 
     def stc_set_port_scheduling_mode(self, mode):
@@ -576,17 +576,17 @@ class StcHandler:
             If invalid mode passed.
         """
 
-        xpath = ['StcSystem/Project/Port/Generator/GeneratorConfig']
+        xpath = ["StcSystem/Project/Port/Generator/GeneratorConfig"]
         gen_config_handler = self.stc_object_xpath(xpath)
 
-        if mode == 'port':
-            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'PORT_BASED')
-        elif mode == 'rate':
-            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'RATE_BASED')
-        elif mode == 'priority':
-            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'PRIORITY_BASED')
-        elif mode == 'manual':
-            self.stc_attribute(gen_config_handler, 'SchedulingMode', 'MANUAL_BASED')
+        if mode == "port":
+            self.stc_attribute(gen_config_handler, "SchedulingMode", "PORT_BASED")
+        elif mode == "rate":
+            self.stc_attribute(gen_config_handler, "SchedulingMode", "RATE_BASED")
+        elif mode == "priority":
+            self.stc_attribute(gen_config_handler, "SchedulingMode", "PRIORITY_BASED")
+        elif mode == "manual":
+            self.stc_attribute(gen_config_handler, "SchedulingMode", "MANUAL_BASED")
         else:
             raise ValueError(
                 "Invalid scheduling mode '{mode}'. Allowed scheduling modes are "
@@ -618,26 +618,26 @@ class StcHandler:
         """
 
         # Check whether port load in STC configuration is set to port-based
-        xpath = ['StcSystem/Project/Port/Generator/GeneratorConfig']
+        xpath = ["StcSystem/Project/Port/Generator/GeneratorConfig"]
         gen_config_handler = self.stc_object_xpath(xpath)
 
-        scheduling_mode = self.stc_attribute(gen_config_handler, 'SchedulingMode')[0][0]
+        scheduling_mode = self.stc_attribute(gen_config_handler, "SchedulingMode")[0][0]
         if scheduling_mode != "PORT_BASED":
             raise RuntimeError(
                 "Invalid port load mode in the STC configuration. Port-based mode is requested."
             )
 
         # Set port load unit according to requested port load type
-        if port_load_type == 'perc':
+        if port_load_type == "perc":
             self.stc_attribute(
-                gen_config_handler, 'LoadUnit', 'PERCENT_LINE_RATE', call_apply=False
+                gen_config_handler, "LoadUnit", "PERCENT_LINE_RATE", call_apply=False
             )
-        elif port_load_type == 'fps':
+        elif port_load_type == "fps":
             self.stc_attribute(
-                gen_config_handler, 'LoadUnit', 'FRAMES_PER_SECOND', call_apply=False
+                gen_config_handler, "LoadUnit", "FRAMES_PER_SECOND", call_apply=False
             )
-        elif port_load_type == 'bps':
-            self.stc_attribute(gen_config_handler, 'LoadUnit', 'BITS_PER_SECOND', call_apply=False)
+        elif port_load_type == "bps":
+            self.stc_attribute(gen_config_handler, "LoadUnit", "BITS_PER_SECOND", call_apply=False)
         else:
             raise ValueError(
                 "Invalid port load type argument '{}'. Allowed port load types "
@@ -645,21 +645,21 @@ class StcHandler:
             )
 
         # Set port load mode to fixed
-        self.stc_attribute(gen_config_handler, 'LoadMode', 'FIXED', call_apply=False)
+        self.stc_attribute(gen_config_handler, "LoadMode", "FIXED", call_apply=False)
         # Set port load value
-        self.stc_attribute(gen_config_handler, 'FixedLoad', str(port_load_value), call_apply=False)
+        self.stc_attribute(gen_config_handler, "FixedLoad", str(port_load_value), call_apply=False)
 
         self._stc.apply()
 
     def stc_set_stream_block_load(self, sb_name, sb_load):
-        xpath = ['StcSystem/Project/Port/StreamBlock[@Name={}]'.format(sb_name)]
+        xpath = ["StcSystem/Project/Port/StreamBlock[@Name={}]".format(sb_name)]
         sb_handler = self.stc_object_xpath(xpath)
 
-        load_handler = self.stc_get_attributes(sb_handler, 'AffiliationStreamBlockLoadProfile')
-        self.stc_attribute(load_handler, 'Load', sb_load)
+        load_handler = self.stc_get_attributes(sb_handler, "AffiliationStreamBlockLoadProfile")
+        self.stc_attribute(load_handler, "Load", sb_load)
 
     def stc_set_stream_block_packet_length(self, sb_name, pkt_len):
-        xpath = ['StcSystem/Project/Port/StreamBlock[@Name={}]/FixedFrameLength'.format(sb_name)]
+        xpath = ["StcSystem/Project/Port/StreamBlock[@Name={}]/FixedFrameLength".format(sb_name)]
         self.stc_attribute_xpath(xpath, str(pkt_len))
 
     def stc_set_traffic_gen_seconds(self, duration):
@@ -675,55 +675,55 @@ class StcHandler:
         """
 
         # Check whether port load in STC configuration is set to port-based
-        xpath = ['StcSystem/Project/Port/Generator/GeneratorConfig']
+        xpath = ["StcSystem/Project/Port/Generator/GeneratorConfig"]
         gen_config_handler = self.stc_object_xpath(xpath)
 
         # Set duration mode to "seconds"
-        self.stc_attribute(gen_config_handler, 'DurationMode', 'SECONDS', call_apply=False)
+        self.stc_attribute(gen_config_handler, "DurationMode", "SECONDS", call_apply=False)
         # Set duration length
-        self.stc_attribute(gen_config_handler, 'Duration', str(duration), call_apply=False)
+        self.stc_attribute(gen_config_handler, "Duration", str(duration), call_apply=False)
 
         self._stc.apply()
 
-    def stc_tx_stream_block_results(self, stream_blocks, names='*'):
+    def stc_tx_stream_block_results(self, stream_blocks, names="*"):
         result_handles = self.stc_attribute(stream_blocks, "children-TxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
 
-    def stc_rx_stream_block_results(self, stream_blocks, names='*'):
+    def stc_rx_stream_block_results(self, stream_blocks, names="*"):
         result_handles = self.stc_attribute(stream_blocks, "children-RxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
 
-    def stc_filtered_stream_results(self, names='*'):
+    def stc_filtered_stream_results(self, names="*"):
         if type(names) == str:
             names = [x for x in names.split()]
         results = []
-        total_page_count = self.stc_attribute([[self._filtered_stream_results]], 'TotalPageCount')
+        total_page_count = self.stc_attribute([[self._filtered_stream_results]], "TotalPageCount")
         for page in range(1, int(total_page_count[0][0]) + 1):
             # Set page
-            self.stc_attribute([[self._filtered_stream_results]], 'PageNumber', str(page))
+            self.stc_attribute([[self._filtered_stream_results]], "PageNumber", str(page))
             # Find specific object
-            objects = self._stc.perform('getObjects', className='FilteredStreamResults')
-            filtered_stream_results = objects['ObjectList'].split(' ')
+            objects = self._stc.perform("getObjects", className="FilteredStreamResults")
+            filtered_stream_results = objects["ObjectList"].split(" ")
             results.append(self.stc_attribute([filtered_stream_results], names))
 
         return results
 
-    def stc_analyzer_filter(self, values=''):
-        objects = self._stc.perform('getObjects', className='AnalyzerFrameConfigFilter')
-        analyzer_frame_config_filters = objects['ObjectList'].split(' ')
+    def stc_analyzer_filter(self, values=""):
+        objects = self._stc.perform("getObjects", className="AnalyzerFrameConfigFilter")
+        analyzer_frame_config_filters = objects["ObjectList"].split(" ")
 
         # Get or set
-        if values == '':
-            return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig')
+        if values == "":
+            return self.stc_attribute([analyzer_frame_config_filters], "FrameConfig")
         else:
-            return self.stc_attribute([analyzer_frame_config_filters], 'FrameConfig', values)
+            return self.stc_attribute([analyzer_frame_config_filters], "FrameConfig", values)
 
     def stc_generator_port_results(self, name: str):
         results = []
 
         # Get specific generator object
-        generator_objects = self._stc.perform('getObjects', className='GeneratorPortResults')
-        generator_port_results = generator_objects['ObjectList'].split(' ')
+        generator_objects = self._stc.perform("getObjects", className="GeneratorPortResults")
+        generator_port_results = generator_objects["ObjectList"].split(" ")
 
         for result in generator_port_results:
             results.append(self._stc.get(result, name))
@@ -734,8 +734,8 @@ class StcHandler:
         results = []
 
         # Get specific analyzer object
-        analyzer_objects = self._stc.perform('getObjects', className='AnalyzerPortResults')
-        analyzer_port_results = analyzer_objects['ObjectList'].split(' ')
+        analyzer_objects = self._stc.perform("getObjects", className="AnalyzerPortResults")
+        analyzer_port_results = analyzer_objects["ObjectList"].split(" ")
 
         for result in analyzer_port_results:
             results.append(self._stc.get(result, name))
@@ -746,8 +746,8 @@ class StcHandler:
         results = []
 
         # Get specific analyzer object
-        overflow_objects = self._stc.perform('getObjects', className='OverflowResults')
-        overflow_results = overflow_objects['ObjectList'].split(' ')
+        overflow_objects = self._stc.perform("getObjects", className="OverflowResults")
+        overflow_results = overflow_objects["ObjectList"].split(" ")
 
         for result in overflow_results:
             results.append(self._stc.get(result, name))
@@ -758,8 +758,8 @@ class StcHandler:
         results = []
 
         # Get specific analyzer object
-        txpp_objects = self._stc.perform('getObjects', className='TxPortPairResults')
-        txpp_results = txpp_objects['ObjectList'].split(' ')
+        txpp_objects = self._stc.perform("getObjects", className="TxPortPairResults")
+        txpp_results = txpp_objects["ObjectList"].split(" ")
 
         for result in txpp_results:
             results.append(self._stc.get(result, name))
@@ -770,8 +770,8 @@ class StcHandler:
         results = []
 
         # Get specific analyzer object
-        rxpp_objects = self._stc.perform('getObjects', className='RxPortPairResults')
-        rxpp_results = rxpp_objects['ObjectList'].split(' ')
+        rxpp_objects = self._stc.perform("getObjects", className="RxPortPairResults")
+        rxpp_results = rxpp_objects["ObjectList"].split(" ")
 
         for result in rxpp_results:
             results.append(self._stc.get(result, name))
@@ -782,8 +782,8 @@ class StcHandler:
         results = []
 
         # Get specific analyzer object
-        arpnd_objects = self._stc.perform('getObjects', className='ArpNdResults')
-        arpnd_results = arpnd_objects['ObjectList'].split(' ')
+        arpnd_objects = self._stc.perform("getObjects", className="ArpNdResults")
+        arpnd_results = arpnd_objects["ObjectList"].split(" ")
 
         for result in arpnd_results:
             results.append(self._stc.get(result, name))
@@ -794,7 +794,7 @@ class StcHandler:
         """
         Set FEC (forward error correction) in xml configuration.
         """
-        xpath = ['StcSystem/Project/Port/Ethernet100GigFiber']
+        xpath = ["StcSystem/Project/Port/Ethernet100GigFiber"]
         fec_handler = self.stc_object_xpath(xpath)
 
-        self.stc_attribute(fec_handler, 'ForwardErrorCorrection', str(fec))
+        self.stc_attribute(fec_handler, "ForwardErrorCorrection", str(fec))

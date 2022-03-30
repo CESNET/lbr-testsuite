@@ -36,12 +36,12 @@ def pytest_addoption(parser):
     """
 
     parser.addini(
-        'lbr_keyboard_interrupt',
-        type='bool',
+        "lbr_keyboard_interrupt",
+        type="bool",
         default=False,
         help=(
-            'Convenience flag which allows user to explicitly enable/disable activation '
-            'of this plugin.'
+            "Convenience flag which allows user to explicitly enable/disable activation "
+            "of this plugin."
         ),
     )
 
@@ -78,7 +78,7 @@ def pytest_sessionstart(session):
     """
 
     # user didn't choose to use this plugin
-    if not session.config.getini('lbr_keyboard_interrupt'):
+    if not session.config.getini("lbr_keyboard_interrupt"):
         return
 
     global keyboard_interrupt

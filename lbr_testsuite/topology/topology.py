@@ -105,15 +105,15 @@ class Topology:
         """
 
         return (
-            'device',
-            'generator',
+            "device",
+            "generator",
         )
 
 
 def topology_union(
     fixtures,
-    name='topology',
-    scope='module',
+    name="topology",
+    scope="module",
     **kwargs,
 ):
     """Our pytest-cases fixture_union wrapper for topology unions.
@@ -218,7 +218,7 @@ def topology_union(
     custom_pids, p_marks, fixtures = extract_parameterset_info((name,), fixtures)
 
     # Inject name prefixes if not already present
-    prefix = f'{name}_'
+    prefix = f"{name}_"
     fixtures = (fix if fix.startswith(prefix) else prefix + fix for fix in fixtures)
 
     # Get all required fixture names
@@ -252,8 +252,8 @@ def topology_union(
         f_alternatives.append(alternative)
 
     # Remove name prefixes from default ids if any specific ids set
-    if kwargs.get('ids', None) is None:
-        kwargs['ids'] = lambda ufix: ufix.alternative_name[len(prefix) :]  # noqa: E203
+    if kwargs.get("ids", None) is None:
+        kwargs["ids"] = lambda ufix: ufix.alternative_name[len(prefix) :]  # noqa: E203
 
     union_fix = _fixture_union(
         caller_module,

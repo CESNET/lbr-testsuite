@@ -4,8 +4,8 @@ from .strace import Strace
 
 
 __all__ = [
-    'Tool',
-    'Daemon',
-    'Strace',
-    'Coredump',
+    "Tool",
+    "Daemon",
+    "Strace",
+    "Coredump",
 ]
