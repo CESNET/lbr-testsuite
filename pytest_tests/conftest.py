@@ -15,10 +15,10 @@ def pytest_configure(config):
     """
 
     restricted_loggers = [
-        'faker.factory',
-        'urllib3.connectionpool',
-        'lbr_testsuite.spirent.spirent',
-        'STC',
+        "faker.factory",
+        "urllib3.connectionpool",
+        "lbr_testsuite.spirent.spirent",
+        "STC",
     ]
     for rl in restricted_loggers:
         logging.getLogger(rl).setLevel(logging.WARNING)

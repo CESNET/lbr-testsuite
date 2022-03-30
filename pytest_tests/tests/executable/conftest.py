@@ -16,7 +16,7 @@ def _this_test_dir():
     return pathlib.Path(__file__).parent.resolve()
 
 
-@pytest_cases.fixture(scope='session')
+@pytest_cases.fixture(scope="session")
 def helper_app(tmp_path_factory):
     """Path to testing helper application.
 
@@ -32,9 +32,9 @@ def helper_app(tmp_path_factory):
         Path to the application.
     """
 
-    app_source = str(_this_test_dir() / 'helper' / 'helper_app.c')
-    app = str(tmp_path_factory.getbasetemp() / 'helper_app')
-    subprocess.run(['gcc', app_source, '-o', app], check=True)
+    app_source = str(_this_test_dir() / "helper" / "helper_app.c")
+    app = str(tmp_path_factory.getbasetemp() / "helper_app")
+    subprocess.run(["gcc", app_source, "-o", app], check=True)
 
     return app
 
@@ -62,8 +62,8 @@ def tmp_files(request, tmp_path):
 
     tmp_file_base = tmp_path / request.node.name
     tmp_files = dict()
-    for ft in ('stdout', 'stderr', 'core', 'strace'):
-        tmp_files[ft] = pathlib.Path(f'{tmp_file_base}.{ft}')
+    for ft in ("stdout", "stderr", "core", "strace"):
+        tmp_files[ft] = pathlib.Path(f"{tmp_file_base}.{ft}")
     return tmp_files
 
 
@@ -92,7 +92,7 @@ def match_syscalls(file_path, expressions, segfault=False):
     non_expr_lines = 5 + len(expressions)
     if segfault:
         non_expr_lines += 1
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         for line in f.readlines()[:-non_expr_lines]:
             sys_call = line.split()[3]
             if not list(filter(sys_call.startswith, expressions)):
