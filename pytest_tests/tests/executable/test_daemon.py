@@ -96,7 +96,9 @@ def test_daemon_simple_args_allowed_failure(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, '-r', '2', '-e', TESTING_OUTPUT], failure_verbosity='no-exception')
+    cmd = executable.Daemon(
+        [helper_app, '-r', '2', '-e', TESTING_OUTPUT], failure_verbosity='no-exception'
+    )
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -236,7 +238,9 @@ def test_daemon_coredump(require_root, tmp_files, helper_app):
 
     cd = coredump.Coredump()
     cd.set_output_file(tmp_files['core'])
-    cmd = executable.Daemon([helper_app, '-f', '2', '-s'], default_logger_level=logging.CRITICAL + 1)
+    cmd = executable.Daemon(
+        [helper_app, '-f', '2', '-s'], default_logger_level=logging.CRITICAL + 1
+    )
     cmd.set_coredump(cd)
 
     cmd.start()
@@ -290,7 +294,9 @@ def test_daemon_strace_expressions_coredump(require_root, tmp_files, helper_app)
     st.add_expression(strace_expressions)
     cd = coredump.Coredump()
     cd.set_output_file(tmp_files['core'])
-    cmd = executable.Daemon([helper_app, '-f', '2', '-s'], default_logger_level=logging.CRITICAL + 1)
+    cmd = executable.Daemon(
+        [helper_app, '-f', '2', '-s'], default_logger_level=logging.CRITICAL + 1
+    )
     cmd.set_strace(st)
     cmd.set_coredump(cd)
 

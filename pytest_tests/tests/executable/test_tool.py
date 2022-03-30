@@ -141,10 +141,11 @@ def test_tool_simple_args_fail(helper_app):
 
 
 def test_tool_simple_args_allowed_failure(helper_app):
-    """Test of command which is allowed to fail.
-    """
+    """Test of command which is allowed to fail."""
 
-    cmd = executable.Tool([helper_app, '-r', '2', '-e', TESTING_OUTPUT], failure_verbosity='no-exception')
+    cmd = executable.Tool(
+        [helper_app, '-r', '2', '-e', TESTING_OUTPUT], failure_verbosity='no-exception'
+    )
 
     stdout, stderr = cmd.run()
 
@@ -153,8 +154,7 @@ def test_tool_simple_args_allowed_failure(helper_app):
 
 
 def test_tool_simple_args_expected_failure(helper_app):
-    """Test of command which is expected to fail.
-    """
+    """Test of command which is expected to fail."""
 
     cmd = executable.Tool([helper_app, '-r', '2'], failure_verbosity='no-error')
 
@@ -163,8 +163,7 @@ def test_tool_simple_args_expected_failure(helper_app):
 
 
 def test_tool_env():
-    """Test of environment variable setup.
-    """
+    """Test of environment variable setup."""
 
     test_var = 'TEST_TOOL_ENV_VAR'
     test_var_value = TESTING_OUTPUT
@@ -181,8 +180,7 @@ def test_tool_env():
 
 
 def test_tool_env_key():
-    """Test of environment variable setup.
-    """
+    """Test of environment variable setup."""
 
     test_var = 'TEST_TOOL_ENV_VAR'
     test_var_value = TESTING_OUTPUT
@@ -196,8 +194,7 @@ def test_tool_env_key():
 
 
 def test_tool_env_clear():
-    """Test of environment variable setup.
-    """
+    """Test of environment variable setup."""
 
     cmd = executable.Tool(['printenv', '-0'])
     cmd.clear_env()
