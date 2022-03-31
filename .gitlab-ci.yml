@@ -14,6 +14,11 @@ docker:
     variables: { DOCKER_BUILDKIT: 1 }
     script: [docker build -t $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG .]
 
+docker-rebuild:
+    extends: docker
+    variables: { DOCKER_OPTS: --no-cache }
+    when: manual
+
 editorconfig:
     stage: check
     needs: []

@@ -15,7 +15,7 @@ setuptools.setup(
         "dirty_template": "{tag}.dev{ccount}+git.{sha}.dirty",
         "starting_version": "1.0.0",
     },
-    setup_requires=['setuptools-git-versioning'],
+    setup_requires=['setuptools-git-versioning==1.8.1'],
     author="CESNET",
     author_email="tran@cesnet.cz",
     description="Lbr_testsuite package contains various modules used by CESNET projects",
