@@ -1,7 +1,7 @@
 """
 Author(s): Jan Kucera <jan.kucera@cesnet.cz>
 
-Copyright: (C) 2020-2021 CESNET
+Copyright: (C) 2020-2022 CESNET
 
 Device classes.
 """
@@ -19,6 +19,8 @@ class Device:
     ----------
     _dpdk_args : list[str]
         List of DPDK EAL (Environment Abstraction Layer) parameters.
+    _dpdk_devargs : dict[str]
+        Dictionary of DPDK device arguments.
     _dpdk_name : str
         Name of the device in DPDK runtime.
     """
@@ -28,7 +30,19 @@ class Device:
         """
 
         self._dpdk_args = []
+        self._dpdk_devargs = {}
         self._dpdk_name = None
+
+    def _dpdk_device(self):
+        """Returns DPDK device specification for command-line.
+
+        Returns
+        -------
+        str
+            Device specification.
+        """
+
+        return None
 
     def get_dpdk_args(self):
         """Gets list of DPDK EAL (Environment Abstraction Layer)
@@ -40,7 +54,25 @@ class Device:
             List of DPDK EAL parameters.
         """
 
-        return self._dpdk_args
+        device = self._dpdk_device()
+        if not device:
+            return self._dpdk_args
+
+        for key, val in self._dpdk_devargs.items():
+            device = device + f',{key}={val}'
+
+        return [device] + self._dpdk_args
+
+    def get_dpdk_devargs(self):
+        """Gets dictionary of DPDK device arguments.
+
+        Returns
+        -------
+        dict[str]
+            Dictionary of DPDK device arguments.
+        """
+
+        return self._dpdk_devargs
 
     def get_dpdk_name(self):
         """Gets name of the device in DPDK runtime.
@@ -62,13 +94,18 @@ class PciDevice(Device):
         PCIe device address.
     """
 
-    def __init__(self, address):
+    def _dpdk_device(self):
+        return f'--allow={self._address}'
+
+    def __init__(self, address, devargs=None):
         """The device object based on a real PCIe device.
 
         Parameters
         ----------
         address : str
             address of PCIe device
+        devargs : dict[str], optional
+            device arguments
 
         Raises
         ------
@@ -82,8 +119,9 @@ class PciDevice(Device):
             raise RuntimeError(f"no such PCIe device '{address}'")
 
         self._address = PciAddress.from_string(address)
-        self._dpdk_args.extend([f'--allow={self._address}'])
         self._dpdk_name = str(address)
+        if devargs:
+            self._dpdk_devargs = devargs
 
     def get_address(self):
         """Gets PCIe address of the device.
@@ -100,6 +138,9 @@ class PciDevice(Device):
 class VdevDevice(Device):
     """Derived class representing a virtual device.
     """
+
+    def _dpdk_device(self):
+        return f'--vdev={self._dpdk_name}'
 
     def __init__(self):
         """The DPDK virtual device object.
@@ -123,7 +164,6 @@ class RingDevice(VdevDevice):
         """
 
         super().__init__()
-        self._dpdk_args.extend(['--vdev=net_ring0'])
         self._dpdk_name = f'net_ring{id}'
 
 
@@ -158,5 +198,5 @@ class PcapLiveDevice(VdevDevice):
             raise RuntimeError(f"no such network interface '{netdev}'")
 
         self._netdev = str(netdev)
-        self._dpdk_args.extend([f'--vdev=net_pcap0,iface={self._netdev}'])
+        self._dpdk_devargs['iface'] = self._netdev
         self._dpdk_name = f'net_pcap{id}'

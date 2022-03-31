@@ -13,6 +13,7 @@ from pathlib import Path
 
 from ...executable import executable
 from ...topology.device import PciDevice
+from ...topology.devices_args import DevicesArgs
 from ...topology.topology import Topology, select_topologies
 from ...topology import registration
 
@@ -25,6 +26,18 @@ from ._spirent import topology_wired_spirent  # noqa
 def pytest_addoption(parser):
     for args, kwargs in _options.options():
         parser.addoption(*args, **kwargs)
+
+    parser.addoption(
+        '--dpdk-devargs',
+        action='append',
+        default=[],
+        type=str,
+        help=(
+            'Add DPDK devices arguments as comma separated pairs in form '
+            '<device-name>[,<arg1>=<value1>[,<arg2>=<value2>...]], e.g., '
+            '--dpdk-devargs=0000:01:00.0,mprq_en=1,rxqs_min_mprq=1.'
+        )
+    )
 
     parser.addini(
         'default_topology',
@@ -197,3 +210,22 @@ def device_bound(request, require_root, device):
         executable.Tool([str(utility), '-d', str(device.get_address())]).run()
 
     return device
+
+
+@pytest_cases.fixture(scope='session')
+def devices_args(request):
+    """Fixture creating devices arguments instance from command-line options.
+
+    Parameters
+    ----------
+    request : FixtureRequest
+        Special pytest fixture
+
+    Returns
+    -------
+    DeviceArgs
+        An instance of DeviceArgs representing devices arguments.
+    """
+
+    options = request.config.getoption('dpdk_devargs')
+    return DevicesArgs(options)

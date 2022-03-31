@@ -1,7 +1,7 @@
 """
 Author(s): Jan Kucera <jan.kucera@cesnet.cz>
 
-Copyright: (C) 2020-2021 CESNET
+Copyright: (C) 2020-2022 CESNET
 
 Traffic generator classes. All the specific traffic generator classes
 should extend base Generator class.
