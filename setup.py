@@ -18,7 +18,7 @@ setuptools.setup(
         "dirty_template": "{tag}.dev{ccount}+git.{sha}.dirty",
         "starting_version": "1.0.0",
     },
-    setup_requires=['setuptools-git-versioning==1.8.1'],
+    setup_requires=["setuptools-git-versioning==1.8.1"],
     author="CESNET",
     author_email="tran@cesnet.cz",
     description="Lbr_testsuite package contains various modules used by CESNET projects",
@@ -31,12 +31,12 @@ setuptools.setup(
         "Framework :: Pytest",
     ],
     install_requires=[
-        'pyroute2>=0.6.2,<1.',
-        'lbr_trex_client',
-        'stcrestclient',
-        'pytest',
+        "pyroute2>=0.6.2,<1.",
+        "lbr_trex_client",
+        "stcrestclient",
+        "pytest",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     entry_points={
         "pytest11": [
             "lbr_testsuite = lbr_testsuite._pytest_plugins.plugin",
