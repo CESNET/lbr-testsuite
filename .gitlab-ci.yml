@@ -35,6 +35,24 @@ pycodestyle:
         reports: { junit: pycodestyle.xml }
         when: always
 
+isort:
+    stage: check
+    needs: [docker]
+    script:
+        - isort --check-only --diff *.py lbr_testsuite/ pytest_tests/ | tee isort.log
+    artifacts:
+        paths: [isort.log]
+        when: always
+
+black:
+    stage: check
+    needs: [docker]
+    script:
+        - black --check --diff *.py lbr_testsuite/ pytest_tests/ | tee black.log
+    artifacts:
+        paths: [black.log]
+        when: always
+
 pytest:
     stage: pytest
     script:
