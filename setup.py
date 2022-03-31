@@ -1,12 +1,14 @@
 import setuptools
 
 
-long_description = "Package includes following modules:\n" \
-    "- common | module with useful functions for testing in python\n" \
-    "- ipconfigurer | API for ip configuration using pyroute2 library\n" \
-    "- spirent, spirentlib | API for Spirent Test Center (STC)\n" \
-    "- TRex tools | tools to simplify basic TRex operations\n" \
+long_description = (
+    "Package includes following modules:\n"
+    "- common | module with useful functions for testing in python\n"
+    "- ipconfigurer | API for ip configuration using pyroute2 library\n"
+    "- spirent, spirentlib | API for Spirent Test Center (STC)\n"
+    "- TRex tools | tools to simplify basic TRex operations\n"
     "- topology | module with implementation of our pytest topologies."
+)
 
 setuptools.setup(
     name="lbr_testsuite",
@@ -26,13 +28,13 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.6",
-        "Framework :: Pytest"
+        "Framework :: Pytest",
     ],
     install_requires=[
         'pyroute2>=0.6.2,<1.',
         'lbr_trex_client',
         'stcrestclient',
-        'pytest'
+        'pytest',
     ],
     python_requires='>=3.6',
     entry_points={
