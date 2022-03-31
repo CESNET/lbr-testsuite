@@ -9,10 +9,7 @@ Topology plugin implementation.
 
 import pytest
 import pytest_cases
-from pathlib import Path
 
-from ...executable import executable
-from ...topology.device import PciDevice
 from ...topology.devices_args import DevicesArgs
 from ...topology.topology import Topology, select_topologies
 from ...topology import registration
@@ -182,34 +179,6 @@ def topology_tuple(topology):
 # creates, e.g., 'device' and 'generator' aliases for device and
 # generator attributes.
 pytest_cases.unpack_fixture(Topology.get_tuple_keys(), topology_tuple)
-
-
-@pytest_cases.fixture(scope='module')
-def device_bound(request, require_root, device):
-    """Fixture which bounds the driver of the PCI device, for other type
-    of devices it has no effect.
-
-    Parameters
-    ----------
-    request : FixtureRequest
-        Special pytest fixture
-    require_root : Fixture
-        Fixture checking we are running under the root
-    device : Device
-        An instance of Device to be bound
-
-    Returns
-    -------
-    Device
-        bound device object
-    """
-
-    if isinstance(device, PciDevice):
-        root_dir = Path(request.config.getoption('repository_root')).resolve()
-        utility = root_dir / request.config.getoption('dcpro_autobind_exec')
-        executable.Tool([str(utility), '-d', str(device.get_address())]).run()
-
-    return device
 
 
 @pytest_cases.fixture(scope='session')
