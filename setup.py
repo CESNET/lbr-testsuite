@@ -1,5 +1,6 @@
 import setuptools
 
+
 long_description = "Package includes following modules:\n" \
     "- common | module with useful functions for testing in python\n" \
     "- ipconfigurer | API for ip configuration using pyroute2 library\n" \
