@@ -12,7 +12,7 @@ import resource
 import shutil
 import signal
 
-from lbr_testsuite.executable import executable
+from . import executable
 
 
 global_logger = logging.getLogger(__name__)
