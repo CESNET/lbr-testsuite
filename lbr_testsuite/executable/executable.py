@@ -35,11 +35,11 @@ class Executable:
     """
 
     DEFAULT_OPTIONS = {
-        'stdout': subprocess.PIPE,
-        'stderr': subprocess.PIPE,
-        'encoding': 'utf-8',
-        'shell': False,
-        'start_new_session': True,  # This runs the subprocess in a new session,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.PIPE,
+        "encoding": "utf-8",
+        "shell": False,
+        "start_new_session": True,  # This runs the subprocess in a new session,
         # so it is not directly affected by pressing CTRL+C which basically sends
         # SIGINT to all processes within the process group. We can thus catch and
         # process KeyboardInterrupt properly and kill the subprocess afterwards.
@@ -56,19 +56,14 @@ class Executable:
     - silent: a failure does not provide any output nor raises
     an exception.
     """
-    FAILURE_VERBOSITY_LEVELS = (
-        'normal',
-        'no-error',
-        'no-exception',
-        'silent'
-    )
+    FAILURE_VERBOSITY_LEVELS = ("normal", "no-error", "no-exception", "silent")
 
     def __init__(
         self,
         command,
         logger=None,
         default_logger_level=None,
-        failure_verbosity='normal',
+        failure_verbosity="normal",
         env=None,
     ):
         """
@@ -105,12 +100,12 @@ class Executable:
         self._post_exec_fn = None
 
         if isinstance(command, str):
-            self._options['shell'] = True
+            self._options["shell"] = True
             self._cmd = command
         elif isinstance(command, tuple) or isinstance(command, list):
             self._cmd = list(command)  # always get list because of append_arguments method
         else:
-            assert False, f'Unsupported command type {type(command)}.'
+            assert False, f"Unsupported command type {type(command)}."
 
         if logger is not None:
             self._logger = logger
@@ -121,13 +116,12 @@ class Executable:
 
         self._failure_verbosity = failure_verbosity
         if env is not None:
-            self._options['env'] = env
+            self._options["env"] = env
         else:
-            self._options['env'] = os.environ.copy()
+            self._options["env"] = os.environ.copy()
 
     def _cmd_str(self):
-        """Convert command to string representation.
-        """
+        """Convert command to string representation."""
 
         if isinstance(self._cmd, str):
             return self._cmd
@@ -158,7 +152,7 @@ class Executable:
             Mapping that defines the environment variables.
         """
 
-        self._options['env'] = env
+        self._options["env"] = env
 
     def set_env_key(self, key, value):
         """Set new environment variable mapping.
@@ -171,13 +165,12 @@ class Executable:
             Value of the varible.
         """
 
-        self._options['env'][key] = value
+        self._options["env"][key] = value
 
     def clear_env(self):
-        """Clear all environment variables mapping.
-        """
+        """Clear all environment variables mapping."""
 
-        self._options['env'] = {}
+        self._options["env"] = {}
 
     def set_strace(self, strace):
         """Set strace for a command.
@@ -199,24 +192,21 @@ class Executable:
             Configured instance of Coredump class.
         """
 
-        self._options['preexec_fn'] = coredump.popen_preexec
+        self._options["preexec_fn"] = coredump.popen_preexec
         self._post_exec_fn = coredump.popen_postexec
 
     def _set_output(self, output_type, output):
-        """Set output for a command (stdout or stderr).
-        """
+        """Set output for a command (stdout or stderr)."""
 
-        assert output_type in ['stdout', 'stderr']
+        assert output_type in ["stdout", "stderr"]
 
         if isinstance(output, pathlib.Path):
             output = str(output)
 
         if isinstance(output, str):
-            self._options[output_type] = open(output, 'w')
+            self._options[output_type] = open(output, "w")
             self._output_files[output_type] = self._options[output_type]
-            self._logger.info(
-                f'{output_type} for command {self._cmd_str()} set to: {output}.'
-            )
+            self._logger.info(f"{output_type} for command {self._cmd_str()} set to: {output}.")
         else:
             self._options[output_type] = output
 
@@ -237,15 +227,14 @@ class Executable:
             subprocess module.
         """
 
-        self._set_output('stdout', stdout)
+        self._set_output("stdout", stdout)
         if stderr is None:
-            self._options['stderr'] = subprocess.STDOUT
+            self._options["stderr"] = subprocess.STDOUT
         else:
-            self._set_output('stderr', stderr)
+            self._set_output("stderr", stderr)
 
     def _close_output_files(self):
-        """Close output files opened withing setting of outputs.
-        """
+        """Close output files opened withing setting of outputs."""
 
         for f in self._output_files.values():
             if f is not None:
@@ -259,21 +248,23 @@ class Executable:
         an exception is reraised.
         """
 
-        if self._failure_verbosity == 'silent':
+        if self._failure_verbosity == "silent":
             return
 
         fail_msg = f'Command "{process_error.cmd}" has failed with code {process_error.returncode}.'
 
-        if self._failure_verbosity == 'normal':
+        if self._failure_verbosity == "normal":
             self._logger.error(fail_msg)
         else:
-            assert self._failure_verbosity == 'no-error' or self._failure_verbosity == 'no-exception'
+            assert (
+                self._failure_verbosity == "no-error" or self._failure_verbosity == "no-exception"
+            )
             self._logger.debug(fail_msg)
 
-        self._logger.debug(f'Captured stdout:\n{stdout}')
-        self._logger.debug(f'Captured stderr:\n{stderr}')
+        self._logger.debug(f"Captured stdout:\n{stdout}")
+        self._logger.debug(f"Captured stderr:\n{stderr}")
 
-        if self._failure_verbosity == 'normal' or self._failure_verbosity == 'no-error':
+        if self._failure_verbosity == "normal" or self._failure_verbosity == "no-error":
             raise
 
     def append_arguments(self, args):
@@ -290,7 +281,7 @@ class Executable:
 
         if isinstance(self._cmd, str):
             assert isinstance(args, str)
-            self._cmd = self._cmd + ' ' + args  # single argument expected
+            self._cmd = self._cmd + " " + args  # single argument expected
         else:
             assert isinstance(self._cmd, list)
             if isinstance(args, str):
@@ -382,11 +373,10 @@ class Daemon(Executable):
         self._terminated = True
 
     def start(self):
-        """Start the command on background.
-        """
+        """Start the command on background."""
 
         if self._process is not None and not self._terminated:
-            raise RuntimeError('start called on a started process')
+            raise RuntimeError("start called on a started process")
 
         self._start()
         self._terminated = False

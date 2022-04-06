@@ -8,11 +8,12 @@ Helper code for collection of core dumps when running child processes.
 
 import logging
 import os
+import resource
 import shutil
 import signal
-import resource
 
 from lbr_testsuite.executable import executable
+
 
 global_logger = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ class Coredump:
         if not self._output_file:
             return
 
-        coredump = f'core.{process.pid}'
+        coredump = f"core.{process.pid}"
 
         if os.path.isfile(coredump):
             shutil.move(coredump, self._output_file)
@@ -137,12 +138,12 @@ class Coredump:
         # check root permissions
         if os.geteuid() != 0:
             global_logger.warning(
-                'Unable to store coredump due to insufficient permissions. Root'
-                'permissions are required to retrieve coredump.'
+                "Unable to store coredump due to insufficient permissions. Root"
+                "permissions are required to retrieve coredump."
             )
 
         # extract coredump using coredumpctl if core.<pid> file is not present
         executable.Tool(
-            ['coredumpctl', 'dump', str(process.pid), '-o', self._output_file],
-            failure_verbosity='no-exception'
+            ["coredumpctl", "dump", str(process.pid), "-o", self._output_file],
+            failure_verbosity="no-exception",
         ).run()

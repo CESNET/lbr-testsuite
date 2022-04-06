@@ -11,21 +11,21 @@ Base TRex test module. Provides a common frame for tests using Cisco TRex.
     | `Python Automation API <https://trex-tgn.cisco.com/trex/doc/>`_.
 """
 
+import logging
 from functools import partial
 
-import logging
+
 global_logger = logging.getLogger(__name__)
 
 import lbr_trex_client.paths  # noqa: F401
-
-from trex.stl.api import *
 from trex.astf.api import *
+from trex.stl.api import *
 from trex.utils.parsing_opts import decode_multiplier
 from trex_client import CTRexClient
 from trex_exceptions import TRexInUseError
 
 
-class TRex_Instances():
+class TRex_Instances:
     """Base TRex class.
 
     Tests should call :meth:`~trex_tools.trex_instances.TRex_Instances.setup_trex_instance`
@@ -62,7 +62,7 @@ class TRex_Instances():
         statefulness,
         force_use=False,
         pyt_request=None,
-        **trex_cmd_options
+        **trex_cmd_options,
     ):
         """Create, start and connect to a new TRex instance.
 
@@ -173,7 +173,7 @@ class TRex_Instances():
             TRex handler.
         """
 
-        if statefulness not in ('stl', 'astf'):
+        if statefulness not in ("stl", "astf"):
             raise ValueError(f'Bad statefulness. Expected "stl" or "astf", got "{statefulness}"')
 
         trex_daemon_handler = None
@@ -181,14 +181,14 @@ class TRex_Instances():
 
         # Connect to and create handler for communication with TRex daemon
         # CTRexClient() class doesn't have any explicit disconnect() method -> no finalizer
-        global_logger.debug(f'Connecting to TRex daemon ({server}:{daemon_port}) ...')
+        global_logger.debug(f"Connecting to TRex daemon ({server}:{daemon_port}) ...")
         trex_daemon_handler = CTRexClient(trex_host=server, trex_daemon_port=daemon_port)
 
         if force_use:
             trex_daemon_handler.force_kill(confirm=False)
 
         # Command TRex daemon to start TRex instance
-        global_logger.debug(f'Starting {statefulness} TRex ...')
+        global_logger.debug(f"Starting {statefulness} TRex ...")
         try:
             if statefulness == "stl":
                 trex_daemon_handler.start_stateless(cfg=config_file, **trex_cmd_options)
@@ -198,7 +198,9 @@ class TRex_Instances():
                 self._trex_daemon_handlers.append(trex_daemon_handler)
 
         except TRexInUseError as e:
-            global_logger.error('TRex is already running. Call this method with force_use=True to kill TRex.')
+            global_logger.error(
+                "TRex is already running. Call this method with force_use=True to kill TRex."
+            )
             # It is recommended to catch this exception and raise additional message to inform user
             # about solutions based on your testing framework. Eg. launching test again with command
             # line parameter like --trex-force-use that will ensure calling this method with force_use=True.
@@ -209,18 +211,22 @@ class TRex_Instances():
         else:
             trex_handler = ASTFClient(server=server, sync_port=sync_port, async_port=async_port)
 
-        global_logger.debug(f'Connecting to TRex ({trex_handler.ctx.server}:' +
-                            f'[{trex_handler.ctx.async_port},{trex_handler.ctx.sync_port}]) ...')
+        global_logger.debug(
+            f"Connecting to TRex ({trex_handler.ctx.server}:"
+            + f"[{trex_handler.ctx.async_port},{trex_handler.ctx.sync_port}]) ..."
+        )
         trex_handler.connect()
         self._trex_handlers.append(trex_handler)
-        global_logger.debug('Acquiring all available physical ports ...')
+        global_logger.debug("Acquiring all available physical ports ...")
 
         # Note: reset() without arguments acquires all available physical ports.
         # If you need to use only one physical port, then set TRex configuration file
         # to use one 'dummy' port, which cannot be acquired.
         trex_handler.reset()
         for port in trex_handler.get_all_ports():
-            global_logger.debug(f'Port {port} speed: {trex_handler.get_port_attr(port)["speed"]} GB.')
+            global_logger.debug(
+                f'Port {port} speed: {trex_handler.get_port_attr(port)["speed"]} GB.'
+            )
 
         # Can be used only in pytest framework, otherwise see disconnect() method
         def finalizer(self, trex_handler):
@@ -241,15 +247,19 @@ class TRex_Instances():
             Specifies instance of TRex.
         """
 
-        global_logger.debug(f'Disconnecting from TRex ({handler.ctx.server}:' +
-                            f'[{handler.ctx.async_port},{handler.ctx.sync_port}]) ...')
+        global_logger.debug(
+            f"Disconnecting from TRex ({handler.ctx.server}:"
+            + f"[{handler.ctx.async_port},{handler.ctx.sync_port}]) ..."
+        )
         handler.disconnect()
 
         # Daemon handler has same index in _TDH array as TRex handler has in _TH array, so it can be used to find it
         trex_daemon_handler = self._trex_daemon_handlers[self._trex_handlers.index(handler)]
 
-        global_logger.debug(f'Terminating TRex (via its daemon {trex_daemon_handler.trex_host}:' +
-                            f'{trex_daemon_handler.trex_daemon_port}) ...')
+        global_logger.debug(
+            f"Terminating TRex (via its daemon {trex_daemon_handler.trex_host}:"
+            + f"{trex_daemon_handler.trex_daemon_port}) ..."
+        )
         trex_daemon_handler.stop_trex()
 
         self._trex_handlers.remove(handler)
@@ -272,7 +282,7 @@ class TRex_Instances():
             for hnd in self._trex_handlers:
                 hnd.reset()
 
-    def stl_start(self, handler=None, physical_ports=None, duration=-1, mult='1', **kwargs):
+    def stl_start(self, handler=None, physical_ports=None, duration=-1, mult="1", **kwargs):
         """Start generating packets from stateless TRex.
 
         Given ports must be configured with
@@ -307,8 +317,8 @@ class TRex_Instances():
         """
 
         params = kwargs
-        params['duration'] = duration
-        params['mult'] = mult
+        params["duration"] = duration
+        params["mult"] = mult
 
         # Get list of physical port IDs that are configured with streams
         def stl_pid(hnd):
@@ -361,8 +371,8 @@ class TRex_Instances():
         """
 
         params = kwargs
-        params['duration'] = duration
-        params['mult'] = mult
+        params["duration"] = duration
+        params["mult"] = mult
 
         if handler:
             handler.start(**params)
@@ -437,7 +447,9 @@ class TRex_Instances():
         elif isinstance(handler, ASTFClient):
             return handler.get_stats(skip_zero=False)
         else:
-            raise ValueError(f'Bad handler. Expected STLClient or ASTFClient type, got "{type(handler)}"')
+            raise ValueError(
+                f'Bad handler. Expected STLClient or ASTFClient type, got "{type(handler)}"'
+            )
 
     @staticmethod
     def u2i(unit):
@@ -457,7 +469,7 @@ class TRex_Instances():
             Converted value.
         """
 
-        return int(decode_multiplier(unit.lower())['value'])
+        return int(decode_multiplier(unit.lower())["value"])
 
     @staticmethod
     def bps_L3_to_L2(bps_l3, fixed_packet_size, vlan=True):
@@ -495,7 +507,9 @@ class TRex_Instances():
 
         if isinstance(bps_l3, str):
             if bps_l3[-3:].lower() == "pps":
-                raise ValueError('Expected "bps" (bits per second) unit, but got "pps" (packets per second) unit.')
+                raise ValueError(
+                    'Expected "bps" (bits per second) unit, but got "pps" (packets per second) unit.'
+                )
             bps_l3 = TRex_Instances.u2i(bps_l3)
 
         L2_header_size = 18

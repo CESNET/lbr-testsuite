@@ -30,11 +30,11 @@ class DevicesArgs:
         self._args = {}
 
         for option in options:
-            device_name, args = option.split(',', 1)
+            device_name, args = option.split(",", 1)
 
             device_args = {}
-            for arg in args.split(','):
-                key, value = arg.split('=')
+            for arg in args.split(","):
+                key, value = arg.split("=")
                 device_args[key] = value
 
             self._args[device_name] = device_args

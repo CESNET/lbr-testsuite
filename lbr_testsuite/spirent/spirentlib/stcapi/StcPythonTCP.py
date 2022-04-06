@@ -13,7 +13,7 @@ import struct
 
 
 class StcPythonTCP:
-    """ Class simulating standard StcPython, sending all commands over
+    """Class simulating standard StcPython, sending all commands over
     the network.
     """
 
@@ -21,14 +21,13 @@ class StcPythonTCP:
         self._socket = socket.create_connection((host, port))
         self._logger = logging.getLogger("STC")
 
-
     def _recv_msg(self):
         self._logger.debug("Receiving message...")
         buffer = bytearray()
         while len(buffer) < 4:
             buffer.extend(self._socket.recv(1500))
 
-        msg_len, = struct.unpack("<I", buffer[:4])
+        (msg_len,) = struct.unpack("<I", buffer[:4])
         del buffer[:4]
         while len(buffer) < msg_len:
             buffer.extend(self._socket.recv(1500))
@@ -36,14 +35,12 @@ class StcPythonTCP:
         self._logger.debug("Received message - {}B".format(len(buffer)))
         return pickle.loads(buffer)
 
-
     def _send_msg(self, msg):
         self._logger.debug("Sending message: {}".format(msg))
         raw_data = pickle.dumps(msg)
         data = struct.pack("<I", len(raw_data)) + raw_data
         sent = self._socket.send(data)
         self._logger.debug("Sent message - {}B".format(sent))
-
 
     def _process_command(self, command, args, kwargs):
         self._send_msg({"function": command, "args": args, "kwargs": kwargs})
@@ -54,10 +51,25 @@ class StcPythonTCP:
         else:
             return response
 
-
     def __getattr__(self, item):
-        if not item in {"apply", "config", "connect", "create", "delete", "disconnect", "get", "help", "log", "perform",
-                        "release", "reserve", "sleep", "subscribe", "unsubscribe", "waitUntilComplete"}:
+        if not item in {
+            "apply",
+            "config",
+            "connect",
+            "create",
+            "delete",
+            "disconnect",
+            "get",
+            "help",
+            "log",
+            "perform",
+            "release",
+            "reserve",
+            "sleep",
+            "subscribe",
+            "unsubscribe",
+            "waitUntilComplete",
+        }:
             return self.__getattribute__(item)
 
         def call_wrapper(*args, **kwargs):

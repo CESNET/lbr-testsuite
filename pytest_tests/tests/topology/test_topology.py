@@ -12,15 +12,14 @@ these topology arguments see tests help.
 from lbr_testsuite.topology.topology import select_topologies
 
 
-select_topologies(['wired_loopback', 'vdev_loopback', 'wired_spirent'])
+select_topologies(["wired_loopback", "vdev_loopback", "wired_spirent"])
+
 
 def test_topology(device, generator):
     print()
-    print('Device: \n'
-        f'    type: {type(device)}\n'
-        f'    name: {device.get_dpdk_name()}\n'
-        f'    name: {device.get_dpdk_args()}\n'
-    )
-    print('Generator: \n'
-        f'    type: {type(generator)}\n'
-    )
+    print("Device:")
+    print(f"    type: {type(device)}")
+    print(f"    name: {device.get_dpdk_name()}")
+    print(f"    name: {device.get_dpdk_args()}")
+    print("Generator:")
+    print(f"    type: {type(generator)}")

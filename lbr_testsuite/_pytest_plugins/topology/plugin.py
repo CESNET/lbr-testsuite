@@ -10,14 +10,13 @@ Topology plugin implementation.
 import pytest
 import pytest_cases
 
+from ...topology import registration
 from ...topology.devices_args import DevicesArgs
 from ...topology.topology import Topology, select_topologies
-from ...topology import registration
-
 from . import _options
-from ._wired_loopback import topology_wired_loopback  # noqa
-from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
 from ._spirent import topology_wired_spirent  # noqa
+from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
+from ._wired_loopback import topology_wired_loopback  # noqa
 
 
 def pytest_addoption(parser):
@@ -25,22 +24,22 @@ def pytest_addoption(parser):
         parser.addoption(*args, **kwargs)
 
     parser.addoption(
-        '--dpdk-devargs',
-        action='append',
+        "--dpdk-devargs",
+        action="append",
         default=[],
         type=str,
         help=(
-            'Add DPDK devices arguments as comma separated pairs in form '
-            '<device-name>[,<arg1>=<value1>[,<arg2>=<value2>...]], e.g., '
-            '--dpdk-devargs=0000:01:00.0,mprq_en=1,rxqs_min_mprq=1.'
-        )
+            "Add DPDK devices arguments as comma separated pairs in form "
+            "<device-name>[,<arg1>=<value1>[,<arg2>=<value2>...]], e.g., "
+            "--dpdk-devargs=0000:01:00.0,mprq_en=1,rxqs_min_mprq=1."
+        ),
     )
 
     parser.addini(
-        'default_topology',
-        type='linelist',
+        "default_topology",
+        type="linelist",
         default=[],
-        help='Set default topology (or topologies).'
+        help="Set default topology (or topologies).",
     )
 
 
@@ -64,7 +63,7 @@ def _define_pseudofixture(metafunc, pseudofixture, options):
         options = [options]
 
     # Parametrize the test function creating its call for each of the options
-    metafunc.parametrize(pseudofixture, options, scope='session')
+    metafunc.parametrize(pseudofixture, options, scope="session")
 
 
 def _filter_undefined_pseudofixtures(selected, filtered, pseudofixtures):
@@ -80,7 +79,7 @@ def _filter_undefined_pseudofixtures(selected, filtered, pseudofixtures):
     for item in selected:
 
         # Simply include the item if it does not have any call parameters
-        if not hasattr(item, 'callspec'):
+        if not hasattr(item, "callspec"):
             included.append(item)
             continue
 
@@ -117,8 +116,8 @@ def pytest_generate_tests(metafunc):
     for topology in registration.registered_topology_options().values():
         _define_pseudofixture(
             metafunc,
-            topology['pseudofixture'],
-            config.getoption(topology['option_name'])
+            topology["pseudofixture"],
+            config.getoption(topology["option_name"]),
         )
 
 
@@ -129,11 +128,11 @@ def pytest_collection_modifyitems(session, config, items):
     runs that uses undefined pseudofixtures.
     """
 
-    pseudofixtures = [t['pseudofixture'] for t in registration.registered_topology_options().values()]
+    pseudofixs = [t["pseudofixture"] for t in registration.registered_topology_options().values()]
     filtered = []
 
     # Deselect all the test runs having any pseudofixture not defined
-    _filter_undefined_pseudofixtures(items, filtered, pseudofixtures)
+    _filter_undefined_pseudofixtures(items, filtered, pseudofixs)
     config.hook.pytest_deselected(items=filtered)
 
 
@@ -144,16 +143,16 @@ def pytest_sessionstart(session):
     tests.
     """
 
-    default = session.config.getini('default_topology')
+    default = session.config.getini("default_topology")
 
     if not default:
         # Our library default topology
-        select_topologies(['wired_loopback'])
+        select_topologies(["wired_loopback"])
     else:
         select_topologies(default)
 
 
-@pytest_cases.fixture(scope='module')
+@pytest_cases.fixture(scope="module")
 def topology_tuple(topology):
     """Fixture to access the topology object as a tuple of
     its attributes, components respectively. This fixture is
@@ -181,7 +180,7 @@ def topology_tuple(topology):
 pytest_cases.unpack_fixture(Topology.get_tuple_keys(), topology_tuple)
 
 
-@pytest_cases.fixture(scope='session')
+@pytest_cases.fixture(scope="session")
 def devices_args(request):
     """Fixture creating devices arguments instance from command-line options.
 
@@ -196,5 +195,5 @@ def devices_args(request):
         An instance of DeviceArgs representing devices arguments.
     """
 
-    options = request.config.getoption('dpdk_devargs')
+    options = request.config.getoption("dpdk_devargs")
     return DevicesArgs(options)

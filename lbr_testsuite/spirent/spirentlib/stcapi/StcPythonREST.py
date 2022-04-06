@@ -8,6 +8,7 @@ Spirent REST API wrapper class.
 
 import os
 
+
 try:
     from stcrestclient.stcpythonrest import StcPythonRest
 except ImportError:
@@ -24,7 +25,7 @@ class StcPythonREST(StcPythonRest):
     """
 
     def __init__(self, host, port, **kwargs):
-        os.environ['STC_REST_API'] = str(1)
-        os.environ['STC_SERVER_ADDRESS'] = str(host)
-        os.environ['STC_SERVER_PORT'] = str(port)
+        os.environ["STC_REST_API"] = str(1)
+        os.environ["STC_SERVER_ADDRESS"] = str(host)
+        os.environ["STC_SERVER_PORT"] = str(port)
         super().__init__(**kwargs)

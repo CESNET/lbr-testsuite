@@ -30,9 +30,8 @@ used until it is unbound manually.
 import logging
 import time
 
-from .spirentlib.spirentlib import StcHandler, STC_API_PROPRIETARY, STC_API_OFFICIAL
-
 from ..topology.generator import Generator
+from .spirentlib.spirentlib import STC_API_OFFICIAL, STC_API_PROPRIETARY, StcHandler
 
 
 STC_API_PROPRIETARY = STC_API_PROPRIETARY
@@ -75,7 +74,7 @@ class Spirent(Generator):
         port,
         api_version=STC_API_OFFICIAL,
         api_session_start_timeout=120,
-        server_port=None
+        server_port=None,
     ):
         """
         Parameters
@@ -118,20 +117,20 @@ class Spirent(Generator):
         self._spirent_config = config_path
 
     def connect(self):
-        """Establishes a connection to spirentlib server application.
-        """
+        """Establishes a connection to spirentlib server application."""
 
-        self._logger.debug(f'Connecting to STC terminal server: {self._server}:{self._server_port}.')
+        self._logger.debug(
+            f"Connecting to STC terminal server: {self._server}:{self._server_port}."
+        )
         self._stc_handler.stc_api_connect(self._server, self._server_port)
 
     def _load_config(self):
-        """Configure STC using the configuration file.
-        """
+        """Configure STC using the configuration file."""
 
         assert not self._port_reserved
-        assert self._spirent_config, 'Configuration file not set. Use set_config_file() to set it.'
+        assert self._spirent_config, "Configuration file not set. Use set_config_file() to set it."
 
-        self._logger.debug(f'Loading STC configuration: {self._spirent_config}.')
+        self._logger.debug(f"Loading STC configuration: {self._spirent_config}.")
         self._stc_handler.stc_init(self._spirent_config)
 
     def _connect_chassis_port(self):
@@ -143,7 +142,7 @@ class Spirent(Generator):
         configuration.
         """
 
-        self._logger.debug(f'Reserving STC port: {self._port} at chassis {self._chassis}.')
+        self._logger.debug(f"Reserving STC port: {self._port} at chassis {self._chassis}.")
         self._stc_handler.stc_connect(self._chassis, self._port)
 
         self._port_reserved = True
@@ -159,10 +158,9 @@ class Spirent(Generator):
         self._connect_chassis_port()
 
     def disconnect_chassis(self):
-        """Disconnect from spirent chassis and unbound spirent port.
-        """
+        """Disconnect from spirent chassis and unbound spirent port."""
 
-        self._logger.debug('Disconnecting from Spirent Test Center chassis.')
+        self._logger.debug("Disconnecting from Spirent Test Center chassis.")
         self._stc_handler.stc_disconnect()
 
         self._port_reserved = False
@@ -173,7 +171,9 @@ class Spirent(Generator):
             obj_names = [obj_names]
 
         if not isinstance(obj_names, list):
-            err_msg = f'Object names must be defined as a list of strings but passed "{type(obj_names)}".'
+            err_msg = (
+                f'Object names must be defined as a list of strings but passed "{type(obj_names)}".'
+            )
             raise TypeError(err_msg)
 
         return obj_names
@@ -181,7 +181,9 @@ class Spirent(Generator):
     @staticmethod
     def _stream_blocks_presence_check(sb_handler, sb_names):
         if len(sb_handler) != len(sb_names):
-            err_msg = f'Some of defined stream blocks "{sb_names}" are not defined in STC configuration.'
+            err_msg = (
+                f'Some of defined stream blocks "{sb_names}" are not defined in STC configuration.'
+            )
             raise ValueError(err_msg)
 
         for index, sb in enumerate(sb_handler):
@@ -215,11 +217,11 @@ class Spirent(Generator):
 
         # deactivate all stream blocks
         all_stream_blocks = self._stc_handler.stc_stream_block()
-        self._stc_handler.stc_attribute(all_stream_blocks, 'Active', 'FALSE')
+        self._stc_handler.stc_attribute(all_stream_blocks, "Active", "FALSE")
 
         # activate requested stream blocks
         stream_blocks = self._stream_blocks_handler(stream_block_names)
-        self._stc_handler.stc_attribute(stream_blocks, 'Active', 'TRUE')
+        self._stc_handler.stc_attribute(stream_blocks, "Active", "TRUE")
 
     def set_stream_blocks_vlan(self, stream_block_names, vlan_id):
         """Set VLAN ID for stream blocks selected by names.
@@ -235,11 +237,11 @@ class Spirent(Generator):
 
         stream_blocks = self._stream_blocks_handler(stream_block_names)
         # access VLAN handler in a chain of stream block childs
-        eth = self._stc_handler.stc_attribute(stream_blocks, 'children-ethernet:EthernetII')
-        vlans = self._stc_handler.stc_attribute(eth, 'children-vlans')
-        vlan_handler = self._stc_handler.stc_attribute(vlans, 'children-vlan')
+        eth = self._stc_handler.stc_attribute(stream_blocks, "children-ethernet:EthernetII")
+        vlans = self._stc_handler.stc_attribute(eth, "children-vlans")
+        vlan_handler = self._stc_handler.stc_attribute(vlans, "children-vlan")
         # set VLAN ID
-        self._stc_handler.stc_attribute(vlan_handler, 'ID', str(vlan_id))
+        self._stc_handler.stc_attribute(vlan_handler, "ID", str(vlan_id))
 
     def delete_stream_blocks_vlan(self, stream_block_names):
         """Delete VLANs of stream blocks selected by names.
@@ -252,8 +254,8 @@ class Spirent(Generator):
         """
 
         stream_blocks = self._stream_blocks_handler(stream_block_names)
-        eth = self._stc_handler.stc_attribute(stream_blocks, 'children-ethernet:EthernetII')
-        vlans = self._stc_handler.stc_attribute(eth, 'children-vlans')
+        eth = self._stc_handler.stc_attribute(stream_blocks, "children-ethernet:EthernetII")
+        vlans = self._stc_handler.stc_attribute(eth, "children-vlans")
         self._stc_handler.stc_delete(vlans)
 
     def set_device_vlan(self, device_names, vlan_id):
@@ -270,8 +272,8 @@ class Spirent(Generator):
 
         device_names = self._object_name_list(device_names)
         devices = self._stc_handler.stc_device(device_names)
-        vlan_handler = self._stc_handler.stc_attribute(devices, 'children-VlanIf')
-        self._stc_handler.stc_attribute(vlan_handler, 'VlanId', str(vlan_id))
+        vlan_handler = self._stc_handler.stc_attribute(devices, "children-VlanIf")
+        self._stc_handler.stc_attribute(vlan_handler, "VlanId", str(vlan_id))
 
     def delete_device_vlan(self, device_names):
         """Delete VLANs of devices selected by names.
@@ -285,10 +287,12 @@ class Spirent(Generator):
 
         device_names = self._object_name_list(device_names)
         devices = self._stc_handler.stc_device(device_names)
-        vlan = self._stc_handler.stc_attribute(devices, 'children-VlanIf')
-        upper_layer = [self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Sources')[0][0].split()]
-        lower_layer = [self._stc_handler.stc_attribute(vlan, 'StackedOnEndpoint-Targets')[0][0]]
-        self._stc_handler.stc_attribute(upper_layer, 'StackedOnEndpoint-Targets', lower_layer)
+        vlan = self._stc_handler.stc_attribute(devices, "children-VlanIf")
+        upper_layer = [
+            self._stc_handler.stc_attribute(vlan, "StackedOnEndpoint-Sources")[0][0].split()
+        ]
+        lower_layer = [self._stc_handler.stc_attribute(vlan, "StackedOnEndpoint-Targets")[0][0]]
+        self._stc_handler.stc_attribute(upper_layer, "StackedOnEndpoint-Targets", lower_layer)
         self._stc_handler.stc_delete(vlan)
 
     def configure_stream_blocks_vlan(self, stream_block_names, vlan_id):
@@ -351,22 +355,22 @@ class Spirent(Generator):
         pl_type = port_load_type.lower()
 
         pl_value = port_load_value
-        if pl_type == 'kbps':
+        if pl_type == "kbps":
             pl_value *= 1000
-            pl_type = 'bps'
-        elif pl_type == 'mbps':
-            pl_value *= 1000*1000
-            pl_type = 'bps'
-        elif pl_type == 'gbps':
-            pl_value *= 1000*1000*1000
-            pl_type = 'bps'
+            pl_type = "bps"
+        elif pl_type == "mbps":
+            pl_value *= 1000 * 1000
+            pl_type = "bps"
+        elif pl_type == "gbps":
+            pl_value *= 1000 * 1000 * 1000
+            pl_type = "bps"
 
-        if pl_type == 'perc':
-            self._stc_handler.stc_set_port_load('perc', pl_value)
-        elif pl_type == 'fps':
-            self._stc_handler.stc_set_port_load('fps', pl_value)
-        elif pl_type == 'bps':
-            self._stc_handler.stc_set_port_load('bps', pl_value)
+        if pl_type == "perc":
+            self._stc_handler.stc_set_port_load("perc", pl_value)
+        elif pl_type == "fps":
+            self._stc_handler.stc_set_port_load("fps", pl_value)
+        elif pl_type == "bps":
+            self._stc_handler.stc_set_port_load("bps", pl_value)
         else:
             raise ValueError("Invalid port load type '{}'.".format(pl_type))
 
@@ -460,11 +464,10 @@ class Spirent(Generator):
         return flat_results
 
     def filter_ipv4_destination_address(self):
-        """Configure STC analyzer to filter destination IPv4 addresses.
-        """
+        """Configure STC analyzer to filter destination IPv4 addresses."""
 
-        self._logger.debug('Configure STC analyzer to filter destination IPv4 addresses.')
-        IPV4_DEST_ADDR_FILTER = '''
+        self._logger.debug("Configure STC analyzer to filter destination IPv4 addresses.")
+        IPV4_DEST_ADDR_FILTER = """
             <frame>
                 <config>
                     <pdus>
@@ -476,15 +479,14 @@ class Spirent(Generator):
                         </pdus>
                 </config>
             </frame>
-        '''
+        """
         self._stc_handler.stc_analyzer_filter([IPV4_DEST_ADDR_FILTER])
 
     def filter_ipv6_destination_address(self):
-        """Configure STC analyzer to filter destination IPv6 addresses.
-        """
+        """Configure STC analyzer to filter destination IPv6 addresses."""
 
-        self._logger.debug('Configure STC analyzer to filter destination IPv6 addresses.')
-        IPV6_DEST_ADDR_FILTER = '''
+        self._logger.debug("Configure STC analyzer to filter destination IPv6 addresses.")
+        IPV6_DEST_ADDR_FILTER = """
             <frame>
                 <config>
                     <pdus>
@@ -497,15 +499,14 @@ class Spirent(Generator):
                     </pdus>
                 </config>
             </frame>
-        '''
+        """
         self._stc_handler.stc_analyzer_filter([IPV6_DEST_ADDR_FILTER])
 
     def filter_ttl_in_ipv4_packets(self):
-        """Configure STC analyzer to filter TTL values in IPv4 packets.
-        """
+        """Configure STC analyzer to filter TTL values in IPv4 packets."""
 
-        self._logger.debug('Configure STC analyzer to filter TTL values is IPv4 packets.')
-        IPV4_TTL_FILTER = '''
+        self._logger.debug("Configure STC analyzer to filter TTL values is IPv4 packets.")
+        IPV4_TTL_FILTER = """
             <frame>
                 <config>
                     <pdus>
@@ -516,15 +517,16 @@ class Spirent(Generator):
                     </pdus>
                 </config>
             </frame>
-        '''
+        """
         self._stc_handler.stc_analyzer_filter([IPV4_TTL_FILTER])
 
     def filter_ttl_in_ipv6_packets(self):
-        """Configure STC analyzer to filter TTL (hopLimit) values in IPv6 packets.
-        """
+        """Configure STC analyzer to filter TTL (hopLimit) values in IPv6 packets."""
 
-        self._logger.debug('Configure STC analyzer to filter TTL (hopLimit) values is IPv6 packets.')
-        IPV6_TTL_FILTER = '''
+        self._logger.debug(
+            "Configure STC analyzer to filter TTL (hopLimit) values is IPv6 packets."
+        )
+        IPV6_TTL_FILTER = """
             <frame>
                 <config>
                     <pdus>
@@ -535,15 +537,14 @@ class Spirent(Generator):
                     </pdus>
                 </config>
             </frame>
-        '''
+        """
         self._stc_handler.stc_analyzer_filter([IPV6_TTL_FILTER])
 
     def filter_vlan(self):
-        """Configure STC analyzer to filter VLANs.
-        """
+        """Configure STC analyzer to filter VLANs."""
 
-        self._logger.debug('Configure STC analyzer to filter VLANs.')
-        VLAN_FILTER = '''
+        self._logger.debug("Configure STC analyzer to filter VLANs.")
+        VLAN_FILTER = """
             <frame>
                 <config>
                     <pdus>
@@ -557,7 +558,7 @@ class Spirent(Generator):
                     </pdus>
                 </config>
             </frame>
-        '''
+        """
         self._stc_handler.stc_analyzer_filter([VLAN_FILTER])
 
     def filter_mac_address(self, direction):
@@ -569,11 +570,11 @@ class Spirent(Generator):
             MAC address direction. Allowed values are "src" or "dst".
         """
 
-        assert direction == 'src' or direction == 'dst'
+        assert direction == "src" or direction == "dst"
 
-        direction_tag = 'srcMac' if direction == 'src' else 'dstMac'
-        self._logger.debug(f'Configure STC analyzer to filter {direction} MAC addresses.f')
-        MAC_ADDRESS_FILTER = f'''
+        direction_tag = "srcMac" if direction == "src" else "dstMac"
+        self._logger.debug(f"Configure STC analyzer to filter {direction} MAC addresses.f")
+        MAC_ADDRESS_FILTER = f"""
             <frame>
                 <config>
                     <pdus>
@@ -585,5 +586,5 @@ class Spirent(Generator):
                     </pdus>
                 </config>
             </frame>
-        '''
+        """
         self._stc_handler.stc_analyzer_filter([MAC_ADDRESS_FILTER])

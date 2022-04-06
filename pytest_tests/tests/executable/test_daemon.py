@@ -14,12 +14,12 @@ import time
 
 import pytest
 
-from lbr_testsuite.executable import executable, coredump, strace
+from lbr_testsuite.executable import coredump, executable, strace
 
 from .conftest import match_syscalls
 
 
-TESTING_OUTPUT = 'I am testing myself!'
+TESTING_OUTPUT = "I am testing myself!"
 
 
 def test_daemon_simple_args(helper_app):
@@ -33,7 +33,7 @@ def test_daemon_simple_args(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, '-f', '5', '-o', TESTING_OUTPUT, '-e', TESTING_OUTPUT])
+    cmd = executable.Daemon([helper_app, "-f", "5", "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT])
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -76,7 +76,7 @@ def test_daemon_finished(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, '-o', TESTING_OUTPUT, '-e', TESTING_OUTPUT])
+    cmd = executable.Daemon([helper_app, "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT])
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -96,13 +96,15 @@ def test_daemon_simple_args_allowed_failure(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, '-r', '2', '-e', TESTING_OUTPUT], failure_verbosity='no-exception')
+    cmd = executable.Daemon(
+        [helper_app, "-r", "2", "-e", TESTING_OUTPUT], failure_verbosity="no-exception"
+    )
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
     stdout, stderr = cmd.stop()
 
-    assert stdout == ''
+    assert stdout == ""
     assert stderr == TESTING_OUTPUT
 
 
@@ -115,7 +117,7 @@ def test_daemon_simple_args_expected_failure(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, '-r', '2'], failure_verbosity='no-error')
+    cmd = executable.Daemon([helper_app, "-r", "2"], failure_verbosity="no-error")
 
     with pytest.raises(subprocess.CalledProcessError):
         cmd.start()
@@ -135,7 +137,7 @@ def test_daemon_is_running(helper_app):
     outputs_interval = 3
     outputs_multiplier = 2
     test_duration = outputs_multiplier * outputs_interval + 2
-    cmd = executable.Daemon([helper_app, '-f', str(outputs_interval), '-o', TESTING_OUTPUT])
+    cmd = executable.Daemon([helper_app, "-f", str(outputs_interval), "-o", TESTING_OUTPUT])
 
     cmd.start()
     time.sleep(test_duration)  # wait some time so helper_app can register signal handlers
@@ -145,7 +147,7 @@ def test_daemon_is_running(helper_app):
 
     # TESTING_OUTPUT is printed right away and every outputs_interval second
     assert stdout == TESTING_OUTPUT * (1 + outputs_multiplier)
-    assert stderr == ''
+    assert stderr == ""
 
 
 def test_daemon_not_running(helper_app):
@@ -157,7 +159,7 @@ def test_daemon_not_running(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, '-o', TESTING_OUTPUT])
+    cmd = executable.Daemon([helper_app, "-o", TESTING_OUTPUT])
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -166,7 +168,7 @@ def test_daemon_not_running(helper_app):
     assert not cmd.is_running()
 
     assert stdout == TESTING_OUTPUT
-    assert stderr == ''
+    assert stderr == ""
 
 
 def test_daemon_outputs_mixed(tmp_files, helper_app):
@@ -182,16 +184,16 @@ def test_daemon_outputs_mixed(tmp_files, helper_app):
     """
 
     cmd = executable.Daemon(f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{TESTING_OUTPUT}"')
-    cmd.set_outputs(str(tmp_files['stdout']))
+    cmd.set_outputs(str(tmp_files["stdout"]))
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
     stdout, stderr = cmd.stop()
 
     assert stdout is None and stderr is None
-    assert tmp_files['stdout'].exists()
-    with open(tmp_files['stdout'], 'r') as of:
-        assert of.read() == f'{TESTING_OUTPUT}{TESTING_OUTPUT}'
+    assert tmp_files["stdout"].exists()
+    with open(tmp_files["stdout"], "r") as of:
+        assert of.read() == f"{TESTING_OUTPUT}{TESTING_OUTPUT}"
 
 
 def test_daemon_outputs_separated(tmp_files, helper_app):
@@ -206,20 +208,20 @@ def test_daemon_outputs_separated(tmp_files, helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    err_testing_output = f'err: {TESTING_OUTPUT}'
+    err_testing_output = f"err: {TESTING_OUTPUT}"
     cmd = executable.Daemon(f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{err_testing_output}"')
-    cmd.set_outputs(stdout=str(tmp_files['stdout']), stderr=str(tmp_files['stderr']))
+    cmd.set_outputs(stdout=str(tmp_files["stdout"]), stderr=str(tmp_files["stderr"]))
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
     stdout, stderr = cmd.stop()
 
     assert stdout is None and stderr is None
-    assert tmp_files['stdout'].exists()
-    assert tmp_files['stderr'].exists()
-    with open(tmp_files['stdout'], 'r') as of:
+    assert tmp_files["stdout"].exists()
+    assert tmp_files["stderr"].exists()
+    with open(tmp_files["stdout"], "r") as of:
         assert of.read() == TESTING_OUTPUT
-    with open(tmp_files['stderr'], 'r') as of:
+    with open(tmp_files["stderr"], "r") as of:
         assert of.read() == err_testing_output
 
 
@@ -235,14 +237,16 @@ def test_daemon_coredump(require_root, tmp_files, helper_app):
     """
 
     cd = coredump.Coredump()
-    cd.set_output_file(tmp_files['core'])
-    cmd = executable.Daemon([helper_app, '-f', '2', '-s'], default_logger_level=logging.CRITICAL + 1)
+    cd.set_output_file(tmp_files["core"])
+    cmd = executable.Daemon(
+        [helper_app, "-f", "2", "-s"], default_logger_level=logging.CRITICAL + 1
+    )
     cmd.set_coredump(cd)
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can start and fail
     assert not cmd.is_running()
-    with pytest.raises(subprocess.CalledProcessError, match='died with <Signals.SIGSEGV'):
+    with pytest.raises(subprocess.CalledProcessError, match="died with <Signals.SIGSEGV"):
         cmd.stop()
 
     assert pathlib.Path(cd.get_output_file()).exists()
@@ -260,8 +264,8 @@ def test_daemon_strace(tmp_files, helper_app):
     """
 
     st = strace.Strace()
-    st.set_output_file(tmp_files['strace'])
-    cmd = executable.Daemon([helper_app, '-f', '2'])
+    st.set_output_file(tmp_files["strace"])
+    cmd = executable.Daemon([helper_app, "-f", "2"])
     cmd.set_strace(st)
 
     cmd.start()
@@ -284,20 +288,22 @@ def test_daemon_strace_expressions_coredump(require_root, tmp_files, helper_app)
         Path to the testing helper application in a form of string.
     """
 
-    strace_expressions = ('open', 'read')
+    strace_expressions = ("open", "read")
     st = strace.Strace()
-    st.set_output_file(tmp_files['strace'])
+    st.set_output_file(tmp_files["strace"])
     st.add_expression(strace_expressions)
     cd = coredump.Coredump()
-    cd.set_output_file(tmp_files['core'])
-    cmd = executable.Daemon([helper_app, '-f', '2', '-s'], default_logger_level=logging.CRITICAL + 1)
+    cd.set_output_file(tmp_files["core"])
+    cmd = executable.Daemon(
+        [helper_app, "-f", "2", "-s"], default_logger_level=logging.CRITICAL + 1
+    )
     cmd.set_strace(st)
     cmd.set_coredump(cd)
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can start and fail
     assert not cmd.is_running()
-    with pytest.raises(subprocess.CalledProcessError, match='died with <Signals.SIGSEGV'):
+    with pytest.raises(subprocess.CalledProcessError, match="died with <Signals.SIGSEGV"):
         cmd.stop()
 
     assert pathlib.Path(st.get_output_file()).exists()

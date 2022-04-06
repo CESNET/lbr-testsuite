@@ -14,8 +14,8 @@ import time
 
 from pr2modules import netns
 from pr2modules.iproute import IPRoute
-from pr2modules.nslink.nslink import NetNS
 from pr2modules.netlink.exceptions import NetlinkError
+from pr2modules.nslink.nslink import NetNS
 
 
 IFA_F_SECONDARY = 0x01
@@ -39,6 +39,7 @@ class IpConfigurerError(NetlinkError):
     also can easily catch such exceptions and distinguish them
     from other unexpected errors.
     """
+
     pass
 
 
@@ -83,7 +84,7 @@ def _link_lookup_first(ifc_name, namespace=None):
     if not links:
         raise IpConfigurerError(
             errno.ENODEV,
-            f"No such interface '{ifc_name}' in namespace '{namespace}'."
+            f"No such interface '{ifc_name}' in namespace '{namespace}'.",
         )
     return links[0]
 
@@ -98,9 +99,9 @@ def _manipulate_ip_addr(
     mask,
     family=socket.AF_INET,
     ifa_flags=None,
-    namespace=None
+    namespace=None,
 ):
-    assert cmd == 'add' or cmd == 'del'
+    assert cmd == "add" or cmd == "del"
 
     with _get_ipr_context(namespace) as ipr:
         ifc_index = _link_lookup_first(ifc_name, namespace)
@@ -111,7 +112,7 @@ def _manipulate_ip_addr(
             family=family,
         )
         if ifa_flags:
-            params['IFA_FLAGS'] = ifa_flags
+            params["IFA_FLAGS"] = ifa_flags
         ipr.addr(cmd, **params)
 
 
@@ -122,7 +123,7 @@ def add_ip_addr(
     family=socket.AF_INET,
     ifa_flags=None,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Add an IP address to the interface.
 
@@ -154,7 +155,7 @@ def add_ip_addr(
     """
 
     try:
-        _manipulate_ip_addr('add', ifc_name, address, mask, family, ifa_flags, namespace)
+        _manipulate_ip_addr("add", ifc_name, address, mask, family, ifa_flags, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.EEXIST:
             raise err
@@ -168,7 +169,7 @@ def delete_ip_addr(
     mask,
     family=socket.AF_INET,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Delete an IP address from the interface
 
@@ -198,7 +199,7 @@ def delete_ip_addr(
     """
 
     try:
-        _manipulate_ip_addr('del', ifc_name, address, mask, family, None, namespace)
+        _manipulate_ip_addr("del", ifc_name, address, mask, family, None, namespace)
     except NetlinkError as err:
         if not safe or (err.code != errno.EADDRNOTAVAIL and err.code != errno.ENODEV):
             raise err
@@ -223,14 +224,14 @@ def ifc_set_mac(ifc_name, mac_addr, namespace=None):
     """
 
     with _get_ipr_context(namespace) as ipr:
-        ipr.link('set', ifname=ifc_name, address=mac_addr)
+        ipr.link("set", ifname=ifc_name, address=mac_addr)
 
 
 def _ifc_up_down(state, ifc_name, namespace=None):
-    assert state == 'up' or state == 'down'
+    assert state == "up" or state == "down"
 
     with _get_ipr_context(namespace) as ipr:
-        ipr.link('set', ifname=ifc_name, state=state)
+        ipr.link("set", ifname=ifc_name, state=state)
 
 
 def ifc_up(ifc_name, namespace=None):
@@ -244,7 +245,7 @@ def ifc_up(ifc_name, namespace=None):
         Name of a namespace.
     """
 
-    _ifc_up_down('up', ifc_name, namespace)
+    _ifc_up_down("up", ifc_name, namespace)
 
 
 def ifc_down(ifc_name, namespace=None, safe=False):
@@ -266,7 +267,7 @@ def ifc_down(ifc_name, namespace=None, safe=False):
     """
 
     try:
-        _ifc_up_down('down', ifc_name, namespace)
+        _ifc_up_down("down", ifc_name, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.ENODEV:
             raise err
@@ -301,7 +302,7 @@ def ifc_status(ifc_name, namespace=None):
     if not links:
         raise IpConfigurerError(
             errno.ENODEV,
-            f"No such interface '{ifc_name}' in namespace '{namespace}'."
+            f"No such interface '{ifc_name}' in namespace '{namespace}'.",
         )
 
     return _extract_attr_tuples(links[0])
@@ -344,7 +345,7 @@ def ifc_set_master(
                 raise RuntimeError(f"No such interface '{master}' in namespace '{namespace}'.")
             master_index = links[0]
 
-        ipr.link('set', index=index, master=master_index)
+        ipr.link("set", index=index, master=master_index)
 
 
 def ifc_carrier(ifc_name, namespace=None):
@@ -364,7 +365,7 @@ def ifc_carrier(ifc_name, namespace=None):
     """
 
     status = ifc_status(ifc_name, namespace)
-    return status['IFLA_CARRIER']
+    return status["IFLA_CARRIER"]
 
 
 def wait_until_ifc_carrier(ifc_name, namespace=None, timeout=1):
@@ -396,7 +397,7 @@ def wait_until_ifc_carrier(ifc_name, namespace=None, timeout=1):
         if now - started > timeout:
             raise IpConfigurerError(
                 errno.ETIME,
-                f"No carrier on interface '{ifc_name}' (waited {timeout} seconds)."
+                f"No carrier on interface '{ifc_name}' (waited {timeout} seconds).",
             )
 
         time.sleep(1)
@@ -413,9 +414,9 @@ def _manipulate_route(
     table,
     family=socket.AF_INET,
     prefsrc=None,
-    namespace=None
+    namespace=None,
 ):
-    assert cmd == 'add' or cmd == 'del'
+    assert cmd == "add" or cmd == "del"
 
     with _get_ipr_context(namespace) as ipr:
         params = dict(
@@ -423,9 +424,9 @@ def _manipulate_route(
             gateway=gateway,
         )
         if table:
-            params['table'] = table
+            params["table"] = table
         if prefsrc:
-            params['prefsrc'] = prefsrc
+            params["prefsrc"] = prefsrc
 
         ipr.route(cmd, **params)
 
@@ -437,7 +438,7 @@ def add_route(
     family=socket.AF_INET,
     prefsrc=None,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Add a route.
 
@@ -470,7 +471,7 @@ def add_route(
     """
 
     try:
-        _manipulate_route('add', destination, gateway, table, family, prefsrc, namespace)
+        _manipulate_route("add", destination, gateway, table, family, prefsrc, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.EEXIST:
             raise err
@@ -485,7 +486,7 @@ def delete_route(
     family=socket.AF_INET,
     prefsrc=None,
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Delete a route.
 
@@ -521,7 +522,7 @@ def delete_route(
     """
 
     try:
-        _manipulate_route('del', destination, gateway, table, family, prefsrc, namespace)
+        _manipulate_route("del", destination, gateway, table, family, prefsrc, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.ESRCH:
             raise err
@@ -583,7 +584,7 @@ def add_link(
     master_link_namespace=None,
     vlan_id=None,
     peer=None,
-    safe=False
+    safe=False,
 ):
     """Add a link.
 
@@ -630,20 +631,20 @@ def add_link(
                 ifc_index = _link_lookup_first(link, namespace)
             else:
                 ifc_index = _link_lookup_first(link, master_link_namespace)
-            params['link'] = ifc_index
+            params["link"] = ifc_index
         if address:
-            params['address'] = address
+            params["address"] = address
         if macvlan_mode:
-            params['macvlan_mode'] = macvlan_mode
+            params["macvlan_mode"] = macvlan_mode
         if namespace:
-            params['net_ns_fd'] = namespace
+            params["net_ns_fd"] = namespace
         if vlan_id:
-            params['vlan_id'] = vlan_id
+            params["vlan_id"] = vlan_id
         if peer:
-            params['peer'] = peer
+            params["peer"] = peer
 
         try:
-            ipr.link('add', **params)
+            ipr.link("add", **params)
         except NetlinkError as err:
             if not safe or err.code != errno.EEXIST:
                 raise err
@@ -657,7 +658,7 @@ def delete_link(
     link=None,
     namespace=None,
     vlan_id=None,
-    safe=False
+    safe=False,
 ):
     """Add a link.
 
@@ -689,19 +690,19 @@ def delete_link(
 
         params = dict(ifname=name)
         if kind:
-            params['kind'] = kind
+            params["kind"] = kind
         if link:
             try:
-                params['link'] = _link_lookup_first(link, namespace)
+                params["link"] = _link_lookup_first(link, namespace)
             except NetlinkError as err:
                 if not safe or err.code != errno.ENODEV:
                     raise err
                 return False
         if vlan_id:
-            params['vlan_id'] = vlan_id
+            params["vlan_id"] = vlan_id
 
         try:
-            ipr.link('del', **params)
+            ipr.link("del", **params)
         except NetlinkError as err:
             if not safe or err.code != errno.ENODEV:
                 raise err
@@ -741,10 +742,10 @@ def _manipulate_ip_neigh(
     address,
     lladdr,
     family=socket.AF_INET,
-    state='permanent',
-    namespace=None
+    state="permanent",
+    namespace=None,
 ):
-    assert cmd == 'add' or cmd == 'del' or cmd == 'change'
+    assert cmd == "add" or cmd == "del" or cmd == "change"
 
     with _get_ipr_context(namespace) as ipr:
         ifc_index = _link_lookup_first(ifc_name, namespace)
@@ -764,9 +765,9 @@ def add_ip_neigh(
     address,
     lladdr,
     family=socket.AF_INET,
-    state='permanent',
+    state="permanent",
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Add an IP neighbour (ARP/NDP cache entry).
 
@@ -798,7 +799,7 @@ def add_ip_neigh(
     """
 
     try:
-        _manipulate_ip_neigh('add', ifc_name, address, lladdr, family, state, namespace)
+        _manipulate_ip_neigh("add", ifc_name, address, lladdr, family, state, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.EEXIST:
             raise err
@@ -811,9 +812,9 @@ def change_ip_neigh(
     address,
     lladdr,
     family=socket.AF_INET,
-    state='permanent',
+    state="permanent",
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Change an existing IP neighbour (ARP/NDP cache entry). If the
     record does not exist, fail.
@@ -846,7 +847,7 @@ def change_ip_neigh(
     """
 
     try:
-        _manipulate_ip_neigh('change', ifc_name, address, lladdr, family, state, namespace)
+        _manipulate_ip_neigh("change", ifc_name, address, lladdr, family, state, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
@@ -859,9 +860,9 @@ def delete_ip_neigh(
     address,
     lladdr,
     family=socket.AF_INET,
-    state='permanent',
+    state="permanent",
     namespace=None,
-    safe=False
+    safe=False,
 ):
     """Delete an IP neighbour (ARP/NDP cache entry).
 
@@ -893,7 +894,7 @@ def delete_ip_neigh(
     """
 
     try:
-        _manipulate_ip_neigh('del', ifc_name, address, lladdr, family, state, namespace)
+        _manipulate_ip_neigh("del", ifc_name, address, lladdr, family, state, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
@@ -935,7 +936,7 @@ def add_vlan(name, link, vlan_id, namespace=None, master_link_namespace=None, sa
 
     return add_link(
         name,
-        'vlan',
+        "vlan",
         link,
         vlan_id=vlan_id,
         namespace=namespace,
@@ -969,14 +970,14 @@ def delete_vlan(name, link, vlan_id, namespace=None, safe=False):
         True on success, False otherwise
     """
 
-    return delete_link(name, 'vlan', link, vlan_id=vlan_id, namespace=namespace, safe=safe)
+    return delete_link(name, "vlan", link, vlan_id=vlan_id, namespace=namespace, safe=safe)
 
 
 ##
 # Rules
 ##
 def _rule_match_attr(rule, key, value):
-    for att in rule['attrs']:
+    for att in rule["attrs"]:
         if att[0] == key:
             return att[1] == value
 
@@ -984,7 +985,7 @@ def _rule_match_attr(rule, key, value):
 
 
 def _rule_contains_attr(rule, key):
-    for att in rule['attrs']:
+    for att in rule["attrs"]:
         if att[0] == key:
             return True
 
@@ -992,54 +993,65 @@ def _rule_contains_attr(rule, key):
 
 
 def _rule_match(rule, table, iif=None, oif=None, priority=None):
-    if rule['table'] != table:
+    if rule["table"] != table:
         return False
 
     if priority is not None:
         atts = _extract_attr_tuples(rule)
-        if 'FRA_PRIORITY' in atts and atts['FRA_PRIORITY'] != priority:
+        if "FRA_PRIORITY" in atts and atts["FRA_PRIORITY"] != priority:
             return False
 
     if iif is not None and oif is not None:
-        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and _rule_match_attr(rule, 'FRA_OIFNAME', oif)
+        return _rule_match_attr(rule, "FRA_IIFNAME", iif) and _rule_match_attr(
+            rule, "FRA_OIFNAME", oif
+        )
+
     elif iif is not None:
-        return _rule_match_attr(rule, 'FRA_IIFNAME', iif) and not _rule_contains_attr(rule, 'FRA_OIFNAME')
+        return _rule_match_attr(rule, "FRA_IIFNAME", iif) and not _rule_contains_attr(
+            rule, "FRA_OIFNAME"
+        )
+
     elif oif is not None:
-        return _rule_match_attr(rule, 'FRA_OIFNAME', oif) and not _rule_contains_attr(rule, 'FRA_IIFNAME')
+        return _rule_match_attr(rule, "FRA_OIFNAME", oif) and not _rule_contains_attr(
+            rule, "FRA_IIFNAME"
+        )
+
     else:
-        return not _rule_contains_attr(rule, 'FRA_IIFNAME') and not _rule_contains_attr(rule, 'FRA_OIFNAME')
+        return not _rule_contains_attr(rule, "FRA_IIFNAME") and not _rule_contains_attr(
+            rule, "FRA_OIFNAME"
+        )
 
 
 def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, priority=None):
-    assert cmd == 'add' or cmd == 'del'
+    assert cmd == "add" or cmd == "del"
 
     kwargs = {
-        'table': table,
-        'family': family,
+        "table": table,
+        "family": family,
     }
 
     if iif is not None:
-        kwargs['FRA_IIFNAME'] = iif
+        kwargs["FRA_IIFNAME"] = iif
     if oif is not None:
-        kwargs['FRA_OIFNAME'] = oif
+        kwargs["FRA_OIFNAME"] = oif
 
     if priority is not None:
-        kwargs['priority'] = priority
+        kwargs["priority"] = priority
 
     with _get_ipr_context() as ipr:
         ipr.rule(cmd, **kwargs)
 
 
 def _format_rule_match_errmsg(kwargs):
-    msg = ''
+    msg = ""
 
-    if 'iif' in kwargs:
-        iif = kwargs['iif']
-        msg += f' and iif {iif}'
+    if "iif" in kwargs:
+        iif = kwargs["iif"]
+        msg += f" and iif {iif}"
 
-    if 'oif' in kwargs:
-        oif = kwargs['oif']
-        msg += f' and oif {oif}'
+    if "oif" in kwargs:
+        oif = kwargs["oif"]
+        msg += f" and oif {oif}"
 
     return msg
 
@@ -1070,41 +1082,49 @@ def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priorit
     """
 
     kwargs = {
-        'priority': priority,
+        "priority": priority,
     }
     if iif_name is not None:
-        kwargs['iif'] = iif_name
+        kwargs["iif"] = iif_name
     if oif_name is not None:
-        kwargs['oif'] = oif_name
+        kwargs["oif"] = oif_name
 
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
             family=family,
-            match=lambda x: _rule_match(x, table, **kwargs)
+            match=lambda x: _rule_match(x, table, **kwargs),
         )
 
     if curr_rules:
         if safe:
             return False
         raise IpConfigurerError(
-                errno.EEXIST,
-                f"The rule already exists for table '{table}'" + _format_rule_match_errmsg(**kwargs) + "."
-            )
+            errno.EEXIST,
+            f"The rule already exists for table '{table}' {_format_rule_match_errmsg(**kwargs)}.",
+        )
 
-    kwargs['family'] = family
+    kwargs["family"] = family
 
-    _manipulate_rule('add', table, **kwargs)
+    _manipulate_rule("add", table, **kwargs)
     return True
 
 
 def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _add_rule wrapper to enable API changes"""
     from warnings import warn
-    warn('function add_rule_iif() is deprecated, use add_rule()')
+
+    warn("function add_rule_iif() is deprecated, use add_rule()")
     return add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
 
 
-def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
+def delete_rule(
+    table,
+    iif_name=None,
+    oif_name=None,
+    family=socket.AF_INET,
+    priority=None,
+    safe=False,
+):
     """Delete a rule.
 
     Parameters
@@ -1130,16 +1150,16 @@ def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, prio
     """
 
     kwargs = {
-        'family': family,
-        'priority': priority,
+        "family": family,
+        "priority": priority,
     }
     if iif_name is not None:
-        kwargs['iif'] = iif_name
+        kwargs["iif"] = iif_name
     if oif_name is not None:
-        kwargs['oif'] = oif_name
+        kwargs["oif"] = oif_name
 
     try:
-        _manipulate_rule('del', table, **kwargs)
+        _manipulate_rule("del", table, **kwargs)
     except NetlinkError as err:
         if not safe or err.code != errno.ENOENT:
             raise err
@@ -1150,5 +1170,6 @@ def delete_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, prio
 def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
     """Deprecated _delete_rule wrapper to enable API changes"""
     from warnings import warn
-    warn('function delete_rule_iif() is deprecated, use delete_rule()')
+
+    warn("function delete_rule_iif() is deprecated, use delete_rule()")
     return delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)

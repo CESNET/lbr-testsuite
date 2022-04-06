@@ -10,8 +10,8 @@ from warnings import warn
 
 import pytest
 from pytest_cases.common_pytest import extract_parameterset_info, get_fixture_name
-from pytest_cases.fixture_core1_unions import UnionFixtureAlternative, _fixture_union
 from pytest_cases.fixture__creation import get_caller_module
+from pytest_cases.fixture_core1_unions import UnionFixtureAlternative, _fixture_union
 
 from .device import Device
 from .generator import Generator
@@ -105,16 +105,16 @@ class Topology:
         """
 
         return (
-            'device',
-            'generator',
+            "device",
+            "generator",
         )
 
 
 def topology_union(
     fixtures,
-    name='topology',
-    scope='module',
-    **kwargs
+    name="topology",
+    scope="module",
+    **kwargs,
 ):
     """Our pytest-cases fixture_union wrapper for topology unions.
     Unfortunately it is necessary to duplicate a part of the original
@@ -215,10 +215,10 @@ def topology_union(
         raise TypeError("topology_union: the `fixtures` argument should be a tuple, set or list")
 
     # Unpack the pytest.param marks
-    custom_pids, p_marks, fixtures = extract_parameterset_info((name, ), fixtures)
+    custom_pids, p_marks, fixtures = extract_parameterset_info((name,), fixtures)
 
     # Inject name prefixes if not already present
-    prefix = f'{name}_'
+    prefix = f"{name}_"
     fixtures = (fix if fix.startswith(prefix) else prefix + fix for fix in fixtures)
 
     # Get all required fixture names
@@ -230,7 +230,11 @@ def topology_union(
 
     for _idx, (_name, _id, _mark) in enumerate(zip(f_names, custom_pids, p_marks)):
         # Create the alternative object
-        alternative = UnionFixtureAlternative(union_name=name, alternative_name=_name, alternative_index=_idx)
+        alternative = UnionFixtureAlternative(
+            union_name=name,
+            alternative_name=_name,
+            alternative_index=_idx,
+        )
 
         # Remove duplicates in the fixture arguments
         if _name in f_names_args:
@@ -248,8 +252,8 @@ def topology_union(
         f_alternatives.append(alternative)
 
     # Remove name prefixes from default ids if any specific ids set
-    if kwargs.get('ids', None) is None:
-        kwargs['ids'] = lambda ufix: ufix.alternative_name[len(prefix):]
+    if kwargs.get("ids", None) is None:
+        kwargs["ids"] = lambda ufix: ufix.alternative_name[len(prefix) :]  # noqa: E203
 
     union_fix = _fixture_union(
         caller_module,
@@ -257,7 +261,8 @@ def topology_union(
         fix_alternatives=f_alternatives,
         unique_fix_alt_names=f_names_args,
         scope=scope,
-        **kwargs)
+        **kwargs,
+    )
 
     return union_fix
 

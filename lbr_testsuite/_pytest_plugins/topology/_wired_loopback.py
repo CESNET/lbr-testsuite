@@ -13,33 +13,34 @@ import pytest
 import pytest_cases
 
 from ...common.sysctl import sysctl_set_with_restore
+from ...topology import registration
 from ...topology.device import PciDevice
 from ...topology.generator import NetdevGenerator
 from ...topology.topology import Topology
-from ...topology import registration
-
 from . import _options
 
 
 def _init():
-    _options.add_option((
-        ['--wired-loopback'],
-        dict(
-            action='append',
-            default=[],
-            type=str,
-            help=(
-                'Add wired loopback topology of two ports, the first is a kernel interface '
-                '(its name or its PCI address) the second is PCI address. (Example: '
-                'tge3,0000:01:00.0 or 0000:04:00.0,0000:04:00.1).'
-            )
+    _options.add_option(
+        (
+            ["--wired-loopback"],
+            dict(
+                action="append",
+                default=[],
+                type=str,
+                help=(
+                    "Add wired loopback topology of two ports, the first is a kernel interface "
+                    "(its name or its PCI address) the second is PCI address. (Example: "
+                    "tge3,0000:01:00.0 or 0000:04:00.0,0000:04:00.1)."
+                ),
+            ),
         )
-    ))
+    )
 
-    registration.topology_option_register('wired_loopback')
+    registration.topology_option_register("wired_loopback")
 
 
-@pytest_cases.fixture(scope='session')
+@pytest_cases.fixture(scope="session")
 def topology_wired_loopback(request, devices_args, option_wired_loopback):
     """Fixture creating wired loopback topology. Unlike vdev_loopback,
     it is uses real NIC interfaces to build Device and Generator objects
@@ -61,7 +62,7 @@ def topology_wired_loopback(request, devices_args, option_wired_loopback):
 
     # Workaroud for a weird bug in pytest_cases similar to
     # https://github.com/smarie/python-pytest-cases/issues/37
-    if (option_wired_loopback == pytest_cases.NOT_USED):
+    if option_wired_loopback == pytest_cases.NOT_USED:
         return  # skip the fixture if its parameter not used
 
     wlpbk = option_wired_loopback.split(",")
@@ -73,6 +74,6 @@ def topology_wired_loopback(request, devices_args, option_wired_loopback):
     device = PciDevice(device_address, device_args)
     generator = NetdevGenerator(wlpbk[0])
 
-    sysctl_set_with_restore(request, f'net.ipv6.conf.{generator.get_netdev()}.disable_ipv6', '1')
+    sysctl_set_with_restore(request, f"net.ipv6.conf.{generator.get_netdev()}.disable_ipv6", "1")
 
     return Topology(device, generator)

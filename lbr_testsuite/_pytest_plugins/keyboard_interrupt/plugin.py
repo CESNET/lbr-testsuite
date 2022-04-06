@@ -20,9 +20,10 @@ pressing CTRL+C. In "normal" mode exceptions are raised as expected
 to be handled traditionally by pytest itself.
 """
 
-import pytest
-import _pytest
 import logging
+
+import _pytest
+import pytest
 
 
 global_logger = logging.getLogger(__name__)
@@ -35,13 +36,13 @@ def pytest_addoption(parser):
     """
 
     parser.addini(
-        'lbr_keyboard_interrupt',
-        type='bool',
+        "lbr_keyboard_interrupt",
+        type="bool",
         default=False,
         help=(
-            'Convenience flag which allows user to explicitly enable/disable activation '
-            'of this plugin.'
-        )
+            "Convenience flag which allows user to explicitly enable/disable activation "
+            "of this plugin."
+        ),
     )
 
 
@@ -77,7 +78,7 @@ def pytest_sessionstart(session):
     """
 
     # user didn't choose to use this plugin
-    if not session.config.getini('lbr_keyboard_interrupt'):
+    if not session.config.getini("lbr_keyboard_interrupt"):
         return
 
     global keyboard_interrupt
@@ -86,7 +87,6 @@ def pytest_sessionstart(session):
     addfinalizer_old = _pytest.fixtures.FixtureRequest.addfinalizer
 
     def addfinalizer_new(self, finalizer):
-
         def finalizer_wrapped():
             try:
                 finalizer()

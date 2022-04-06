@@ -26,8 +26,7 @@ class Device:
     """
 
     def __init__(self):
-        """Device constructor expects to be extended.
-        """
+        """Device constructor expects to be extended."""
 
         self._dpdk_args = []
         self._dpdk_devargs = {}
@@ -59,7 +58,7 @@ class Device:
             return self._dpdk_args
 
         for key, val in self._dpdk_devargs.items():
-            device = device + f',{key}={val}'
+            device = device + f",{key}={val}"
 
         return [device] + self._dpdk_args
 
@@ -95,7 +94,7 @@ class PciDevice(Device):
     """
 
     def _dpdk_device(self):
-        return f'--allow={self._address}'
+        return f"--allow={self._address}"
 
     def __init__(self, address, devargs=None):
         """The device object based on a real PCIe device.
@@ -115,7 +114,7 @@ class PciDevice(Device):
 
         super().__init__()
 
-        if not isdir(f'/sys/bus/pci/devices/{address}'):
+        if not isdir(f"/sys/bus/pci/devices/{address}"):
             raise RuntimeError(f"no such PCIe device '{address}'")
 
         self._address = PciAddress.from_string(address)
@@ -136,23 +135,20 @@ class PciDevice(Device):
 
 
 class VdevDevice(Device):
-    """Derived class representing a virtual device.
-    """
+    """Derived class representing a virtual device."""
 
     def _dpdk_device(self):
-        return f'--vdev={self._dpdk_name}'
+        return f"--vdev={self._dpdk_name}"
 
     def __init__(self):
-        """The DPDK virtual device object.
-        """
+        """The DPDK virtual device object."""
 
         super().__init__()
-        self._dpdk_args.extend(['--no-pci'])
+        self._dpdk_args.extend(["--no-pci"])
 
 
 class RingDevice(VdevDevice):
-    """Derived class representing a ring device.
-    """
+    """Derived class representing a ring device."""
 
     def __init__(self, id=0):
         """The DPDK ring device object.
@@ -164,7 +160,7 @@ class RingDevice(VdevDevice):
         """
 
         super().__init__()
-        self._dpdk_name = f'net_ring{id}'
+        self._dpdk_name = f"net_ring{id}"
 
 
 class PcapLiveDevice(VdevDevice):
@@ -194,9 +190,9 @@ class PcapLiveDevice(VdevDevice):
 
         super().__init__()
 
-        if not isdir(f'/sys/class/net/{netdev}'):
+        if not isdir(f"/sys/class/net/{netdev}"):
             raise RuntimeError(f"no such network interface '{netdev}'")
 
         self._netdev = str(netdev)
-        self._dpdk_devargs['iface'] = self._netdev
-        self._dpdk_name = f'net_pcap{id}'
+        self._dpdk_devargs["iface"] = self._netdev
+        self._dpdk_name = f"net_pcap{id}"

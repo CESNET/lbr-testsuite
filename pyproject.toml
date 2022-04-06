@@ -1,0 +1,9 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
+
+[tool.black]
+line-length = 100
