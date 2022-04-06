@@ -992,13 +992,17 @@ def _rule_contains_attr(rule, key):
     return False
 
 
-def _rule_match(rule, table, iif=None, oif=None, priority=None):
+def _rule_match(rule, table, iif=None, oif=None, fwmark=None, priority=None):
     if rule["table"] != table:
         return False
 
     if priority is not None:
         atts = _extract_attr_tuples(rule)
         if "FRA_PRIORITY" in atts and atts["FRA_PRIORITY"] != priority:
+            return False
+
+    if fwmark is not None:
+        if not _rule_match_attr(rule, "fwmark", fwmark):
             return False
 
     if iif is not None and oif is not None:
@@ -1022,7 +1026,15 @@ def _rule_match(rule, table, iif=None, oif=None, priority=None):
         )
 
 
-def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, priority=None):
+def _manipulate_rule(
+    cmd,
+    table,
+    iif=None,
+    oif=None,
+    fwmark=None,
+    family=socket.AF_INET,
+    priority=None,
+):
     assert cmd == "add" or cmd == "del"
 
     kwargs = {
@@ -1034,6 +1046,8 @@ def _manipulate_rule(cmd, table, iif=None, oif=None, family=socket.AF_INET, prio
         kwargs["FRA_IIFNAME"] = iif
     if oif is not None:
         kwargs["FRA_OIFNAME"] = oif
+    if fwmark is not None:
+        kwargs["fwmark"] = fwmark
 
     if priority is not None:
         kwargs["priority"] = priority
@@ -1053,10 +1067,22 @@ def _format_rule_match_errmsg(kwargs):
         oif = kwargs["oif"]
         msg += f" and oif {oif}"
 
+    if "fwmark" in kwargs:
+        fwm = kwargs["fwmark"]
+        msg += f" and fwmark {fwm}"
+
     return msg
 
 
-def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priority=None, safe=False):
+def add_rule(
+    table,
+    iif_name=None,
+    oif_name=None,
+    fwmark=None,
+    family=socket.AF_INET,
+    priority=None,
+    safe=False,
+):
     """Add a rule.
 
     Parameters
@@ -1067,6 +1093,8 @@ def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priorit
         Name of a related iif interface.
     oif_name : str, optional
         Name of a related oif interface.
+    fwmark : int, optional
+        Firewall mark group number.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -1088,6 +1116,8 @@ def add_rule(table, iif_name=None, oif_name=None, family=socket.AF_INET, priorit
         kwargs["iif"] = iif_name
     if oif_name is not None:
         kwargs["oif"] = oif_name
+    if fwmark is not None:
+        kwargs["fwmark"] = fwmark
 
     with _get_ipr_context() as ipr:
         curr_rules = ipr.get_rules(
@@ -1121,6 +1151,7 @@ def delete_rule(
     table,
     iif_name=None,
     oif_name=None,
+    fwmark=None,
     family=socket.AF_INET,
     priority=None,
     safe=False,
@@ -1135,6 +1166,8 @@ def delete_rule(
         Name of a related iif interface.
     oif_name : str, optional
         Name of a related oif interface.
+    fwmark : int, optional
+        Firewall mark group number.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -1157,6 +1190,8 @@ def delete_rule(
         kwargs["iif"] = iif_name
     if oif_name is not None:
         kwargs["oif"] = oif_name
+    if fwmark is not None:
+        kwargs["fwmark"] = fwmark
 
     try:
         _manipulate_rule("del", table, **kwargs)
