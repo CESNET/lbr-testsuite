@@ -17,7 +17,6 @@ from .ipconfigurer import (
     add_link,
     add_route,
     add_rule,
-    add_rule_iif,
     add_vlan,
     change_ip_neigh,
     create_namespace,
@@ -27,7 +26,6 @@ from .ipconfigurer import (
     delete_namespace,
     delete_route,
     delete_rule,
-    delete_rule_iif,
     delete_vlan,
     ifc_carrier,
     ifc_down,
@@ -76,7 +74,5 @@ __all__ = [
     "add_vlan",
     "delete_vlan",
     "add_rule",
-    "add_rule_iif",
     "delete_rule",
-    "delete_rule_iif",
 ]
