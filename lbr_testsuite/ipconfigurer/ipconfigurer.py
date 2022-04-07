@@ -1139,14 +1139,6 @@ def add_rule(
     return True
 
 
-def add_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
-    """Deprecated _add_rule wrapper to enable API changes"""
-    from warnings import warn
-
-    warn("function add_rule_iif() is deprecated, use add_rule()")
-    return add_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
-
-
 def delete_rule(
     table,
     iif_name=None,
@@ -1200,11 +1192,3 @@ def delete_rule(
             raise err
         return False
     return True
-
-
-def delete_rule_iif(ifc_name, table, family=socket.AF_INET, priority=None, safe=False):
-    """Deprecated _delete_rule wrapper to enable API changes"""
-    from warnings import warn
-
-    warn("function delete_rule_iif() is deprecated, use delete_rule()")
-    return delete_rule(table, iif_name=ifc_name, family=family, priority=priority, safe=safe)
