@@ -12,7 +12,7 @@ long_description = (
 
 setuptools.setup(
     name="lbr_testsuite",
-    version_config={
+    setuptools_git_versioning={
         "template": "{tag}",
         "dev_template": "{tag}.dev{ccount}+git.{sha}",
         "dirty_template": "{tag}.dev{ccount}+git.{sha}.dirty",
