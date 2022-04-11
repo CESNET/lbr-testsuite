@@ -6,6 +6,11 @@ stages:
     - build
     - upload
 
+variables:
+    GIT_STRATEGY: clone
+    IMAGE_BUILD: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/build"
+    IMAGE_TESTS: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/tests"
+
 image: $IMAGE_BUILD
 
 docker-build:
@@ -107,8 +112,3 @@ upload:
         -    fi
         - fi
     only: ['master']
-
-variables:
-    GIT_STRATEGY: clone
-    IMAGE_BUILD: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/build"
-    IMAGE_TESTS: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/tests"
