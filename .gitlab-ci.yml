@@ -6,16 +6,27 @@ stages:
     - build
     - upload
 
-image: $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG
+image: $IMAGE_BUILD
 
-docker:
+docker-build:
     stage: prepare
     tags: [docker-shell]
     variables: { DOCKER_BUILDKIT: 1 }
-    script: [docker build -t $CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG .]
+    script: [docker build -t $IMAGE_BUILD -f Dockerfile.build .]
 
-docker-rebuild:
-    extends: docker
+docker-build-rebuild:
+    extends: docker-build
+    variables: { DOCKER_OPTS: --no-cache }
+    when: manual
+
+docker-tests:
+    stage: prepare
+    tags: [docker-shell]
+    variables: { DOCKER_BUILDKIT: 1 }
+    script: [docker build -t $IMAGE_TESTS -f Dockerfile.tests .]
+
+docker-tests-rebuild:
+    extends: docker-tests
     variables: { DOCKER_OPTS: --no-cache }
     when: manual
 
@@ -27,7 +38,7 @@ editorconfig:
 
 pycodestyle:
     stage: check
-    needs: [docker]
+    needs: [docker-build]
     script:
         - pytest --color=yes --flake8 -m flake8 --junitxml=pycodestyle.xml lbr_testsuite | tee pycodestyle.log
     artifacts:
@@ -37,7 +48,7 @@ pycodestyle:
 
 isort:
     stage: check
-    needs: [docker]
+    needs: [docker-build]
     script:
         - isort --check-only --diff *.py lbr_testsuite/ pytest_tests/ | tee isort.log
     artifacts:
@@ -46,7 +57,7 @@ isort:
 
 black:
     stage: check
-    needs: [docker]
+    needs: [docker-build]
     script:
         - black --check --diff *.py lbr_testsuite/ pytest_tests/ | tee black.log
     artifacts:
@@ -55,6 +66,7 @@ black:
 
 pytest:
     stage: pytest
+    image: $IMAGE_TESTS
     script:
         - pip install .
         - mkdir -p pytest_tests/output
@@ -98,3 +110,5 @@ upload:
 
 variables:
     GIT_STRATEGY: clone
+    IMAGE_BUILD: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/build"
+    IMAGE_TESTS: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/tests"
