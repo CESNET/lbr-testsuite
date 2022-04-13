@@ -6,3 +6,7 @@ dist
 *.pyc
 pycodestyle.log
 pycodestyle.xml
+black.log
+isort.log
+pytest_tests/output/*
+pytest_tests/report.*

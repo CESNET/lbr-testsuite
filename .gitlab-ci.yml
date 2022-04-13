@@ -95,6 +95,7 @@ build:
     stage: build
     script:
         - python3.6 setup.py bdist_wheel
+        - ls -l dist
     artifacts:
         paths: [dist]
 
