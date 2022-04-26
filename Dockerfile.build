@@ -1,4 +1,4 @@
 FROM python:3.6
 
 COPY Pipfile Pipfile.lock /tmp/
-RUN python3 -m pip install pipenv && cd /tmp && pipenv install --dev --system --deploy
+RUN python3 -m pip install 'pipenv<=2022.4.8' && cd /tmp && pipenv install --dev --system --deploy
