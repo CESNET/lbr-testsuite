@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "32c02fe565fde593d9909dd3745dd799aa39344e7700ea9d2dae886a6c74e5a3"
+            "sha256": "94645ec49f742e5bcc034809c97b3f0523a8228582be9d879a3e88dd4c1f813b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -614,6 +614,14 @@
             ],
             "version": "==0.9.0"
         },
+        "pbr": {
+            "hashes": [
+                "sha256:27108648368782d07bbf1cb468ad2e2eeef29086affd14087a6d04b7de8af4ec",
+                "sha256:66bc5a34912f408bb3925bf21231cb6f59206267b7f63f3503ef865c1a292e25"
+            ],
+            "markers": "python_version >= '2.6'",
+            "version": "==5.8.1"
+        },
         "pkginfo": {
             "hashes": [
                 "sha256:542e0d0b6750e2e21c20179803e40ab50598d8066d51097a0e382cba9eb02bff",
@@ -784,6 +792,14 @@
             ],
             "index": "pypi",
             "version": "==1.0.0"
+        },
+        "sphinxcontrib-apidoc": {
+            "hashes": [
+                "sha256:6671a46b2c6c5b0dca3d8a147849d159065e50443df79614f921b42fbd15cb09",
+                "sha256:729bf592cf7b7dd57c4c05794f732dc026127275d785c2a5494521fdde773fb9"
+            ],
+            "index": "pypi",
+            "version": "==0.3.0"
         },
         "sphinxcontrib-applehelp": {
             "hashes": [
