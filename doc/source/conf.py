@@ -77,6 +77,14 @@ html_css_files = [
     'one_parameter_per_line.css',
 ]
 
+html_theme_options = {
+    # navigation entries are expandable – the [+] icons next to each entry
+    "collapse_navigation": False,
+
+    # unlimited depth of the table of contents tree (spirent packages has too many levels)
+    "navigation_depth": -1,
+}
+
 # -- Configuration for sphinxcontrib-apidoc extension ------------------------
 
 apidoc_module_dir = str(Path(__file__).parents[2])
