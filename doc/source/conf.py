@@ -84,3 +84,4 @@ apidoc_output_dir = str(Path(__file__).parents[0] / 'sources')
 apidoc_excluded_paths = ['framework', 'setup.py']
 apidoc_separate_modules = True
 apidoc_module_first = True
+apidoc_extra_args = ['--no-toc', '-t', str(Path(__file__).parents[0] / '_templates')]
