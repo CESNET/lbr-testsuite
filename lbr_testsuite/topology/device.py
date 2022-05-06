@@ -89,7 +89,7 @@ class PciDevice(Device):
 
     Attributes
     ----------
-    _address : PciAddress
+    _address : pci_address.PciAddress
         PCIe device address.
     """
 
@@ -127,7 +127,7 @@ class PciDevice(Device):
 
         Returns
         -------
-        PciAddress
+        pci_address.PciAddress
             PCIe address.
         """
 

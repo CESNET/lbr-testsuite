@@ -23,9 +23,9 @@ class Topology:
 
     Attributes
     ----------
-    _device : Device
+    _device : device.Device
         Topology device.
-    _generator : Generator
+    _generator : generator.Generator
         Topology generator.
     """
 
@@ -34,9 +34,9 @@ class Topology:
 
         Parameters
         ----------
-        device : Device
+        device : device.Device
             building device object
-        generator : Generator, optional
+        generator : generator.Generator, optional
             building generator object
 
         Raises
@@ -63,7 +63,7 @@ class Topology:
 
         Returns
         -------
-        Generator
+        generator.Generator
             topology generator
         """
 
@@ -74,7 +74,7 @@ class Topology:
 
         Returns
         -------
-        Device
+        device.Device
             topology device
         """
 
