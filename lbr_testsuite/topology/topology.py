@@ -198,7 +198,7 @@ def topology_union(
     Parameters
     ----------
     fixtures : Iterable[str]
-        fixtures to be united (can be specified without 'name_' prefix)
+        fixtures to be united (can be specified without ``'name_'`` prefix)
     name : str, optional
         name of the output union fixture, otherwise name 'topology' is used
     scope : str, optional
