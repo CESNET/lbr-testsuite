@@ -116,6 +116,17 @@ class Spirent(Generator):
 
         self._spirent_config = config_path
 
+    def get_port(self):
+        """Spirent port getter.
+
+        Returns
+        -------
+        str
+            Spirent port.
+        """
+
+        return self._port
+
     def connect(self):
         """Establishes a connection to spirentlib server application."""
 
