@@ -93,3 +93,11 @@ built on top of official API and make certain things much easier.
 ## Repository Maintainer
 
 - Pavel Krobot, Pavel.Krobot@cesnet.cz
+
+
+## Acknowledgement
+
+The software was partially developed within the scope of the Security Research
+Programme of the Czech Republic 2015-2022 (BV III / 1 VS) granted by the Ministry
+of the Interior of the Czech Republic under the project No. VI20192022137 --
+Adaptive protection against DDoS attacks (AdaptDDoS).
