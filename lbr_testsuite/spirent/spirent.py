@@ -75,6 +75,7 @@ class Spirent(Generator):
         api_version=STC_API_OFFICIAL,
         api_session_start_timeout=120,
         server_port=None,
+        force_port_reservation=False,
     ):
         """
         Parameters
@@ -91,6 +92,9 @@ class Spirent(Generator):
         server_port : int, optional
             Server port for connection to the spirent test center. If
             not set, the default port for given API version is used.
+        force_port_reservation : bool
+            Flag whether reservation of spirent chassis port should be
+            forced or not (i.e. terminating any current reservation).
         """
 
         self._server = server
@@ -104,6 +108,7 @@ class Spirent(Generator):
             self._server_port = server_port
         self._stc_handler = StcHandler(api_version, api_session_start_timeout)
         self._port_reserved = False
+        self._force_port_reservation = force_port_reservation
 
     def set_config_file(self, config_path):
         """Configure STC configuration file.
@@ -154,7 +159,7 @@ class Spirent(Generator):
         """
 
         self._logger.debug(f"Reserving STC port: {self._port} at chassis {self._chassis}.")
-        self._stc_handler.stc_connect(self._chassis, self._port)
+        self._stc_handler.stc_connect(self._chassis, self._port, self._force_port_reservation)
 
         self._port_reserved = True
 
