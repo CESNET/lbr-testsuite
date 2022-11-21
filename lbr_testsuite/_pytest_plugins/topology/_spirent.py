@@ -126,20 +126,17 @@ def topology_wired_spirent(request, devices_args, option_wired_spirent):
         return  # skip the fixture if its parameter not used
 
     spirent_chassis_port, device_address = option_wired_spirent.split(",")
+    spirent_api_version = SPIRENT_API_VERSION_CONV[request.config.getoption("spirent_api_version")]
 
     device_args = devices_args[device_address]
     device = PciDevice(device_address, device_args)
 
-    spirent_server = request.config.getoption("spirent_server")
-    spirent_chassis = request.config.getoption("spirent_chassis")
-    spirent_api_version = SPIRENT_API_VERSION_CONV[request.config.getoption("spirent_api_version")]
-    spirent_stc_server_port = request.config.getoption("spirent_stc_server_port")
     generator = Spirent(
-        spirent_server,
-        spirent_chassis,
+        request.config.getoption("spirent_server"),
+        request.config.getoption("spirent_chassis"),
         spirent_chassis_port,
         api_version=spirent_api_version,
-        server_port=spirent_stc_server_port,
+        server_port=request.config.getoption("spirent_stc_server_port"),
     )
     generator.connect()
 
