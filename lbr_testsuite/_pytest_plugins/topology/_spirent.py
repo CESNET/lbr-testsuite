@@ -89,6 +89,19 @@ def _init():
             ),
         )
     )
+    _options.add_option(
+        (
+            ["--spirent-port-reservation-force"],
+            dict(
+                default=False,
+                action="store_true",
+                help=(
+                    "Force reservation of spirent chassis port. Use with caution as this "
+                    "terminates any current reservation."
+                ),
+            ),
+        )
+    )
 
     registration.topology_option_register("wired_spirent")
 
@@ -137,6 +150,7 @@ def topology_wired_spirent(request, devices_args, option_wired_spirent):
         spirent_chassis_port,
         api_version=spirent_api_version,
         server_port=request.config.getoption("spirent_stc_server_port"),
+        force_port_reservation=request.config.getoption("spirent_port_reservation_force"),
     )
     generator.connect()
 
