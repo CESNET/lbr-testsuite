@@ -399,7 +399,7 @@ class StcHandler:
         # Get/Set values
         return self.stc_attribute(handles, attributes, values)
 
-    def stc_connect(self, host: str, ports: str):
+    def stc_connect(self, host: str, ports: str, force_ports=False):
         port_list = ports.split(" ")
 
         if len(port_list) == 0:
@@ -422,7 +422,12 @@ class StcHandler:
 
         # Perform the logical to physical port mapping, connect to the chassis and reserve the ports
         project_ports = self._stc.get("project1", "children-Port")
-        self._stc.perform("attachPorts", autoconnect="true", portlist=project_ports)
+        self._stc.perform(
+            "attachPorts",
+            autoconnect="true",
+            portlist=project_ports,
+            revokeowner=str(force_ports).lower(),
+        )
 
     def stc_disconnect(self):
         self._stc.perform("chassisDisconnectAll")
