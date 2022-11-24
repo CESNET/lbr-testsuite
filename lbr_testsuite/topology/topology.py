@@ -13,13 +13,16 @@ from pytest_cases.common_pytest import extract_parameterset_info, get_fixture_na
 from pytest_cases.fixture__creation import get_caller_module
 from pytest_cases.fixture_core1_unions import UnionFixtureAlternative, _fixture_union
 
+from .analyzer import Analyzer
 from .device import Device
 from .generator import Generator
 
 
 class Topology:
-    """Topology class. A topology object represents a tuple of two
-    elements - a generator object and a device object.
+    """Topology class. A topology object represents a tuple of three
+    elements - a generator object, a device object and an analyzer
+    object (generator and analyzer might be aggregated into single
+    object).
 
     Attributes
     ----------
@@ -27,9 +30,11 @@ class Topology:
         Topology device.
     _generator : generator.Generator
         Topology generator.
+    _analyzer : analyzer.Analyzer
+        Topology analyzer.
     """
 
-    def __init__(self, device, generator=None):
+    def __init__(self, device, generator=None, analyzer=None):
         """Creates a topology from its components.
 
         Parameters
@@ -38,12 +43,15 @@ class Topology:
             building device object
         generator : generator.Generator, optional
             building generator object
+        analyzer : analyzer.Analyzer, optional
+            building analyzer object
 
         Raises
         ------
         RuntimeError
             If device is not an instance of Device, or not set. If
-            generator set and not an instance of Generator.
+            generator set and not an instance of Generator or if
+            analyzer set and not an instance of Analyzer.
         """
 
         if not isinstance(device, Device):
@@ -57,6 +65,12 @@ class Topology:
             raise RuntimeError(f"expected instance of Generator, but got {classname}")
 
         self._generator = generator
+
+        if analyzer is not None and not isinstance(analyzer, Analyzer):
+            classname = type(analyzer).__name__
+            raise RuntimeError(f"expected instance of Analyzer, but got {classname}")
+
+        self._analyzer = analyzer
 
     def get_generator(self):
         """Get topology generator component.
@@ -80,6 +94,17 @@ class Topology:
 
         return self._device
 
+    def get_analyzer(self):
+        """Get topology analyzer component.
+
+        Returns
+        -------
+        analyzer.Analyzer
+            topology analyzer
+        """
+
+        return self._analyzer
+
     def get_tuple(self):
         """Get tuple of the topology components.
 
@@ -92,6 +117,7 @@ class Topology:
         return (
             self._device,
             self._generator,
+            self._analyzer,
         )
 
     @staticmethod
@@ -107,6 +133,7 @@ class Topology:
         return (
             "device",
             "generator",
+            "analyzer",
         )
 
 

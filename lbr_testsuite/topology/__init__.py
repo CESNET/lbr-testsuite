@@ -1,3 +1,4 @@
+from .analyzer import Analyzer
 from .device import Device, PcapLiveDevice, PciDevice, RingDevice, VdevDevice
 from .generator import Generator, NetdevGenerator
 from .pci_address import PciAddress
@@ -6,6 +7,7 @@ from .topology import Topology, select_topologies
 
 
 __all__ = [
+    "Analyzer",
     "Generator",
     "NetdevGenerator",
     "Device",
