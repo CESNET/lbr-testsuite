@@ -9,11 +9,12 @@ device is represented by physical port physicaly connected to a spirent
 generator.
 """
 
+import pytest
 import pytest_cases
 
 from ...spirent.spirent import STC_API_OFFICIAL, STC_API_PROPRIETARY, Spirent
 from ...topology import registration
-from ...topology.device import PciDevice
+from ...topology.device import MultiDevice, PciDevice
 from ...topology.topology import Topology
 from . import _options
 
@@ -29,8 +30,11 @@ def _init():
                 help=(
                     "Add wired connection to the spirent traffic generator. "
                     "An argument is spirent test center chassis port followed by comma "
-                    "and PCI address of the interface connected to the spirent. "
-                    "Example: --wired-spirent=7/1,0000:01:00.0"
+                    "and comma separated list of PCI address(es) of the interface(s) "
+                    "connected to the spirent. "
+                    "Example: \n"
+                    "    --wired-spirent=7/1,0000:01:00.0\n"
+                    "    --wired-spirent=7/1,0000:01:00.0,0000:01:00.1\n"
                 ),
             ),
         )
@@ -138,11 +142,25 @@ def topology_wired_spirent(request, devices_args, option_wired_spirent):
     if option_wired_spirent == pytest_cases.NOT_USED:
         return  # skip the fixture if its parameter not used
 
-    spirent_chassis_port, device_address = option_wired_spirent.split(",")
+    ws_opt = option_wired_spirent.split(",")
+    if len(ws_opt) < 2:
+        pytest.skip("missing some argument for wired spirent topology (see --wired-spirent)")
+
+    spirent_chassis_port = ws_opt[0]
+    devices_address = ws_opt[1:]
+    assert len(devices_address) == len(set(devices_address)), "duplicate devices are not allowed"
     spirent_api_version = SPIRENT_API_VERSION_CONV[request.config.getoption("spirent_api_version")]
 
-    device_args = devices_args[device_address]
-    device = PciDevice(device_address, device_args)
+    devs = []
+    for addr in devices_address:
+        device_args = devices_args[addr]
+        d = PciDevice(addr, device_args)
+        devs.append(d)
+
+    if len(devs) == 1:
+        device = devs[0]
+    else:
+        device = MultiDevice(devs)
 
     generator = Spirent(
         request.config.getoption("spirent_server"),
