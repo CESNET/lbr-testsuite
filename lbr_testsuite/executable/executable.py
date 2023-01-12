@@ -172,6 +172,18 @@ class Executable:
 
         self._options["env"] = {}
 
+    def set_cwd(self, path):
+        """Set working directory for a command.
+
+        Parameters
+        ----------
+        path : str or pathlib.Path
+            Path to the working directory. Directory is not created if
+            it does not exist.
+        """
+
+        self._options["cwd"] = path
+
     def set_strace(self, strace):
         """Set strace for a command.
 
