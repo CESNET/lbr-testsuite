@@ -196,3 +196,79 @@ class PcapLiveDevice(VdevDevice):
         self._netdev = str(netdev)
         self._dpdk_devargs["iface"] = self._netdev
         self._dpdk_name = f"net_pcap{id}"
+
+
+class MultiDevice(Device):
+    """Derived class representing a compound device.
+
+    Attributes
+    ----------
+    _devices : list[Devices]
+        List of base devices.
+    """
+
+    def __init__(self, devices):
+        """The MultiDevice object based on a list of base devices.
+
+        Parameters
+        ----------
+        device : list[Devices]
+            list of base Device instances
+
+        Raises
+        ------
+        RuntimeError
+            If the list is empty.
+        """
+
+        super().__init__()
+
+        if len(devices) == 0:
+            raise RuntimeError(f"devices list empty")
+
+        self._devices = devices
+
+    def get_dpdk_args(self):
+        """Gets list of DPDK EAL (Environment Abstraction Layer)
+        parameters needed.
+
+        Returns
+        -------
+        list[str]
+            List of DPDK EAL parameters.
+        """
+
+        dpdk_args = []
+
+        for device in self._devices:
+            dpdk_args = dpdk_args + device.get_dpdk_args()
+
+        return dpdk_args
+
+    def get_base_devices(self):
+        """Gets list of base devices.
+
+        Returns
+        -------
+        list[Devices]
+            Base devices.
+        """
+
+        return self._devices
+
+    def _unsupported_method_called(self):
+        assert False, "invalid method call for MultiDevice"
+
+    def get_dpdk_devargs(self):
+        """Calling this method on MultiDevice makes no sense. Device
+        arguments has to be handled for individual devices.
+        """
+
+        self._unsupported_method_called()
+
+    def get_dpdk_name(self):
+        """Calling this method on MultiDevice makes no sense. Device
+        name has to be retrieved for individual devices.
+        """
+
+        self._unsupported_method_called()
