@@ -205,6 +205,18 @@ def test_tool_env_clear():
     assert stderr == ""
 
 
+def test_tool_cwd(tmp_path):
+    """Test of command current working directory (cwd) setup."""
+
+    cmd = executable.Tool(["pwd"])
+    cmd.set_cwd(tmp_path)
+
+    stdout, stderr = cmd.run()
+
+    assert stdout == f"{tmp_path}\n"
+    assert stderr == ""
+
+
 def test_tool_outputs_mixed(tmp_files, helper_app):
     """Test of outputs setting - stdout and stderr are mixed to a single
     file.
