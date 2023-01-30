@@ -33,7 +33,7 @@ setuptools.setup(
     ],
     install_requires=[
         "pyroute2>=0.6.2,<1.",
-        "lbr_trex_client",
+        "lbr_trex_client==1.0",
         "stcrestclient",
         "pytest",
     ],
