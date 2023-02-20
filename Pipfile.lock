@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "418b6cba5eb49bd4b345f7af38d893e296d54db61fc6012737204d5bd43e3a94"
+            "sha256": "599670618ee05e9806dbee6b4e626401a833f7c60fb942211a7e27cc6d4fbeb4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -76,10 +76,10 @@
         },
         "lbr-trex-client": {
             "hashes": [
-                "sha256:8e4416e8a9da8988af8f723a6111c3ce0f55faf8051d932d15fa5e86ddac4a79"
+                "sha256:ca708a63f3c5fe5e6f5845964b3fcdec753d7d9e012036fe4c17b658b9b253e6"
             ],
-            "index": "pypi",
-            "version": "==1.0"
+            "index": "liberouter-pypi",
+            "version": "==2.0.1"
         },
         "makefun": {
             "hashes": [
@@ -762,6 +762,14 @@
             "markers": "sys_platform == 'linux'",
             "version": "==3.3.1"
         },
+        "setuptools": {
+            "hashes": [
+                "sha256:22c7348c6d2976a52632c67f7ab0cdf40147db7789f9aed18734643fe9cf3373",
+                "sha256:4ce92f1e1f8f01233ee9952c04f6b81d1e02939d6e1b488428154974a4d0783e"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==59.6.0"
+        },
         "six": {
             "hashes": [
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
@@ -823,6 +831,14 @@
                 "sha256:f5f8bb2d0d629f398bf47d0d69c07bc13b65f75a81ad9e2f71a63d4b7a2f6db2"
             ],
             "markers": "python_version >= '3.6'",
+            "version": "==2.0.0"
+        },
+        "sphinxcontrib-jquery": {
+            "hashes": [
+                "sha256:8fb65f6dba84bf7bcd1aea1f02ab3955ac34611d838bcc95d4983b805b234daa",
+                "sha256:ed47fa425c338ffebe3c37e1cdb56e30eb806116b85f01055b158c7057fdb995"
+            ],
+            "markers": "python_version >= '3.1'",
             "version": "==2.0.0"
         },
         "sphinxcontrib-jsmath": {
