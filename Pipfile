@@ -10,7 +10,7 @@ name = "liberouter-pypi"
 
 [packages]
 pyroute2 = "<1.,>=0.6.2"
-lbr-trex-client = {version="1.0", index="liberouter-pypi"}
+lbr-trex-client = {version=">=2.0.1", index="liberouter-pypi"}
 stcrestclient = "*"
 pytest = ">=7.0"
 pytest-cases = ">=3.6.11"
