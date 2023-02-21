@@ -292,6 +292,24 @@ class Spirent(Generator):
         eth = self._stc_handler.stc_attribute(stream_blocks, "children-ethernet:EthernetII")
         self._stc_handler.stc_attribute(eth, "dstMac", dst_mac)
 
+    def set_stream_blocks_src_mac(self, stream_block_names, src_mac):
+        """Set source MAC address for passed stream blocks.
+
+        Parameters
+        ----------
+        stream_block_names : str or list(str)
+            Stream block name or list of names from current
+            STC configuration.
+        src_mac : str
+            Source MAC address to be set in the streamblock. The format
+            follows the standard 'XX:XX:XX:XX:XX:XX'.
+        """
+
+        stream_blocks = self._stream_blocks_handler(stream_block_names)
+        # access src MAC address handler
+        eth = self._stc_handler.stc_attribute(stream_blocks, "children-ethernet:EthernetII")
+        self._stc_handler.stc_attribute(eth, "srcMac", src_mac)
+
     def set_device_vlan(self, device_names, vlan_id):
         """Set VLAN ID on devices selected by names.
 
