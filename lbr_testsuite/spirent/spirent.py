@@ -292,6 +292,24 @@ class Spirent(Generator):
         eth = self._stc_handler.stc_attribute(stream_blocks, "children-ethernet:EthernetII")
         self._stc_handler.stc_attribute(eth, "dstMac", dst_mac)
 
+    def set_stream_blocks_src_mac(self, stream_block_names, src_mac):
+        """Set source MAC address for passed stream blocks.
+
+        Parameters
+        ----------
+        stream_block_names : str or list(str)
+            Stream block name or list of names from current
+            STC configuration.
+        src_mac : str
+            Source MAC address to be set in the streamblock. The format
+            follows the standard 'XX:XX:XX:XX:XX:XX'.
+        """
+
+        stream_blocks = self._stream_blocks_handler(stream_block_names)
+        # access src MAC address handler
+        eth = self._stc_handler.stc_attribute(stream_blocks, "children-ethernet:EthernetII")
+        self._stc_handler.stc_attribute(eth, "srcMac", src_mac)
+
     def set_device_vlan(self, device_names, vlan_id):
         """Set VLAN ID on devices selected by names.
 
@@ -328,6 +346,23 @@ class Spirent(Generator):
         lower_layer = [self._stc_handler.stc_attribute(vlan, "StackedOnEndpoint-Targets")[0][0]]
         self._stc_handler.stc_attribute(upper_layer, "StackedOnEndpoint-Targets", lower_layer)
         self._stc_handler.stc_delete(vlan)
+
+    def set_device_mac(self, device_names, mac):
+        """Set MAC address on devices selected by names.
+
+        Parameters
+        ----------
+        device_names : str or list(str)
+            Device name or list of device names from current STC
+            configuration.
+        mac : str
+            MAC address to set on provided devices.
+        """
+
+        device_names = self._object_name_list(device_names)
+        devices = self._stc_handler.stc_device(device_names)
+        eth_handler = self._stc_handler.stc_attribute(devices, "children-EthIIIf")
+        self._stc_handler.stc_attribute(eth_handler, "SourceMac", mac)
 
     def configure_stream_blocks_vlan(self, stream_block_names, vlan_id):
         """Configure VLAN for stream blocks selected by names.
