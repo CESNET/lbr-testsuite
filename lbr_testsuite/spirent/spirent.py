@@ -421,6 +421,23 @@ class Spirent(Generator):
         else:
             self.delete_device_vlan(device_names)
 
+    def set_stream_blocks_packet_length(self, stream_blocks_names, packet_length):
+        """Set packet length for provided stream block names.
+
+        Parameters
+        ----------
+        stream_blocks_names : str or list(str)
+            Stream block names to be configured.
+        packet_length : int
+            Packet length in bytes.
+        """
+
+        if isinstance(stream_blocks_names, str):
+            stream_blocks_names = [stream_blocks_names]
+
+        for block in stream_blocks_names:
+            self._stc_handler.stc_set_stream_block_packet_length(block, packet_length)
+
     def set_port_load(self, port_load_type, port_load_value):
         """Set port load on spirent port.
 
