@@ -181,6 +181,29 @@ class Spirent(Generator):
 
         self._port_reserved = False
 
+    def determine_src_mac_address(self):
+        """Determine packets' source MAC address
+        according to the used spirent port.
+
+        This method is useful whenever there are more spirent generators running
+        at the same time. These may use the same source MAC address for their
+        stream blocks. In that case, the connected switch may infer the MAC
+        address for one of the ports and then discard all packets coming from
+        another port with the same source MAC address.
+
+        Returns
+        -------
+        str
+            MAC address corresponding to the spirent port.
+        """
+
+        mac_addr_template = "00:10:94:00:{0:02X}:{1:02X}"
+        port_str = self.get_port().split("/")
+        slot = int(port_str[0])
+        port = int(port_str[1])
+
+        return mac_addr_template.format(slot, port)
+
     @staticmethod
     def _object_name_list(obj_names):
         if isinstance(obj_names, str):
