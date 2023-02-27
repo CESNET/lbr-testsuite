@@ -21,6 +21,8 @@ from .conftest import match_syscalls
 
 TESTING_OUTPUT = "I am testing myself!"
 
+TIME_MEASUREMENT_TOLERANCE = 0.2
+
 
 def test_daemon_simple_args(helper_app):
     """Test successful execution of a simple command with arguments.
@@ -142,6 +144,34 @@ def test_daemon_is_running(helper_app):
     cmd.start()
     time.sleep(test_duration)  # wait some time so helper_app can register signal handlers
     assert cmd.is_running()
+    stdout, stderr = cmd.stop()
+    assert not cmd.is_running()
+
+    # TESTING_OUTPUT is printed right away and every outputs_interval second
+    assert stdout == TESTING_OUTPUT * (1 + outputs_multiplier)
+    assert stderr == ""
+
+
+def test_daemon_is_running_wait(helper_app):
+    """Test that the 'is_running()' method correctly waits the specified amount
+    of time before checking command status. The command should be active.
+
+    Parameters
+    ----------
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    """
+
+    outputs_interval = 3
+    outputs_multiplier = 2
+    test_duration = outputs_multiplier * outputs_interval + 2
+    cmd = executable.Daemon([helper_app, "-f", str(outputs_interval), "-o", TESTING_OUTPUT])
+
+    cmd.start()
+    t_start = time.time()
+    assert cmd.is_running(after=test_duration)
+    t_diff = time.time() - t_start
+    assert t_diff > test_duration and t_diff < test_duration + TIME_MEASUREMENT_TOLERANCE
     stdout, stderr = cmd.stop()
     assert not cmd.is_running()
 
