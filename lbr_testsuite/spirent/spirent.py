@@ -181,6 +181,29 @@ class Spirent(Generator):
 
         self._port_reserved = False
 
+    def determine_src_mac_address(self):
+        """Determine packets' source MAC address
+        according to the used spirent port.
+
+        This method is useful whenever there are more spirent generators running
+        at the same time. These may use the same source MAC address for their
+        stream blocks. In that case, the connected switch may infer the MAC
+        address for one of the ports and then discard all packets coming from
+        another port with the same source MAC address.
+
+        Returns
+        -------
+        str
+            MAC address corresponding to the spirent port.
+        """
+
+        mac_addr_template = "00:10:94:00:{0:02X}:{1:02X}"
+        port_str = self.get_port().split("/")
+        slot = int(port_str[0])
+        port = int(port_str[1])
+
+        return mac_addr_template.format(slot, port)
+
     @staticmethod
     def _object_name_list(obj_names):
         if isinstance(obj_names, str):
@@ -397,6 +420,23 @@ class Spirent(Generator):
             self.set_device_vlan(device_names, vlan_id)
         else:
             self.delete_device_vlan(device_names)
+
+    def set_stream_blocks_packet_length(self, stream_blocks_names, packet_length):
+        """Set packet length for provided stream block names.
+
+        Parameters
+        ----------
+        stream_blocks_names : str or list(str)
+            Stream block names to be configured.
+        packet_length : int
+            Packet length in bytes.
+        """
+
+        if isinstance(stream_blocks_names, str):
+            stream_blocks_names = [stream_blocks_names]
+
+        for block in stream_blocks_names:
+            self._stc_handler.stc_set_stream_block_packet_length(block, packet_length)
 
     def set_port_load(self, port_load_type, port_load_value):
         """Set port load on spirent port.
