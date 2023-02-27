@@ -250,11 +250,11 @@ def test_service_is_active_transitions(helper_service_success_delay):
 
     Parameters
     ----------
-    helper_service_success : fixture
+    helper_service_success_delay : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_success)
+    srv = Service(helper_service_success_delay)
     assert srv.is_active() is False
     srv.start(blocking=True)
     assert srv.is_active()
