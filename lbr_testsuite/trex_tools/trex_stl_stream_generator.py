@@ -199,7 +199,6 @@ class TRex_Stl_Stream_Generator:
         total_pkts=None,
         **kwargs,
     ):
-
         if not isinstance(trex_handler, STLClient):
             raise ValueError(
                 f"TRex_handler parameter needs to be STLClient type! Instead got {type(trex_handler)}"
@@ -235,7 +234,6 @@ class TRex_Stl_Stream_Generator:
         }
 
     def _create_frame(self):
-
         # MAC addresses are taken from TRex configuration file/interface by default
         frame = Ether()
 
@@ -246,7 +244,6 @@ class TRex_Stl_Stream_Generator:
         return frame
 
     def _add_padding(self, packet):
-
         padding = ""
 
         if self.packet_padding and self.packet_size > len(packet):
@@ -256,7 +253,6 @@ class TRex_Stl_Stream_Generator:
         return padding
 
     def _create_stl_stream(self, packet, vm):
-
         if self.stream_mode == "STLTXCont":
             if self.stream_pps:
                 mode = STLTXCont(pps=self.stream_pps)
@@ -280,7 +276,6 @@ class TRex_Stl_Stream_Generator:
         )
 
     def _get_expected_packet_size(self, base_packet):
-
         if self.packet_padding and self.packet_size > len(base_packet):
             return self.packet_size
         else:
@@ -291,12 +286,10 @@ class TRex_Stl_Stream_Generator:
                 return len(base_packet)
 
     def _v4_to_v6(self, ip):
-
         numbers = list(map(int, ip.split(".")))
         return self.ipv6_msb + "{:02x}{:02x}:{:02x}{:02x}".format(*numbers)
 
     def _ips_in_range(self, src_ip, dst_ip, ipv6=False):
-
         if not ipv6:
             return IPv4Address(self.src_ipv4_from) <= IPv4Address(src_ip) <= IPv4Address(
                 self.src_ipv4_to
@@ -314,7 +307,6 @@ class TRex_Stl_Stream_Generator:
             ) and IPv6Address(dst_from) <= IPv6Address(dst_ip) <= IPv6Address(dst_to)
 
     def _ports_in_range(self, src_port=None, dst_port=None):
-
         ret = True
         if src_port:
             ret &= self.src_port_from <= src_port <= self.src_port_to
@@ -1164,7 +1156,6 @@ class TRex_Stl_Stream_Generator:
             if self._ips_in_range(pkt["IP"].src, pkt["IP"].dst) and self._ports_in_range(
                 pkt["UDP"].sport, pkt["UDP"].dport
             ):
-
                 # DNS header must be parsed from Raw data, Scapy doesn't parse it if source or destination port isn't 53 or 5353
                 if Raw in pkt:
                     try:

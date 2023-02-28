@@ -77,7 +77,6 @@ def _filter_undefined_pseudofixtures(selected, filtered, pseudofixtures):
     excluded = []
 
     for item in selected:
-
         # Simply include the item if it does not have any call parameters
         if not hasattr(item, "callspec"):
             included.append(item)

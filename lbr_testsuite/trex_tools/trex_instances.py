@@ -44,7 +44,6 @@ class TRex_Instances:
     """
 
     def __init__(self):
-
         self._trex_daemon_handlers = []
         self._trex_handlers = []
 
@@ -230,7 +229,6 @@ class TRex_Instances:
 
         # Can be used only in pytest framework, otherwise see disconnect() method
         def finalizer(self, trex_handler):
-
             self.disconnect(trex_handler)
 
         if pyt_request:
