@@ -135,7 +135,6 @@ class TRex_Astf_Profile_Generator:
         gi_tcp_keepidle=10,
         gi_tcp_keepintvl=10,
     ):
-
         # Define all parameters as class attributes
         for param, value in locals().items():
             if param != "self":

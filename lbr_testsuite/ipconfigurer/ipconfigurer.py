@@ -332,7 +332,6 @@ def ifc_set_master(
     """
 
     with _get_ipr_context(namespace) as ipr:
-
         links = ipr.link_lookup(ifname=ifc_name)
         if not links:
             raise RuntimeError(f"No such interface '{ifc_name}' in namespace '{namespace}'.")
@@ -621,7 +620,6 @@ def add_link(
     """
 
     with _get_ipr_context(master_link_namespace) as ipr:
-
         params = dict(
             ifname=name,
             kind=kind,
@@ -687,7 +685,6 @@ def delete_link(
     """
 
     with _get_ipr_context(namespace) as ipr:
-
         params = dict(ifname=name)
         if kind:
             params["kind"] = kind
