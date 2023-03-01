@@ -94,7 +94,7 @@ doc:
 build:
     stage: build
     script:
-        - python3.6 setup.py bdist_wheel
+        - python3 setup.py bdist_wheel
         - ls -l dist
     artifacts:
         paths: [dist]
@@ -103,5 +103,5 @@ upload:
     stage: upload
     script:
         - TWINE_PASSWORD=${LRB_PYPI_PASSWORD} TWINE_USERNAME=${LRB_PYPI_USERNAME}
-            python3.6 -m twine upload --verbose --repository-url ${LBR_PYPI_REPOSITORY_URL} dist/*
+            python3 -m twine upload --verbose --repository-url ${LBR_PYPI_REPOSITORY_URL} dist/*
     only: ['master']

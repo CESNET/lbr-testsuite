@@ -37,7 +37,7 @@ setuptools.setup(
         "stcrestclient",
         "pytest",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     entry_points={
         "pytest11": [
             "lbr_testsuite = lbr_testsuite._pytest_plugins.plugin",

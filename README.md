@@ -43,9 +43,9 @@ scope set to `api`.
 For installation of `lbr_testsuite` you can use one of these commands:
 
 ```
-python3.6 -m pip install lbr-testsuite --extra-index-url https://gitlab+deploy-token-13:dPyQaA7ypwhNLxSttz2r@gitlab.liberouter.org/api/v4/projects/95/packages/pypi/simple
+python3.8 -m pip install lbr-testsuite --extra-index-url https://gitlab+deploy-token-13:dPyQaA7ypwhNLxSttz2r@gitlab.liberouter.org/api/v4/projects/95/packages/pypi/simple
 *or*
-python3.6 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.liberouter.org/piproxy/tmc/pypi-liberouter/simple --trusted-host cisticka-devel.liberouter.org
+python3.8 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.liberouter.org/piproxy/tmc/pypi-liberouter/simple --trusted-host cisticka-devel.liberouter.org
 ```
 
 ## Usage
