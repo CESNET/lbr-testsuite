@@ -77,6 +77,7 @@ def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post
         yield HELPER_SERVICE_NAME
 
         HELPER_SERVICE_PATH.unlink()
+        executable.Tool(["systemctl", "daemon-reload"]).run()
 
     return helper_service
 
