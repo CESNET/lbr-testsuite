@@ -23,7 +23,8 @@ void print_help()
 	printf("\n");
 	printf("Options:\n");
 	printf("-h   Print this help and exit.\n");
-	printf("-f sec   Run forever. Print requested message on stdout and/or stderr every 'sec' seconds.\n");
+	printf("-d sec   Exit after 'sec' delay. Cannot be used with '-f'.\n");
+	printf("-f sec   Run forever. Print requested message on stdout and/or stderr every 'sec' seconds. Cannot be used with '-d'.\n");
 	printf("-s   Die on segfault. Print requested message on stdout ('-o') and/or stderr ('-e') once first.\n");
 	printf("-o msg   Print message 'msg' on stdout (every 'sec' seconds when '-f' is used).\n");
 	printf("-e msg   Print message 'msg' on stderr (every 'sec' seconds when '-f' is used).\n");
@@ -60,18 +61,23 @@ int main(int argc, char *argv[]) {
 	char *print_stdout = NULL;
 	char *print_stderr = NULL;
 	int c;
+	int exit_delay;
 	int ret_code = 0;
 
 	signal(SIGINT, sig_handler);
 	signal(SIGTERM, sig_handler);
 
 	run_forever = 0;
+	exit_delay = 0;
 
-	while ((c = getopt(argc, argv, "hf:so:e:r:")) != -1) {
+	while ((c = getopt(argc, argv, "hd:f:so:e:r:")) != -1) {
 		switch (c){
 		case 'h':
 			print_help();
 			return 0;
+			break;
+		case 'd':
+			exit_delay = atoi(optarg);
 			break;
 		case 'f':
 			run_forever = atoi(optarg);
@@ -94,6 +100,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	if (run_forever > 0 && exit_delay > 0) {
+		fprintf(stderr, "Invalid arguments: '-d' and '-f' used together.\n");
+		exit(1);
+	}
+
 	do {
 		print_outputs(print_stdout, print_stderr);
 
@@ -102,6 +113,8 @@ int main(int argc, char *argv[]) {
 
 		sleep(run_forever);
 	} while(run_forever);
+
+	sleep(exit_delay);
 
 	return ret_code;
 }
