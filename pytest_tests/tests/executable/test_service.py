@@ -84,6 +84,7 @@ def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post
 
 helper_srv_ok = helper_service_factory(SUCCESS_ARGS)
 helper_srv_ok_delay_start = helper_service_factory(SUCCESS_ARGS, "sleep 2")
+helper_srv_ok_delay_start_stop = helper_service_factory(SUCCESS_ARGS, "sleep 2", "sleep 2")
 helper_srv_fail = helper_service_factory(FAIL_ARGS)
 helper_srv_fail_delay_start = helper_service_factory(FAIL_ARGS, "sleep 2")
 helper_srv_fail_startup = helper_service_factory(STARTUP_FAIL_ARGS)
@@ -244,17 +245,17 @@ def test_service_is_active_stopped(helper_srv_ok):
 
 
 @pytest.mark.systemd
-def test_service_is_active_transitions(helper_srv_ok_delay_start):
+def test_service_is_active_transitions(helper_srv_ok_delay_start_stop):
     """Test that 'is_active()' returns correct values for
     service not running, then is started and lastly stopped.
 
     Parameters
     ----------
-    helper_srv_ok_delay_start : fixture
+    helper_srv_ok_delay_start_stop : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_srv_ok_delay_start)
+    srv = Service(helper_srv_ok_delay_start_stop)
     assert srv.is_active() is False
     srv.start(blocking=True)
     assert srv.is_active()
