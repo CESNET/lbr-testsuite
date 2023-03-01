@@ -50,6 +50,7 @@ class Service:
         bool
             True if service is active, False otherwise.
         """
+
         # Use "no-exception" to prevent an exception when a service is not active.
         c = executable.Tool(
             ["systemctl", "is-active", self._name], failure_verbosity="no-exception"
