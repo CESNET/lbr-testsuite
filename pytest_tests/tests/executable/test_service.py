@@ -258,5 +258,5 @@ def test_service_is_active_transitions(helper_service_success_delay):
     assert srv.is_active() is False
     srv.start(blocking=True)
     assert srv.is_active()
-    srv.stop(blocking=False)
+    srv.stop(blocking=True)
     assert srv.is_active() is False
