@@ -10,6 +10,7 @@ Testing of executable module Service class.
 
 import pathlib
 import subprocess
+import time
 
 import pytest
 
@@ -39,6 +40,9 @@ StandardError=inherit
 SUCCESS_ARGS = "-f 10"
 FAIL_ARGS = f"{SUCCESS_ARGS} -r 1"
 STARTUP_FAIL_ARGS = "-r 1"
+EXIT_DELAY_ARGS = "-d 2"
+
+TIME_MEASUREMENT_TOLERANCE = 0.2
 
 
 def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post_start="true"):
@@ -83,6 +87,7 @@ def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post
 
 
 helper_srv_ok = helper_service_factory(SUCCESS_ARGS)
+helper_srv_delay_exit = helper_service_factory(EXIT_DELAY_ARGS)
 helper_srv_ok_delay_start = helper_service_factory(SUCCESS_ARGS, "sleep 2")
 helper_srv_ok_delay_start_stop = helper_service_factory(SUCCESS_ARGS, "sleep 2", "sleep 2")
 helper_srv_fail = helper_service_factory(FAIL_ARGS)
@@ -261,3 +266,45 @@ def test_service_is_active_transitions(helper_srv_ok_delay_start_stop):
     assert srv.is_active()
     srv.stop(blocking=True)
     assert srv.is_active() is False
+
+
+@pytest.mark.systemd
+def test_service_is_active_after3s_running(helper_srv_ok):
+    """Test that 'is_active(after=3)' waits for 3 seconds and returns correct value for
+    service that is running.
+
+    Parameters
+    ----------
+    helper_srv_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    srv.start(blocking=True)
+    t_start = time.time()
+    assert srv.is_active(after=3)
+    t_diff = time.time() - t_start
+    assert t_diff > 3 and t_diff < 3 + TIME_MEASUREMENT_TOLERANCE
+    srv.stop(blocking=False)
+
+
+@pytest.mark.systemd
+def test_service_is_active_after_2s_delay_exit(helper_srv_delay_exit):
+    """Test that 'is_active(after=1)' waits for one second and checks
+    the status of a running service. After that, another check is made
+    after the service exits 'isactive(after=3)'.
+
+    Parameters
+    ----------
+    helper_srv_delay_exit : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_delay_exit)
+    srv.start(blocking=True)
+    assert srv.is_active(after=1)
+    t_start = time.time()
+    assert not srv.is_active(after=3)
+    t_diff = time.time() - t_start
+    assert t_diff > 3 and t_diff < 3 + TIME_MEASUREMENT_TOLERANCE
+    srv.stop(blocking=False)
