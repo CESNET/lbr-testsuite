@@ -26,6 +26,7 @@ wheel = "*"
 isort = "*"
 black = "*"
 sphinxcontrib-apidoc = "*"
+build = "*"
 
 [requires]
 python_version = "3.8"
