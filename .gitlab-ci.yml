@@ -55,7 +55,7 @@ isort:
     stage: check
     needs: [docker-build]
     script:
-        - isort --check-only --diff *.py lbr_testsuite/ pytest_tests/ | tee isort.log
+        - isort --check-only --diff lbr_testsuite/ pytest_tests/ | tee isort.log
     artifacts:
         paths: [isort.log]
         when: always
@@ -64,7 +64,7 @@ black:
     stage: check
     needs: [docker-build]
     script:
-        - black --check --diff *.py lbr_testsuite/ pytest_tests/ | tee black.log
+        - black --check --diff lbr_testsuite/ pytest_tests/ | tee black.log
     artifacts:
         paths: [black.log]
         when: always
@@ -94,7 +94,7 @@ doc:
 build:
     stage: build
     script:
-        - python3 setup.py bdist_wheel
+        - python3 -m build --wheel
         - ls -l dist
     artifacts:
         paths: [dist]

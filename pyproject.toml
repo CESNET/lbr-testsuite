@@ -1,5 +1,50 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools >= 61", "wheel", "setuptools-git-versioning"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["lbr_testsuite*"]
+
+[project]
+name = "lbr_testsuite"
+description="Lbr_testsuite package contains various modules used by CESNET projects"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "proprietary" }
+authors = [
+    { name = "CESNET", email = "tmc-info@cesnet.cz" }
+]
+maintainers = [
+    { name = "Pavel Krobot", email = "Pavel.Krobot@cesnet.cz" },
+    { name = "Dominik Tran", email = "Dominik.Tran@cesnet.cz" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Framework :: Pytest",
+]
+dependencies = [
+    "pyroute2>=0.6.2,<1",
+    "lbr_trex_client>=2.0.1",
+    "stcrestclient",
+    "pytest",
+]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://gitlab.liberouter.org/tmc/testsuite/"
+
+[project.entry-points."pytest11"]
+lbr_testsuite = "lbr_testsuite._pytest_plugins.plugin"
+lbr_keyboard_interrupt = "lbr_testsuite._pytest_plugins.keyboard_interrupt.plugin"
+lbr_renamer = "lbr_testsuite._pytest_plugins.renamer.plugin"
+lbr_topology = "lbr_testsuite._pytest_plugins.topology.plugin"
+
+[tool.setuptools-git-versioning]
+enabled = true
+template = "{tag}"
+dev_template = "{tag}.dev{ccount}+git.{sha}"
+dirty_template = "{tag}.dev{ccount}+git.{sha}.dirty"
+starting_version = "1.0.0"
 
 [tool.isort]
 profile = "black"
