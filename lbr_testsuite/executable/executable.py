@@ -385,12 +385,24 @@ class Daemon(Executable):
         self._terminated = True
 
     def start(self):
-        """Start the command on background."""
+        """Start the command on background.
+
+        Returns
+        -------
+        tuple or None
+            A pair composed from stdout and stderr acquired using
+            subprocess.communicate() method if start fails. Implicit
+            None otherwise.
+        """
 
         if self._process is not None and not self._terminated:
             raise RuntimeError("start called on a started process")
 
         self._start()
+
+        if not self.is_running():
+            return self.stop()
+
         self._terminated = False
 
     def stop(self, timeout=30):
