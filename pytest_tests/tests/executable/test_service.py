@@ -10,6 +10,7 @@ Testing of executable module Service class.
 
 import pathlib
 import subprocess
+import time
 
 import pytest
 
@@ -39,6 +40,9 @@ StandardError=inherit
 SUCCESS_ARGS = "-f 10"
 FAIL_ARGS = f"{SUCCESS_ARGS} -r 1"
 STARTUP_FAIL_ARGS = "-r 1"
+EXIT_DELAY_ARGS = "-d 2"
+
+TIME_MEASUREMENT_TOLERANCE = 0.2
 
 
 def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post_start="true"):
@@ -77,28 +81,31 @@ def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post
         yield HELPER_SERVICE_NAME
 
         HELPER_SERVICE_PATH.unlink()
+        executable.Tool(["systemctl", "daemon-reload"]).run()
 
     return helper_service
 
 
-helper_service_success = helper_service_factory(SUCCESS_ARGS)
-helper_service_success_delay = helper_service_factory(SUCCESS_ARGS, "sleep 2")
-helper_service_fail = helper_service_factory(FAIL_ARGS)
-helper_service_fail_delay = helper_service_factory(FAIL_ARGS, "sleep 2")
-helper_service_fail_startup = helper_service_factory(STARTUP_FAIL_ARGS)
+helper_srv_ok = helper_service_factory(SUCCESS_ARGS)
+helper_srv_delay_exit = helper_service_factory(EXIT_DELAY_ARGS)
+helper_srv_ok_delay_start = helper_service_factory(SUCCESS_ARGS, "sleep 2")
+helper_srv_ok_delay_start_stop = helper_service_factory(SUCCESS_ARGS, "sleep 2", "sleep 2")
+helper_srv_fail = helper_service_factory(FAIL_ARGS)
+helper_srv_fail_delay_start = helper_service_factory(FAIL_ARGS, "sleep 2")
+helper_srv_fail_startup = helper_service_factory(STARTUP_FAIL_ARGS)
 
 
 @pytest.mark.systemd
-def test_service_start_stop_nonblocking_success(helper_service_success):
+def test_service_start_stop_nonblocking_success(helper_srv_ok):
     """Test successful start of a helper service.
 
     Parameters
     ----------
-    helper_service_success : fixture
+    helper_srv_ok : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_success)
+    srv = Service(helper_srv_ok)
     srv.start(blocking=False)
     assert srv.is_active()
     srv.stop(blocking=False)
@@ -107,16 +114,16 @@ def test_service_start_stop_nonblocking_success(helper_service_success):
 
 
 @pytest.mark.systemd
-def test_service_start_stop_nonblocking_fail(helper_service_fail):
+def test_service_start_stop_nonblocking_fail(helper_srv_fail):
     """Test correct return code on failed service.
 
     Parameters
     ----------
-    helper_service_fail : fixture
+    helper_srv_fail : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_fail)
+    srv = Service(helper_srv_fail)
     srv.start(blocking=False)
     assert srv.is_active()
     srv.stop(blocking=False)
@@ -125,16 +132,16 @@ def test_service_start_stop_nonblocking_fail(helper_service_fail):
 
 
 @pytest.mark.systemd
-def test_service_start_stop_blocking_success(helper_service_success_delay):
+def test_service_start_stop_blocking_success(helper_srv_ok_delay_start):
     """Test successful start of a helper service after a delay.
 
     Parameters
     ----------
-    helper_service_success_delay : fixture
+    helper_srv_ok_delay_start : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_success_delay)
+    srv = Service(helper_srv_ok_delay_start)
     srv.start(blocking=True)
     assert srv.is_active()
     srv.stop(blocking=True)
@@ -143,16 +150,16 @@ def test_service_start_stop_blocking_success(helper_service_success_delay):
 
 
 @pytest.mark.systemd
-def test_service_start_stop_blocking_fail(helper_service_fail_delay):
+def test_service_start_stop_blocking_fail(helper_srv_fail_delay_start):
     """Test correct return code of a failed exit after a delay.
 
     Parameters
     ----------
-    helper_service_fail_delay : fixture
+    helper_srv_fail_delay_start : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_fail_delay)
+    srv = Service(helper_srv_fail_delay_start)
     srv.start(blocking=True)
     assert srv.is_active()
     srv.stop(blocking=True)
@@ -161,16 +168,16 @@ def test_service_start_stop_blocking_fail(helper_service_fail_delay):
 
 
 @pytest.mark.systemd
-def test_service_start_fail(helper_service_fail_startup):
+def test_service_start_fail(helper_srv_fail_startup):
     """Test that error on startup raises an exception.
 
     Parameters
     ----------
-    helper_service_fail_startup : fixture
+    helper_srv_fail_startup : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_fail_startup)
+    srv = Service(helper_srv_fail_startup)
     with pytest.raises((subprocess.CalledProcessError, RuntimeError)):
         srv.start(blocking=True)
 
@@ -178,84 +185,126 @@ def test_service_start_fail(helper_service_fail_startup):
 
 
 @pytest.mark.systemd
-def test_service_is_active_not_started(helper_service_success):
+def test_service_is_active_not_started(helper_srv_ok):
     """Test that 'is_active()' returns correct value for
     service that is not started.
 
     Parameters
     ----------
-    helper_service_success : fixture
+    helper_srv_ok : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_success)
+    srv = Service(helper_srv_ok)
     assert srv.is_active() is False
 
 
 @pytest.mark.systemd
-def test_service_is_active_running(helper_service_success):
+def test_service_is_active_running(helper_srv_ok):
     """Test that 'is_active()' returns correct value for
     service that is running.
 
     Parameters
     ----------
-    helper_service_success : fixture
+    helper_srv_ok : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_success)
+    srv = Service(helper_srv_ok)
     srv.start(blocking=False)
     assert srv.is_active()
     srv.stop(blocking=False)
 
 
 @pytest.mark.systemd
-def test_service_is_active_failed(helper_service_fail_startup):
+def test_service_is_active_failed(helper_srv_fail_startup):
     """Test that 'is_active()' returns correct value for
     service that failed when starting.
 
     Parameters
     ----------
-    helper_service_fail : fixture
+    helper_srv_fail : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_fail_startup)
+    srv = Service(helper_srv_fail_startup)
     srv.start(blocking=False)
     assert srv.is_active() is False
 
 
 @pytest.mark.systemd
-def test_service_is_active_stopped(helper_service_success):
+def test_service_is_active_stopped(helper_srv_ok):
     """Test that 'is_active()' returns correct value for
     service that is successfuly stopped.
 
     Parameters
     ----------
-    helper_service_success : fixture
+    helper_srv_ok : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_success)
+    srv = Service(helper_srv_ok)
     srv.start(blocking=False)
     srv.stop(blocking=False)
     assert srv.is_active() is False
 
 
 @pytest.mark.systemd
-def test_service_is_active_transitions(helper_service_success_delay):
+def test_service_is_active_transitions(helper_srv_ok_delay_start_stop):
     """Test that 'is_active()' returns correct values for
     service not running, then is started and lastly stopped.
 
     Parameters
     ----------
-    helper_service_success : fixture
+    helper_srv_ok_delay_start_stop : fixture
         Fixture generating a systemd service.
     """
 
-    srv = Service(helper_service_success)
+    srv = Service(helper_srv_ok_delay_start_stop)
     assert srv.is_active() is False
     srv.start(blocking=True)
     assert srv.is_active()
-    srv.stop(blocking=False)
+    srv.stop(blocking=True)
     assert srv.is_active() is False
+
+
+@pytest.mark.systemd
+def test_service_is_active_after3s_running(helper_srv_ok):
+    """Test that 'is_active(after=3)' waits for 3 seconds and returns correct value for
+    service that is running.
+
+    Parameters
+    ----------
+    helper_srv_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    srv.start(blocking=True)
+    t_start = time.time()
+    assert srv.is_active(after=3)
+    t_diff = time.time() - t_start
+    assert t_diff > 3 and t_diff < 3 + TIME_MEASUREMENT_TOLERANCE
+    srv.stop(blocking=False)
+
+
+@pytest.mark.systemd
+def test_service_is_active_after_2s_delay_exit(helper_srv_delay_exit):
+    """Test that 'is_active(after=1)' waits for one second and checks
+    the status of a running service. After that, another check is made
+    after the service exits 'isactive(after=3)'.
+
+    Parameters
+    ----------
+    helper_srv_delay_exit : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_delay_exit)
+    srv.start(blocking=True)
+    assert srv.is_active(after=1)
+    t_start = time.time()
+    assert not srv.is_active(after=3)
+    t_diff = time.time() - t_start
+    assert t_diff > 3 and t_diff < 3 + TIME_MEASUREMENT_TOLERANCE
+    srv.stop(blocking=False)

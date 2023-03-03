@@ -11,6 +11,7 @@ import logging
 import os
 import pathlib
 import subprocess
+import time
 
 
 class Executable:
@@ -415,8 +416,12 @@ class Daemon(Executable):
         self._terminate()
         return self._wait_or_kill(timeout)
 
-    def is_running(self):
+    def is_running(self, after=None):
         """Check whether a daemon process is running.
+
+        after : float, optional
+            How many seconds to wait before check. No waiting by
+            default. The waiting operation blocks execution.
 
         Returns
         -------
@@ -426,5 +431,8 @@ class Daemon(Executable):
 
         if self._process is None or self._terminated:
             return False
+
+        if after:
+            time.sleep(after)
 
         return self._process.poll() is None

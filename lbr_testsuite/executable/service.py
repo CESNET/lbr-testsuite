@@ -11,6 +11,7 @@ A module providing class for using systemd services.
 
 import logging
 import subprocess
+import time
 from datetime import datetime
 
 from .. import common
@@ -42,18 +43,27 @@ class Service:
         self._start_time = None
         self._logger = logging.getLogger(self._name)
 
-    def is_active(self):
+    def is_active(self, after=None):
         """Check if managed service is currently active.
+
+        after : float, optional
+            How many seconds to wait before check. No waiting by
+            default.
 
         Returns
         -------
         bool
             True if service is active, False otherwise.
         """
+
         # Use "no-exception" to prevent an exception when a service is not active.
         c = executable.Tool(
             ["systemctl", "is-active", self._name], failure_verbosity="no-exception"
         )
+
+        if after:
+            time.sleep(after)
+
         stdout, _ = c.run()
         return stdout.strip() == "active"
 
