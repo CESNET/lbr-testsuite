@@ -43,7 +43,7 @@ def sysctl_get(variables):
 
     Returns
     -------
-    list or str
+    list(str)
         List of variables values.
 
     Raises
@@ -81,9 +81,9 @@ def sysctl_set_with_restore(pyt_request, variables, values):
     Parameters
         pyt_request : FixtureRequest
         Special pytest fixture, here used for adding of a finalizer.
-    variables : list(str)
+    variables : list(str) or str
         List of variables names.
-    values : list(str)
+    values : list(str) or str
         List of variables values.
     """
 
