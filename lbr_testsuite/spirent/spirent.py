@@ -115,11 +115,11 @@ class Spirent(Generator):
 
         Parameters
         ----------
-        config_path : str
+        config_path : str or pathlib.Path
             Path to the configuration file.
         """
 
-        self._spirent_config = config_path
+        self._spirent_config = str(config_path)
 
     def get_port(self):
         """Spirent port getter.

@@ -50,7 +50,7 @@ def compose_output_path(pyt_request, target, suffix="", dir=""):
     ----------
     pyt_request : FixtureRequest
         Special pytest fixture here used for acccessing test case name.
-    target : str
+    target : str or pathlib.Path
         Name of target file or directory.
     suffix : str, optional
         Suffix of the file. Default is empty string (i.e. no suffix).
@@ -66,7 +66,7 @@ def compose_output_path(pyt_request, target, suffix="", dir=""):
     valid_file_name = pyt_request.node.name.replace("/", "-")
     suffix = f"__{valid_file_name}{suffix}"
 
-    target_path = f"{target}{suffix}"
+    target_path = f"{str(target)}{suffix}"
     return Path(dir) / target_path
 
 
