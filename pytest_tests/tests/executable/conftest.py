@@ -6,9 +6,12 @@ Copyright: (C) 2021 CESNET, z.s.p.o.
 Common sources for executable module testing.
 """
 
+import os
 import pathlib
 import subprocess
 
+import pyroute2
+import pytest
 import pytest_cases
 
 
@@ -98,3 +101,17 @@ def match_syscalls(file_path, expressions, segfault=False):
             if not list(filter(sys_call.startswith, expressions)):
                 return False
     return True
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize("netns", [None, "lbr_testsuite_ns"], idgen=pytest_cases.AUTO)
+def testing_namespace(netns):
+    if netns:
+        if os.geteuid() != 0:
+            pytest.skip(f"namespaces are usable only under the root")
+
+        pyroute2.netns.create(netns)
+        yield netns
+        pyroute2.netns.remove(netns)
+    else:
+        yield None

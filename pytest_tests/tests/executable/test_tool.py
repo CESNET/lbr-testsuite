@@ -23,13 +23,13 @@ from .conftest import match_syscalls
 TESTING_OUTPUT = "I am testing myself!"
 
 
-def test_tool_simple():
+def test_tool_simple(testing_namespace):
     """Test successful execution of a simple command without arguments.
 
     Passing command as a list of strings (preferred).
     """
 
-    cmd = executable.Tool(["pwd"])
+    cmd = executable.Tool(["pwd"], netns=testing_namespace)
 
     stdout, stderr = cmd.run()
 
@@ -37,7 +37,7 @@ def test_tool_simple():
     assert stderr == ""
 
 
-def test_tool_simple_str():
+def test_tool_simple_str(testing_namespace):
     """Test successful execution of a simple command without arguments.
 
     Passing command as a string.
@@ -51,13 +51,13 @@ def test_tool_simple_str():
     assert stderr == ""
 
 
-def test_tool_simple_args():
+def test_tool_simple_args(testing_namespace):
     """Test successful execution of a simple command with arguments.
 
     Passing command as a list of strings (preferred).
     """
 
-    cmd = executable.Tool(["printf", TESTING_OUTPUT])
+    cmd = executable.Tool(["printf", TESTING_OUTPUT], netns=testing_namespace)
 
     stdout, stderr = cmd.run()
 
@@ -65,13 +65,13 @@ def test_tool_simple_args():
     assert stderr == ""
 
 
-def test_tool_simple_args_str():
+def test_tool_simple_args_str(testing_namespace):
     """Test successful execution of a simple command without arguments.
 
     Passing command as a string.
     """
 
-    cmd = executable.Tool(f'printf "{TESTING_OUTPUT}"')
+    cmd = executable.Tool(f'printf "{TESTING_OUTPUT}"', netns=testing_namespace)
 
     stdout, stderr = cmd.run()
 
@@ -79,14 +79,14 @@ def test_tool_simple_args_str():
     assert stderr == ""
 
 
-def test_tool_simple_arg_append():
+def test_tool_simple_arg_append(testing_namespace):
     """Test successful execution of a simple command with single
     appended argument.
 
     Passing command as a list of strings (preferred).
     """
 
-    cmd = executable.Tool(["printf"])
+    cmd = executable.Tool(["printf"], netns=testing_namespace)
     cmd.append_arguments(TESTING_OUTPUT)
 
     stdout, stderr = cmd.run()
@@ -95,14 +95,14 @@ def test_tool_simple_arg_append():
     assert stderr == ""
 
 
-def test_tool_simple_args_append_list():
+def test_tool_simple_args_append_list(testing_namespace):
     """Test successful execution of a simple command with argument
     appended as a list.
 
     Passing command as a list of strings (preferred).
     """
 
-    cmd = executable.Tool(["printf"])
+    cmd = executable.Tool(["printf"], netns=testing_namespace)
     cmd.append_arguments([TESTING_OUTPUT])
 
     stdout, stderr = cmd.run()
@@ -111,14 +111,14 @@ def test_tool_simple_args_append_list():
     assert stderr == ""
 
 
-def test_tool_simple_arg_append_str():
+def test_tool_simple_arg_append_str(testing_namespace):
     """Test successful execution of a simple command with single
     appended argument.
 
     Passing command as a string.
     """
 
-    cmd = executable.Tool(f"printf")
+    cmd = executable.Tool(f"printf", netns=testing_namespace)
     cmd.append_arguments(f' "{TESTING_OUTPUT}"')
 
     stdout, stderr = cmd.run()
@@ -127,24 +127,30 @@ def test_tool_simple_arg_append_str():
     assert stderr == ""
 
 
-def test_tool_simple_args_fail(helper_app):
+def test_tool_simple_args_fail(helper_app, testing_namespace):
     """Test of simple command failure.
 
     Raising of subprocess.CalledProcessError exception is expected.
     """
 
     # Prevent logging of messages of any severity (i.e. all messages) from the testing command
-    cmd = executable.Tool([helper_app, "-r", "2"], default_logger_level=logging.CRITICAL + 1)
+    cmd = executable.Tool(
+        [helper_app, "-r", "2"],
+        default_logger_level=logging.CRITICAL + 1,
+        netns=testing_namespace,
+    )
 
     with pytest.raises(subprocess.CalledProcessError):
         cmd.run()
 
 
-def test_tool_simple_args_allowed_failure(helper_app):
+def test_tool_simple_args_allowed_failure(helper_app, testing_namespace):
     """Test of command which is allowed to fail."""
 
     cmd = executable.Tool(
-        [helper_app, "-r", "2", "-e", TESTING_OUTPUT], failure_verbosity="no-exception"
+        [helper_app, "-r", "2", "-e", TESTING_OUTPUT],
+        failure_verbosity="no-exception",
+        netns=testing_namespace,
     )
 
     stdout, stderr = cmd.run()
@@ -153,23 +159,27 @@ def test_tool_simple_args_allowed_failure(helper_app):
     assert stderr == TESTING_OUTPUT
 
 
-def test_tool_simple_args_expected_failure(helper_app):
+def test_tool_simple_args_expected_failure(helper_app, testing_namespace):
     """Test of command which is expected to fail."""
 
-    cmd = executable.Tool([helper_app, "-r", "2"], failure_verbosity="no-error")
+    cmd = executable.Tool(
+        [helper_app, "-r", "2"],
+        failure_verbosity="no-error",
+        netns=testing_namespace,
+    )
 
     with pytest.raises(subprocess.CalledProcessError):
         cmd.run()
 
 
-def test_tool_env():
+def test_tool_env(testing_namespace):
     """Test of environment variable setup."""
 
     test_var = "TEST_TOOL_ENV_VAR"
     test_var_value = TESTING_OUTPUT
     test_env = dict()
     test_env[test_var] = test_var_value
-    cmd = executable.Tool(["printenv", "-0"])
+    cmd = executable.Tool(["printenv", "-0"], netns=testing_namespace)
     cmd.set_env(test_env)
 
     stdout, stderr = cmd.run()
@@ -179,12 +189,12 @@ def test_tool_env():
     assert stderr == ""
 
 
-def test_tool_env_key():
+def test_tool_env_key(testing_namespace):
     """Test of environment variable setup."""
 
     test_var = "TEST_TOOL_ENV_VAR"
     test_var_value = TESTING_OUTPUT
-    cmd = executable.Tool(f'printf "${test_var}"')
+    cmd = executable.Tool(f'printf "${test_var}"', netns=testing_namespace)
     cmd.set_env_key(test_var, test_var_value)
 
     stdout, stderr = cmd.run()
@@ -193,10 +203,10 @@ def test_tool_env_key():
     assert stderr == ""
 
 
-def test_tool_env_clear():
+def test_tool_env_clear(testing_namespace):
     """Test of environment variable setup."""
 
-    cmd = executable.Tool(["printenv", "-0"])
+    cmd = executable.Tool(["printenv", "-0"], netns=testing_namespace)
     cmd.clear_env()
 
     stdout, stderr = cmd.run()
@@ -205,10 +215,10 @@ def test_tool_env_clear():
     assert stderr == ""
 
 
-def test_tool_cwd(tmp_path):
+def test_tool_cwd(tmp_path, testing_namespace):
     """Test of command current working directory (cwd) setup."""
 
-    cmd = executable.Tool(["pwd"])
+    cmd = executable.Tool(["pwd"], netns=testing_namespace)
     cmd.set_cwd(tmp_path)
 
     stdout, stderr = cmd.run()
@@ -217,7 +227,7 @@ def test_tool_cwd(tmp_path):
     assert stderr == ""
 
 
-def test_tool_outputs_mixed(tmp_files, helper_app):
+def test_tool_outputs_mixed(tmp_files, helper_app, testing_namespace):
     """Test of outputs setting - stdout and stderr are mixed to a single
     file.
 
@@ -229,7 +239,10 @@ def test_tool_outputs_mixed(tmp_files, helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Tool([helper_app, "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT])
+    cmd = executable.Tool(
+        [helper_app, "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT],
+        netns=testing_namespace,
+    )
     cmd.set_outputs(str(tmp_files["stdout"]))
 
     stdout, stderr = cmd.run()
@@ -240,7 +253,7 @@ def test_tool_outputs_mixed(tmp_files, helper_app):
         assert of.read() == f"{TESTING_OUTPUT}{TESTING_OUTPUT}"
 
 
-def test_tool_outputs_separated(tmp_files, helper_app):
+def test_tool_outputs_separated(tmp_files, helper_app, testing_namespace):
     """Test of outputs setting - stdout and stderr are separated to
     different files.
 
@@ -253,7 +266,10 @@ def test_tool_outputs_separated(tmp_files, helper_app):
     """
 
     err_testing_output = f"err: {TESTING_OUTPUT}"
-    cmd = executable.Tool([helper_app, "-o", TESTING_OUTPUT, "-e", err_testing_output])
+    cmd = executable.Tool(
+        [helper_app, "-o", TESTING_OUTPUT, "-e", err_testing_output],
+        netns=testing_namespace,
+    )
     cmd.set_outputs(stdout=str(tmp_files["stdout"]), stderr=str(tmp_files["stderr"]))
 
     stdout, stderr = cmd.run()
@@ -267,7 +283,7 @@ def test_tool_outputs_separated(tmp_files, helper_app):
         assert of.read() == err_testing_output
 
 
-def test_tool_coredump(require_root, tmp_files, helper_app):
+def test_tool_coredump(require_root, tmp_files, helper_app, testing_namespace):
     """Test that a failed command produces a coredump.
 
     Parameters
@@ -280,7 +296,11 @@ def test_tool_coredump(require_root, tmp_files, helper_app):
 
     cd = coredump.Coredump()
     cd.set_output_file(tmp_files["core"])
-    cmd = executable.Tool([helper_app, "-s"], default_logger_level=logging.CRITICAL + 1)
+    cmd = executable.Tool(
+        [helper_app, "-s"],
+        default_logger_level=logging.CRITICAL + 1,
+        netns=testing_namespace,
+    )
     cmd.set_coredump(cd)
 
     with pytest.raises(subprocess.CalledProcessError, match="died with <Signals.SIGSEGV"):
@@ -289,7 +309,7 @@ def test_tool_coredump(require_root, tmp_files, helper_app):
     assert pathlib.Path(cd.get_output_file()).exists()
 
 
-def test_tool_strace(tmp_files):
+def test_tool_strace(tmp_files, testing_namespace):
     """Test that a commad produces a strace.
 
     Parameters
@@ -302,7 +322,7 @@ def test_tool_strace(tmp_files):
 
     st = strace.Strace()
     st.set_output_file(tmp_files["strace"])
-    cmd = executable.Tool(["ls", "/"])
+    cmd = executable.Tool(["ls", "/"], netns=testing_namespace)
     cmd.set_strace(st)
 
     cmd.run()
@@ -310,7 +330,7 @@ def test_tool_strace(tmp_files):
     assert pathlib.Path(st.get_output_file()).exists()
 
 
-def test_tool_strace_expressions(tmp_files):
+def test_tool_strace_expressions(tmp_files, testing_namespace):
     """Test that a commad produces a strace with specified system calls
     only.
 
@@ -326,7 +346,7 @@ def test_tool_strace_expressions(tmp_files):
     st = strace.Strace()
     st.set_output_file(tmp_files["strace"])
     st.add_expression(strace_expressions)
-    cmd = executable.Tool(["ls", "/"])
+    cmd = executable.Tool(["ls", "/"], netns=testing_namespace)
     cmd.set_strace(st)
 
     cmd.run()
@@ -335,7 +355,7 @@ def test_tool_strace_expressions(tmp_files):
     assert match_syscalls(st.get_output_file(), strace_expressions)
 
 
-def test_tool_strace_expressions_coredump(require_root, tmp_files, helper_app):
+def test_tool_strace_expressions_coredump(require_root, tmp_files, helper_app, testing_namespace):
     """Test that a commad produces a strace with specified system calls
     only together with a coredump.
 
@@ -353,7 +373,11 @@ def test_tool_strace_expressions_coredump(require_root, tmp_files, helper_app):
     st.add_expression(strace_expressions)
     cd = coredump.Coredump()
     cd.set_output_file(tmp_files["core"])
-    cmd = executable.Tool([helper_app, "-s"], default_logger_level=logging.CRITICAL + 1)
+    cmd = executable.Tool(
+        [helper_app, "-s"],
+        default_logger_level=logging.CRITICAL + 1,
+        netns=testing_namespace,
+    )
     cmd.set_strace(st)
     cmd.set_coredump(cd)
 
