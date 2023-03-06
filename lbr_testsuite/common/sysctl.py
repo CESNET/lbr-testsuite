@@ -11,7 +11,7 @@ import re
 from ..executable import executable
 
 
-def sysctl_set(variables, values):
+def sysctl_set(variables, values, netns=None):
     """Set kernel variable(s) using sysctl tool.
 
     Parameters
@@ -20,6 +20,9 @@ def sysctl_set(variables, values):
         List of variables names.
     values : list(str) or str
         List of variables values.
+    netns : str, optional
+        Network namespace name. If set, a command is executed in
+        a namespace using the "ip netns" command. Default "None".
     """
 
     if type(variables) is str:
@@ -30,16 +33,19 @@ def sysctl_set(variables, values):
     assert len(variables) == len(values)
 
     for var, val in zip(variables, values):
-        executable.Tool(["sysctl", "-w", f"{var}={val}"]).run()
+        executable.Tool(["sysctl", "-w", f"{var}={val}"], netns=netns).run()
 
 
-def sysctl_get(variables):
+def sysctl_get(variables, netns=None):
     """Get kernel variable(s) using sysctl tool.
 
     Parameters
     ----------
     variables : list(str) or str
         List of variables names.
+    netns : str, optional
+        Network namespace name. If set, a command is executed in
+        a namespace using the "ip netns" command. Default "None".
 
     Returns
     -------
@@ -61,7 +67,7 @@ def sysctl_get(variables):
         var_re = var.replace(".", "\\.")
         var_re = rf"^{var_re}\s*=\s*([0-9])+$"
 
-        stdout, _ = executable.Tool(["sysctl", var]).run()
+        stdout, _ = executable.Tool(["sysctl", var], netns=netns).run()
 
         match = re.match(var_re, stdout)
         if not match:
@@ -71,7 +77,7 @@ def sysctl_get(variables):
     return values
 
 
-def sysctl_set_with_restore(pyt_request, variables, values):
+def sysctl_set_with_restore(pyt_request, variables, values, netns=None):
     """Set kernel variable(s) using sysctl tool with restoration of
     original values.
 
@@ -85,15 +91,21 @@ def sysctl_set_with_restore(pyt_request, variables, values):
         List of variables names.
     values : list(str) or str
         List of variables values.
+    netns : str, optional
+        Network namespace name. If set, a command is executed in
+        a namespace using the "ip netns" command. Default "None".
+        Note: As in most cases a network namespace is deleted upon
+        a test cleanup, restoration of sysctl option within a namespace
+        does not make much sense.
     """
 
-    original_values = sysctl_get(variables)
+    original_values = sysctl_get(variables, netns)
 
-    sysctl_set(variables, values)
+    sysctl_set(variables, values, netns)
 
     def restore_original_values():
         """Cleanup function for restoring of original variables values."""
 
-        sysctl_set(variables, original_values)
+        sysctl_set(variables, original_values, netns)
 
     pyt_request.addfinalizer(restore_original_values)
