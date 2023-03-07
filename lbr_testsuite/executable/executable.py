@@ -108,6 +108,7 @@ class Executable:
         self._output_files = dict(stdout=None, stderr=None)
         self._sigterm_ok = sigterm_ok
         self._post_exec_fn = None
+        self._popen = subprocess.Popen
 
         if isinstance(command, str):
             self._options["shell"] = True
@@ -322,7 +323,7 @@ class Executable:
 
     def _start(self):
         try:
-            self._process = subprocess.Popen(self._cmd, **self._options)
+            self._process = self._popen(self._cmd, **self._options)
         except Exception:
             self._finalize()
             raise
