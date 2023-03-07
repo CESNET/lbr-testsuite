@@ -339,3 +339,26 @@ def test_daemon_strace_expressions_coredump(require_root, tmp_files, helper_app)
     assert pathlib.Path(st.get_output_file()).exists()
     assert pathlib.Path(cd.get_output_file()).exists()
     assert match_syscalls(st.get_output_file(), strace_expressions, segfault=True)
+
+
+def test_daemon_sigterm_error():
+    """Test that a command with return code -signal.SIGTERM produces
+    an error.
+    """
+
+    cmd = executable.Daemon(["ping", "127.0.0.1"], failure_verbosity="no-error")
+    cmd.start()
+
+    with pytest.raises(subprocess.CalledProcessError):
+        cmd.stop()
+
+
+def test_daemon_sigterm_ok():
+    """Test that a command with return code -signal.SIGTERM is allowed
+    (i.e. does not fail).
+    """
+
+    cmd = executable.Daemon(["ping", "127.0.0.1"], failure_verbosity="no-error", sigterm_ok=True)
+    cmd.start()
+
+    cmd.stop()
