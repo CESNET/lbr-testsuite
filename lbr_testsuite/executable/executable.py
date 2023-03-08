@@ -10,6 +10,7 @@ An executable module providing classes for execution of various tools
 import logging
 import os
 import pathlib
+import signal
 import subprocess
 import time
 
@@ -66,6 +67,7 @@ class Executable:
         default_logger_level=None,
         failure_verbosity="normal",
         env=None,
+        sigterm_ok=False,
     ):
         """
         Parameters
@@ -91,6 +93,12 @@ class Executable:
             of subprocess module. This option is deprecated and will
             be removed in next major version. To set environment
             variables use *_env methods.
+        sigterm_ok : bool, optional
+            Flag whether it is OK to die with "SIGTERM" return code
+            (143 in system, -signal.SIGTERM (-15) in
+            subprocess.CalledProcessError.returncode). If set to True,
+            a process which exits with code -15 is treated the same as
+            if it exits with 0. False by default.
         """
 
         assert failure_verbosity in self.FAILURE_VERBOSITY_LEVELS
@@ -98,6 +106,7 @@ class Executable:
         self._process = None
         self._options = self.DEFAULT_OPTIONS.copy()
         self._output_files = dict(stdout=None, stderr=None)
+        self._sigterm_ok = sigterm_ok
         self._post_exec_fn = None
 
         if isinstance(command, str):
@@ -260,6 +269,9 @@ class Executable:
         Otherwise command output together with errro is printed and
         an exception is reraised.
         """
+
+        if self._sigterm_ok and process_error.returncode == -signal.SIGTERM:
+            return
 
         if self._failure_verbosity == "silent":
             return
