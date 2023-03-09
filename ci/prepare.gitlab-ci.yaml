@@ -8,14 +8,3 @@ docker-build-rebuild:
     extends: docker-build
     variables: { DOCKER_OPTS: --no-cache }
     when: manual
-
-docker-tests:
-    stage: prepare
-    tags: [docker-shell]
-    variables: { DOCKER_BUILDKIT: 1 }
-    script: [docker build -t $IMAGE_TESTS -f Dockerfile.tests .]
-
-docker-tests-rebuild:
-    extends: docker-tests
-    variables: { DOCKER_OPTS: --no-cache }
-    when: manual
