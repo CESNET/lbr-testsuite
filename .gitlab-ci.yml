@@ -2,7 +2,6 @@ stages:
     - prepare
     - check
     - pytest
-    - doc
     - build
     - upload
 
@@ -13,7 +12,6 @@ include:
     - local: 'ci/prepare.gitlab-ci.yaml'
     - local: 'ci/check.gitlab-ci.yaml'
     - local: 'ci/pytest.gitlab-ci.yaml'
-    - local: 'ci/doc.gitlab-ci.yaml'
     - local: 'ci/build.gitlab-ci.yaml'
     - local: 'ci/upload.gitlab-ci.yaml'
 

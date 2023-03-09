@@ -5,3 +5,13 @@ build:
         - ls -l dist
     artifacts:
         paths: [dist]
+
+doc:
+    stage: build
+    script:
+        - make -C doc html
+    artifacts:
+        paths: [doc/build/html]
+    environment:
+        name: $CI_COMMIT_REF_SLUG/$CI_BUILD_NAME
+        url: $CI_JOB_URL/artifacts/file/doc/build/html/index.html
