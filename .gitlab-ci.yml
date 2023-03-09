@@ -1,8 +1,8 @@
 stages:
     - prepare
     - check
-    - pytest
     - build
+    - pytest
     - upload
 
 default:
@@ -11,8 +11,8 @@ default:
 include:
     - local: 'ci/prepare.gitlab-ci.yaml'
     - local: 'ci/check.gitlab-ci.yaml'
-    - local: 'ci/pytest.gitlab-ci.yaml'
     - local: 'ci/build.gitlab-ci.yaml'
+    - local: 'ci/pytest.gitlab-ci.yaml'
     - local: 'ci/upload.gitlab-ci.yaml'
 
 variables:
