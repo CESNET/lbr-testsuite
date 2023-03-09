@@ -1,0 +1,33 @@
+editorconfig:
+    stage: check
+    needs: []
+    image: mstruebing/editorconfig-checker
+    script: [ec]
+
+pycodestyle:
+    stage: check
+    needs: [docker-build]
+    script:
+        - pytest --color=yes --flake8 -m flake8 --junitxml=pycodestyle.xml lbr_testsuite | tee pycodestyle.log
+    artifacts:
+        paths: [pycodestyle.*]
+        reports: { junit: pycodestyle.xml }
+        when: always
+
+isort:
+    stage: check
+    needs: [docker-build]
+    script:
+        - isort --check-only --diff lbr_testsuite/ pytest_tests/ | tee isort.log
+    artifacts:
+        paths: [isort.log]
+        when: always
+
+black:
+    stage: check
+    needs: [docker-build]
+    script:
+        - black --check --diff lbr_testsuite/ pytest_tests/ | tee black.log
+    artifacts:
+        paths: [black.log]
+        when: always

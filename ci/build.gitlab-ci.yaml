@@ -1,0 +1,7 @@
+build:
+    stage: build
+    script:
+        - python3 -m build --wheel
+        - ls -l dist
+    artifacts:
+        paths: [dist]

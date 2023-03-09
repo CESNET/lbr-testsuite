@@ -1,0 +1,11 @@
+pytest:
+    stage: pytest
+    image: $IMAGE_TESTS
+    script:
+        - pip install .
+        - mkdir -p pytest_tests/output
+        - cd pytest_tests && pytest -m "not systemd" --color=yes --basetemp=output --log-level=debug --junitxml=report.xml $PYTESTS_ARGS | tee report.log
+    artifacts:
+        paths: [pytest_tests/output, pytest_tests/report.*]
+        reports: { junit: pytest_tests/report.xml }
+        when: always
