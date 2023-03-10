@@ -26,7 +26,8 @@ dependencies = [
     "pyroute2>=0.6.2,<1",
     "lbr_trex_client>=2.0.1",
     "stcrestclient",
-    "pytest",
+    "pytest>=7.0",
+    "pytest-cases>=3.6.11",
 ]
 dynamic = ["version"]
 
