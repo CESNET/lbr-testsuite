@@ -1,0 +1,11 @@
+---
+- name: machine synchronization enabled
+  ansible.builtin.file:
+    path: /nosync
+    state: absent
+
+- name: machine synchronization backups cleaned
+  command: /usr/local/sbin/police clean all
+
+- name: machine synchronized
+  command: /usr/local/sbin/police nobackup sync

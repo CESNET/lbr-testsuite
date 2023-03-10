@@ -1,0 +1,3 @@
+---
+- import_playbook: ready_sync.yaml
+- import_playbook: pytest.yaml

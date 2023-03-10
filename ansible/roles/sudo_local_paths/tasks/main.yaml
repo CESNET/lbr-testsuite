@@ -1,0 +1,4 @@
+---
+- name: enable running sudo on default paths
+  command: /bin/true
+  notify: write sudo secure paths

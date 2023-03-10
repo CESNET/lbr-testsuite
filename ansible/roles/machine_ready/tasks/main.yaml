@@ -1,0 +1,19 @@
+---
+- name: remote host has started
+  wait_for_connection:
+    delay: 0
+    timeout: 600
+
+- name: gather facts
+  setup:
+
+- name: got user used for login
+  command: whoami
+  changed_when: no
+  become: false
+  register: whoami
+
+- name: machine reserved for {{whoami.stdout}} (check only)
+  command: "true"
+  failed_when: whoami.stdout != reserved_by
+  changed_when: no

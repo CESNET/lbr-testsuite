@@ -1,0 +1,21 @@
+---
+- name: python38 and pip is installed
+  yum:
+    name:
+      - python38
+      - python38-pip
+      - python38-devel
+    state: latest
+  when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8'
+
+- name: set python38 environment for EL8
+  ansible.builtin.set_fact:
+    python38_env:
+      PATH: '/usr/local/bin:{{ python38_env.PATH }}'
+      LD_LIBRARY_PATH: '/usr/local/lib:/usr/local/lib64:{{ python38_env.LD_LIBRARY_PATH }}'
+
+- name: pipenv over pip is installed
+  pip:
+    executable: pip3.8
+    name: pipenv<={{ pipenv_version }}
+  environment: '{{ python38_env }}'

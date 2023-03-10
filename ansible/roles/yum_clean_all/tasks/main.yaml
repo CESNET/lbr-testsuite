@@ -1,0 +1,13 @@
+---
+- name: yum cache is cleaned
+  command: yum clean all
+  args:
+    warn: false
+
+- name: yum cache is removed
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /var/cache/yum
+    - /var/cache/dnf
