@@ -1,107 +1,21 @@
 stages:
     - prepare
     - check
-    - pytest
-    - doc
     - build
+    - pytest
     - upload
+
+default:
+    image: $IMAGE_BUILD
+
+include:
+    - local: 'ci/prepare.gitlab-ci.yaml'
+    - local: 'ci/check.gitlab-ci.yaml'
+    - local: 'ci/build.gitlab-ci.yaml'
+    - local: 'ci/pytest.gitlab-ci.yaml'
+    - local: 'ci/upload.gitlab-ci.yaml'
 
 variables:
     GIT_STRATEGY: clone
     IMAGE_BUILD: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/build"
     IMAGE_TESTS: "$CI_PROJECT_PATH_SLUG/$CI_COMMIT_REF_SLUG/tests"
-
-image: $IMAGE_BUILD
-
-docker-build:
-    stage: prepare
-    tags: [docker-shell]
-    variables: { DOCKER_BUILDKIT: 1 }
-    script: [docker build -t $IMAGE_BUILD -f Dockerfile.build .]
-
-docker-build-rebuild:
-    extends: docker-build
-    variables: { DOCKER_OPTS: --no-cache }
-    when: manual
-
-docker-tests:
-    stage: prepare
-    tags: [docker-shell]
-    variables: { DOCKER_BUILDKIT: 1 }
-    script: [docker build -t $IMAGE_TESTS -f Dockerfile.tests .]
-
-docker-tests-rebuild:
-    extends: docker-tests
-    variables: { DOCKER_OPTS: --no-cache }
-    when: manual
-
-editorconfig:
-    stage: check
-    needs: []
-    image: mstruebing/editorconfig-checker
-    script: [ec]
-
-pycodestyle:
-    stage: check
-    needs: [docker-build]
-    script:
-        - pytest --color=yes --flake8 -m flake8 --junitxml=pycodestyle.xml lbr_testsuite | tee pycodestyle.log
-    artifacts:
-        paths: [pycodestyle.*]
-        reports: { junit: pycodestyle.xml }
-        when: always
-
-isort:
-    stage: check
-    needs: [docker-build]
-    script:
-        - isort --check-only --diff lbr_testsuite/ pytest_tests/ | tee isort.log
-    artifacts:
-        paths: [isort.log]
-        when: always
-
-black:
-    stage: check
-    needs: [docker-build]
-    script:
-        - black --check --diff lbr_testsuite/ pytest_tests/ | tee black.log
-    artifacts:
-        paths: [black.log]
-        when: always
-
-pytest:
-    stage: pytest
-    image: $IMAGE_TESTS
-    script:
-        - pip install .
-        - mkdir -p pytest_tests/output
-        - cd pytest_tests && pytest -m "not systemd" --color=yes --basetemp=output --log-level=debug --junitxml=report.xml $PYTESTS_ARGS | tee report.log
-    artifacts:
-        paths: [pytest_tests/output, pytest_tests/report.*]
-        reports: { junit: pytest_tests/report.xml }
-        when: always
-
-doc:
-    stage: doc
-    script:
-        - make -C doc html
-    artifacts:
-        paths: [doc/build/html]
-    environment:
-        name: $CI_COMMIT_REF_SLUG/$CI_BUILD_NAME
-        url: $CI_JOB_URL/artifacts/file/doc/build/html/index.html
-
-build:
-    stage: build
-    script:
-        - python3 -m build --wheel
-        - ls -l dist
-    artifacts:
-        paths: [dist]
-
-upload:
-    stage: upload
-    script:
-        - TWINE_PASSWORD=${LRB_PYPI_PASSWORD} TWINE_USERNAME=${LRB_PYPI_USERNAME}
-            python3 -m twine upload --verbose --repository-url ${LBR_PYPI_REPOSITORY_URL} dist/*
-    only: ['master']

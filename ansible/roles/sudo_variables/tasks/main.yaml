@@ -1,0 +1,11 @@
+---
+- name: mandatory var_name parameter is not set
+  fail:
+    msg: Parameter var_name has to be set when using this role.
+  when: not var_name
+
+- name: ensure propagation of {{ var_name }} variable when using sudo
+  lineinfile:
+    path: /etc/sudoers.d/propagate-vars
+    line: Defaults env_keep += "{{ var_name }}"
+    create: yes

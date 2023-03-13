@@ -1,0 +1,5 @@
+---
+- name: write sudo secure paths
+  copy:
+    dest: /etc/sudoers.d/secure-path-local
+    content: "Defaults secure_path = {{ sudo_secure_paths }}\n"

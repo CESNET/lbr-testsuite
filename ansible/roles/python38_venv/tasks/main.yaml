@@ -1,0 +1,55 @@
+---
+- name: set virtual environment name
+  ansible.builtin.set_fact:
+    venv_name: pytest
+
+- name: create tmp dir for Pipfile and Pipfile.lock
+  tempfile:
+    state: directory
+    suffix: pipfiles
+  register: pipfilestmp
+
+- name: Pipfile and Pipfile.lock are copied to remote
+  copy:
+    src: '{{ item }}'
+    dest: '{{ pipfilestmp.path }}'
+  loop:
+    - '../Pipfile'
+    - '../Pipfile.lock'
+
+- name: set virtual environment path variable
+  ansible.builtin.set_fact:
+    venv_path: /opt/venv_{{ venv_name }}
+
+- name: create python38 virtual environment
+  command: python3.8 -m venv {{ venv_path }}
+  environment: '{{ python38_env }}'
+
+- name: set environment variables for created virtual environment
+  ansible.builtin.set_fact:
+    venv_evn:
+      PATH: '{{ venv_path }}/bin:{{ python38_env.PATH }}'
+      VIRTUAL_ENV: '{{ venv_path }}'
+
+- name: clear python dependencies using pipenv
+  command: pipenv clean
+  args:
+    chdir: '{{ pipfilestmp.path }}'
+  environment: '{{ venv_evn }}'
+
+- name: python dependencies over pipenv are installed
+  command: pipenv install --deploy --dev
+  args:
+    chdir: '{{ pipfilestmp.path }}'
+  environment: '{{ venv_evn }}'
+
+- name: activate virtual environment {{ venv_name }} by default
+  copy:
+    dest: /etc/profile.d/python38_venv_activate.sh
+    content: VIRTUAL_ENV_DISABLE_PROMPT=1 source {{ venv_path }}/bin/activate
+
+- name: enable running executables under sudo from virtual environment {{ venv_name }}
+  set_fact:
+    sudo_secure_paths: '{{ venv_path }}/bin:{{ sudo_secure_paths }}'
+  notify: write sudo secure paths
+  changed_when: true
