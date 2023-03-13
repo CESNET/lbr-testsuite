@@ -419,7 +419,9 @@ class Daemon(Executable):
         self._terminated = False
 
     def stop(self, timeout=30):
-        """Stop previously started command.
+        """Stop previously started command and retrieve its
+        outputs (stdout and stderr). If the command has been terminated
+        retrieve outputs only.
 
         Parameters
         ----------
@@ -434,8 +436,11 @@ class Daemon(Executable):
             subprocess.communicate() method.
         """
 
-        if self._process is None or self._terminated:
+        if self._process is None:
             return
+
+        if self._terminated:
+            return self._process.communicate()
 
         self._terminate()
         return self._wait_or_kill(timeout)
