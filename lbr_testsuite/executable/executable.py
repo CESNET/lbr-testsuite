@@ -336,7 +336,7 @@ class Executable:
             more data. Use Popen.communicate() when using pipes to
             avoid that.
             """
-            stdout, stderr = self._process.communicate(timeout)
+            stdout, stderr = self._process.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             self._process.kill()
             stdout, stderr = self._process.communicate()
