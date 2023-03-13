@@ -388,7 +388,7 @@ class Daemon(Executable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._terminated = False
+        self._terminated = None
 
     def _terminate(self):
         self._process.terminate()
