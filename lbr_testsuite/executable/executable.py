@@ -7,12 +7,15 @@ An executable module providing classes for execution of various tools
 (class Tool) and daemons (clas Daemon).
 """
 
+import functools
 import logging
 import os
 import pathlib
 import signal
 import subprocess
 import time
+
+import pyroute2
 
 
 class Executable:
@@ -68,6 +71,7 @@ class Executable:
         failure_verbosity="normal",
         env=None,
         sigterm_ok=False,
+        netns=None,
     ):
         """
         Parameters
@@ -99,6 +103,9 @@ class Executable:
             subprocess.CalledProcessError.returncode). If set to True,
             a process which exits with code -15 is treated the same as
             if it exits with 0. False by default.
+        netns : str, optional
+            Network namespace name. If set, a command is executed in
+            a namespace using the "ip netns" command. Default "None".
         """
 
         assert failure_verbosity in self.FAILURE_VERBOSITY_LEVELS
@@ -108,6 +115,10 @@ class Executable:
         self._output_files = dict(stdout=None, stderr=None)
         self._sigterm_ok = sigterm_ok
         self._post_exec_fn = None
+        self._popen = subprocess.Popen
+
+        if netns is not None:
+            self._popen = functools.partial(pyroute2.NSPopen, netns)
 
         if isinstance(command, str):
             self._options["shell"] = True
@@ -322,7 +333,7 @@ class Executable:
 
     def _start(self):
         try:
-            self._process = subprocess.Popen(self._cmd, **self._options)
+            self._process = self._popen(self._cmd, **self._options)
         except Exception:
             self._finalize()
             raise
@@ -336,7 +347,7 @@ class Executable:
             more data. Use Popen.communicate() when using pipes to
             avoid that.
             """
-            stdout, stderr = self._process.communicate(timeout)
+            stdout, stderr = self._process.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             self._process.kill()
             stdout, stderr = self._process.communicate()
@@ -388,7 +399,7 @@ class Daemon(Executable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._terminated = False
+        self._terminated = None
 
     def _terminate(self):
         self._process.terminate()
@@ -419,7 +430,9 @@ class Daemon(Executable):
         self._terminated = False
 
     def stop(self, timeout=30):
-        """Stop previously started command.
+        """Stop previously started command and retrieve its
+        outputs (stdout and stderr). If the command has been terminated
+        retrieve outputs only.
 
         Parameters
         ----------
@@ -434,8 +447,11 @@ class Daemon(Executable):
             subprocess.communicate() method.
         """
 
-        if self._process is None or self._terminated:
+        if self._process is None:
             return
+
+        if self._terminated:
+            return self._process.communicate()
 
         self._terminate()
         return self._wait_or_kill(timeout)

@@ -24,7 +24,7 @@ TESTING_OUTPUT = "I am testing myself!"
 TIME_MEASUREMENT_TOLERANCE = 0.2
 
 
-def test_daemon_simple_args(helper_app):
+def test_daemon_simple_args(helper_app, testing_namespace):
     """Test successful execution of a simple command with arguments.
 
     Passing command as a list of strings (preferred).
@@ -35,7 +35,10 @@ def test_daemon_simple_args(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, "-f", "5", "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT])
+    cmd = executable.Daemon(
+        [helper_app, "-f", "5", "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT],
+        netns=testing_namespace,
+    )
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -45,7 +48,7 @@ def test_daemon_simple_args(helper_app):
     assert stderr == TESTING_OUTPUT
 
 
-def test_daemon_simple_args_str(helper_app):
+def test_daemon_simple_args_str(helper_app, testing_namespace):
     """Test successful execution of a simple command with arguments.
 
     Passing command as a string.
@@ -56,7 +59,10 @@ def test_daemon_simple_args_str(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon(f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{TESTING_OUTPUT}"')
+    cmd = executable.Daemon(
+        f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{TESTING_OUTPUT}"',
+        netns=testing_namespace,
+    )
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -66,7 +72,7 @@ def test_daemon_simple_args_str(helper_app):
     assert stderr == TESTING_OUTPUT
 
 
-def test_daemon_finished(helper_app):
+def test_daemon_finished(helper_app, testing_namespace):
     """Test successful execution of a simple command with arguments
     which ends before it is stopped.
 
@@ -78,7 +84,10 @@ def test_daemon_finished(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT])
+    cmd = executable.Daemon(
+        [helper_app, "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT],
+        netns=testing_namespace,
+    )
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -89,7 +98,7 @@ def test_daemon_finished(helper_app):
     assert stderr == TESTING_OUTPUT
 
 
-def test_daemon_simple_args_allowed_failure(helper_app):
+def test_daemon_simple_args_allowed_failure(helper_app, testing_namespace):
     """Test of command which is allowed to fail.
 
     Parameters
@@ -99,7 +108,9 @@ def test_daemon_simple_args_allowed_failure(helper_app):
     """
 
     cmd = executable.Daemon(
-        [helper_app, "-r", "2", "-e", TESTING_OUTPUT], failure_verbosity="no-exception"
+        [helper_app, "-r", "2", "-e", TESTING_OUTPUT],
+        failure_verbosity="no-exception",
+        netns=testing_namespace,
     )
 
     cmd.start()
@@ -110,7 +121,7 @@ def test_daemon_simple_args_allowed_failure(helper_app):
     assert stderr == TESTING_OUTPUT
 
 
-def test_daemon_simple_args_expected_failure(helper_app):
+def test_daemon_simple_args_expected_failure(helper_app, testing_namespace):
     """Test of command which is expected to fail.
 
     Parameters
@@ -119,7 +130,11 @@ def test_daemon_simple_args_expected_failure(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, "-r", "2"], failure_verbosity="no-error")
+    cmd = executable.Daemon(
+        [helper_app, "-r", "2"],
+        failure_verbosity="no-error",
+        netns=testing_namespace,
+    )
 
     with pytest.raises(subprocess.CalledProcessError):
         cmd.start()
@@ -127,7 +142,7 @@ def test_daemon_simple_args_expected_failure(helper_app):
         cmd.stop()
 
 
-def test_daemon_is_running(helper_app):
+def test_daemon_is_running(helper_app, testing_namespace):
     """Test that running command check is working - running command.
 
     Parameters
@@ -139,7 +154,10 @@ def test_daemon_is_running(helper_app):
     outputs_interval = 3
     outputs_multiplier = 2
     test_duration = outputs_multiplier * outputs_interval + 2
-    cmd = executable.Daemon([helper_app, "-f", str(outputs_interval), "-o", TESTING_OUTPUT])
+    cmd = executable.Daemon(
+        [helper_app, "-f", str(outputs_interval), "-o", TESTING_OUTPUT],
+        netns=testing_namespace,
+    )
 
     cmd.start()
     time.sleep(test_duration)  # wait some time so helper_app can register signal handlers
@@ -152,7 +170,7 @@ def test_daemon_is_running(helper_app):
     assert stderr == ""
 
 
-def test_daemon_is_running_wait(helper_app):
+def test_daemon_is_running_wait(helper_app, testing_namespace):
     """Test that the 'is_running()' method correctly waits the specified amount
     of time before checking command status. The command should be active.
 
@@ -165,7 +183,10 @@ def test_daemon_is_running_wait(helper_app):
     outputs_interval = 3
     outputs_multiplier = 2
     test_duration = outputs_multiplier * outputs_interval + 2
-    cmd = executable.Daemon([helper_app, "-f", str(outputs_interval), "-o", TESTING_OUTPUT])
+    cmd = executable.Daemon(
+        [helper_app, "-f", str(outputs_interval), "-o", TESTING_OUTPUT],
+        netns=testing_namespace,
+    )
 
     cmd.start()
     t_start = time.time()
@@ -180,7 +201,7 @@ def test_daemon_is_running_wait(helper_app):
     assert stderr == ""
 
 
-def test_daemon_not_running(helper_app):
+def test_daemon_not_running(helper_app, testing_namespace):
     """Test that running command check is working - exited command.
 
     Parameters
@@ -189,7 +210,7 @@ def test_daemon_not_running(helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon([helper_app, "-o", TESTING_OUTPUT])
+    cmd = executable.Daemon([helper_app, "-o", TESTING_OUTPUT], netns=testing_namespace)
 
     cmd.start()
     time.sleep(1)  # wait some time so helper_app can register signal handlers
@@ -201,7 +222,7 @@ def test_daemon_not_running(helper_app):
     assert stderr == ""
 
 
-def test_daemon_outputs_mixed(tmp_files, helper_app):
+def test_daemon_outputs_mixed(tmp_files, helper_app, testing_namespace):
     """Test of outputs setting - stdout and stderr are mixed to a single
     file.
 
@@ -213,7 +234,10 @@ def test_daemon_outputs_mixed(tmp_files, helper_app):
         Path to the testing helper application in a form of string.
     """
 
-    cmd = executable.Daemon(f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{TESTING_OUTPUT}"')
+    cmd = executable.Daemon(
+        f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{TESTING_OUTPUT}"',
+        netns=testing_namespace,
+    )
     cmd.set_outputs(str(tmp_files["stdout"]))
 
     cmd.start()
@@ -226,7 +250,7 @@ def test_daemon_outputs_mixed(tmp_files, helper_app):
         assert of.read() == f"{TESTING_OUTPUT}{TESTING_OUTPUT}"
 
 
-def test_daemon_outputs_separated(tmp_files, helper_app):
+def test_daemon_outputs_separated(tmp_files, helper_app, testing_namespace):
     """Test of outputs setting - stdout and stderr are separated to
     different files.
 
@@ -239,7 +263,10 @@ def test_daemon_outputs_separated(tmp_files, helper_app):
     """
 
     err_testing_output = f"err: {TESTING_OUTPUT}"
-    cmd = executable.Daemon(f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{err_testing_output}"')
+    cmd = executable.Daemon(
+        f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{err_testing_output}"',
+        netns=testing_namespace,
+    )
     cmd.set_outputs(stdout=str(tmp_files["stdout"]), stderr=str(tmp_files["stderr"]))
 
     cmd.start()
@@ -255,7 +282,7 @@ def test_daemon_outputs_separated(tmp_files, helper_app):
         assert of.read() == err_testing_output
 
 
-def test_daemon_coredump(require_root, tmp_files, helper_app):
+def test_daemon_coredump(require_root, tmp_files, helper_app, testing_namespace):
     """Test that a failed command produces a coredump.
 
     Parameters
@@ -269,7 +296,9 @@ def test_daemon_coredump(require_root, tmp_files, helper_app):
     cd = coredump.Coredump()
     cd.set_output_file(tmp_files["core"])
     cmd = executable.Daemon(
-        [helper_app, "-f", "2", "-s"], default_logger_level=logging.CRITICAL + 1
+        [helper_app, "-f", "2", "-s"],
+        default_logger_level=logging.CRITICAL + 1,
+        netns=testing_namespace,
     )
     cmd.set_coredump(cd)
 
@@ -282,7 +311,7 @@ def test_daemon_coredump(require_root, tmp_files, helper_app):
     assert pathlib.Path(cd.get_output_file()).exists()
 
 
-def test_daemon_strace(tmp_files, helper_app):
+def test_daemon_strace(tmp_files, helper_app, testing_namespace):
     """Test that a commad produces a strace.
 
     Parameters
@@ -295,7 +324,7 @@ def test_daemon_strace(tmp_files, helper_app):
 
     st = strace.Strace()
     st.set_output_file(tmp_files["strace"])
-    cmd = executable.Daemon([helper_app, "-f", "2"])
+    cmd = executable.Daemon([helper_app, "-f", "2"], netns=testing_namespace)
     cmd.set_strace(st)
 
     cmd.start()
@@ -306,7 +335,7 @@ def test_daemon_strace(tmp_files, helper_app):
     assert pathlib.Path(st.get_output_file()).exists()
 
 
-def test_daemon_strace_expressions_coredump(require_root, tmp_files, helper_app):
+def test_daemon_strace_expressions_coredump(require_root, tmp_files, helper_app, testing_namespace):
     """Test that a commad produces a strace with specified system calls
     only together with a coredump.
 
@@ -325,7 +354,9 @@ def test_daemon_strace_expressions_coredump(require_root, tmp_files, helper_app)
     cd = coredump.Coredump()
     cd.set_output_file(tmp_files["core"])
     cmd = executable.Daemon(
-        [helper_app, "-f", "2", "-s"], default_logger_level=logging.CRITICAL + 1
+        [helper_app, "-f", "2", "-s"],
+        default_logger_level=logging.CRITICAL + 1,
+        netns=testing_namespace,
     )
     cmd.set_strace(st)
     cmd.set_coredump(cd)

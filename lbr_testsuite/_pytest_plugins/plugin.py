@@ -19,4 +19,4 @@ def require_root():
     euid = os.geteuid()
 
     if euid != 0:
-        raise pytest.skip(f"insufficient permissions, euid: {euid}")
+        pytest.skip(f"insufficient permissions, euid: {euid}")
