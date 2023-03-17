@@ -33,7 +33,8 @@ def sysctl_set(variables, values, netns=None):
     assert len(variables) == len(values)
 
     for var, val in zip(variables, values):
-        executable.Tool(["sysctl", "-w", f"{var}={val}"], netns=netns).run()
+        cmd = executable.Tool(["sysctl", "-w", f"{var}={val}"], netns=netns)
+        cmd.run()
 
 
 def sysctl_get(variables, netns=None):
@@ -67,7 +68,8 @@ def sysctl_get(variables, netns=None):
         var_re = var.replace(".", "\\.")
         var_re = rf"^{var_re}\s*=\s*([0-9])+$"
 
-        stdout, _ = executable.Tool(["sysctl", var], netns=netns).run()
+        cmd = executable.Tool(["sysctl", var], netns=netns)
+        stdout, _ = cmd.run()
 
         match = re.match(var_re, stdout)
         if not match:
