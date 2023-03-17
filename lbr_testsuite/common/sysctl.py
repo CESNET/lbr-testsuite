@@ -11,7 +11,7 @@ import re
 from ..executable import executable
 
 
-def sysctl_set(variables, values, netns=None):
+def sysctl_set(variables, values, netns=None, failure_verbosity=None):
     """Set kernel variable(s) using sysctl tool.
 
     Parameters
@@ -23,6 +23,9 @@ def sysctl_set(variables, values, netns=None):
     netns : str, optional
         Network namespace name. If set, a command is executed in
         a namespace using the "ip netns" command. Default "None".
+    failure_verbosity : str, optional
+        Failure verbosity of this command. For more details see
+        executable.FAILURE_VERBOSITY_LEVELS.
 
     Returns
     -------
@@ -41,6 +44,8 @@ def sysctl_set(variables, values, netns=None):
 
     for var, val in zip(variables, values):
         cmd = executable.Tool(["sysctl", "-w", f"{var}={val}"], netns=netns)
+        if failure_verbosity:
+            cmd.set_failure_verbosity(failure_verbosity)
         cmd.run()
         if cmd.returncode() == 0:
             variables_set_ok += 1
@@ -48,7 +53,7 @@ def sysctl_set(variables, values, netns=None):
     return variables_set_ok
 
 
-def sysctl_get(variables, netns=None):
+def sysctl_get(variables, netns=None, failure_verbosity=None):
     """Get kernel variable(s) using sysctl tool.
 
     Parameters
@@ -58,6 +63,9 @@ def sysctl_get(variables, netns=None):
     netns : str, optional
         Network namespace name. If set, a command is executed in
         a namespace using the "ip netns" command. Default "None".
+    failure_verbosity : str, optional
+        Failure verbosity of this command. For more details see
+        executable.FAILURE_VERBOSITY_LEVELS.
 
     Returns
     -------
@@ -80,7 +88,11 @@ def sysctl_get(variables, netns=None):
         var_re = rf"^{var_re}\s*=\s*([0-9])+$"
 
         cmd = executable.Tool(["sysctl", var], netns=netns)
+        if failure_verbosity:
+            cmd.set_failure_verbosity(failure_verbosity)
         stdout, _ = cmd.run()
+        if cmd.returncode() != 0:
+            continue
 
         match = re.match(var_re, stdout)
         if not match:
@@ -90,7 +102,7 @@ def sysctl_get(variables, netns=None):
     return values
 
 
-def sysctl_set_with_restore(pyt_request, variables, values, netns=None):
+def sysctl_set_with_restore(pyt_request, variables, values, netns=None, failure_verbosity=None):
     """Set kernel variable(s) using sysctl tool with restoration of
     original values.
 
@@ -110,6 +122,9 @@ def sysctl_set_with_restore(pyt_request, variables, values, netns=None):
         Note: As in most cases a network namespace is deleted upon
         a test cleanup, restoration of sysctl option within a namespace
         does not make much sense.
+    failure_verbosity : str, optional
+        Failure verbosity of this command. For more details see
+        executable.FAILURE_VERBOSITY_LEVELS.
 
     Returns
     -------
@@ -117,16 +132,16 @@ def sysctl_set_with_restore(pyt_request, variables, values, netns=None):
         Count of variables successfully set.
     """
 
-    original_values = sysctl_get(variables, netns)
+    original_values = sysctl_get(variables, netns, failure_verbosity)
 
     def restore_original_values():
         """Cleanup function for restoring of original variables values."""
 
-        sysctl_set(variables, original_values, netns)
+        sysctl_set(variables, original_values, netns, failure_verbosity)
 
     pyt_request.addfinalizer(restore_original_values)
 
-    variables_set = sysctl_set(variables, values, netns)
+    variables_set = sysctl_set(variables, values, netns, failure_verbosity)
 
     original_values_cnt = len(original_values)  # because of assert formatting by black ...
     assert (
