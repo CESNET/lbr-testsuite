@@ -222,6 +222,94 @@ def test_daemon_not_running(helper_app, testing_namespace):
     assert stderr == ""
 
 
+def test_daemon_returncode_finished(helper_app, testing_namespace):
+    """Test return code of successful execution of a simple command
+    which ends before it is stopped.
+
+    Passing command as a list of strings (preferred).
+
+    Parameters
+    ----------
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    """
+
+    cmd = executable.Daemon([helper_app], netns=testing_namespace)
+
+    cmd.start()
+    time.sleep(1)  # wait some time so helper_app can register signal handlers
+    assert not cmd.is_running()
+
+    assert cmd.returncode() == 0
+
+
+def test_daemon_returncode_stopped(helper_app, testing_namespace):
+    """Test return code of successful execution of a simple command
+    terminated by stop() method.
+
+    Passing command as a list of strings (preferred).
+
+    Parameters
+    ----------
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    """
+
+    cmd = executable.Daemon([helper_app, "-f", "5"], netns=testing_namespace)
+
+    cmd.start()
+    time.sleep(1)  # wait some time so helper_app can register signal handlers
+    assert cmd.is_running()
+    cmd.stop()
+
+    assert cmd.returncode() == 0
+
+
+def test_daemon_returncode_none(helper_app, testing_namespace):
+    """Test return code of all stages of successful execution of
+    a simple command terminated by stop() method.
+
+    Passing command as a list of strings (preferred).
+
+    Parameters
+    ----------
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    """
+
+    cmd = executable.Daemon([helper_app, "-f", "5"], netns=testing_namespace)
+
+    assert cmd.returncode() is None
+
+    cmd.start()
+    time.sleep(1)  # wait some time so helper_app can register signal handlers
+    assert cmd.is_running()
+    assert cmd.returncode() is None
+
+    cmd.stop()
+
+    assert cmd.returncode() == 0
+
+
+def test_daemon_returncode_expected_failure(helper_app, testing_namespace):
+    """Test return code of failed command."""
+
+    exp_retcode = 2
+
+    cmd = executable.Daemon(
+        [helper_app, "-f", "5", "-r", str(exp_retcode)],
+        failure_verbosity="no-error",
+        netns=testing_namespace,
+    )
+
+    with pytest.raises(subprocess.CalledProcessError):
+        cmd.start()
+        time.sleep(1)  # wait some time so helper_app can register signal handlers
+        cmd.stop()
+
+    assert cmd.returncode() == exp_retcode
+
+
 def test_daemon_outputs_mixed(tmp_files, helper_app, testing_namespace):
     """Test of outputs setting - stdout and stderr are mixed to a single
     file.
