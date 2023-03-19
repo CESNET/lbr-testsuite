@@ -23,6 +23,11 @@ def sysctl_set(variables, values, netns=None):
     netns : str, optional
         Network namespace name. If set, a command is executed in
         a namespace using the "ip netns" command. Default "None".
+
+    Returns
+    -------
+    int
+        Count of variables successfully set.
     """
 
     if type(variables) is str:
@@ -32,9 +37,15 @@ def sysctl_set(variables, values, netns=None):
 
     assert len(variables) == len(values)
 
+    variables_set_ok = 0
+
     for var, val in zip(variables, values):
         cmd = executable.Tool(["sysctl", "-w", f"{var}={val}"], netns=netns)
         cmd.run()
+        if cmd.returncode() == 0:
+            variables_set_ok += 1
+
+    return variables_set_ok
 
 
 def sysctl_get(variables, netns=None):
@@ -99,6 +110,11 @@ def sysctl_set_with_restore(pyt_request, variables, values, netns=None):
         Note: As in most cases a network namespace is deleted upon
         a test cleanup, restoration of sysctl option within a namespace
         does not make much sense.
+
+    Returns
+    -------
+    int
+        Count of variables successfully set.
     """
 
     original_values = sysctl_get(variables, netns)
@@ -110,4 +126,11 @@ def sysctl_set_with_restore(pyt_request, variables, values, netns=None):
 
     pyt_request.addfinalizer(restore_original_values)
 
-    sysctl_set(variables, values, netns)
+    variables_set = sysctl_set(variables, values, netns)
+
+    original_values_cnt = len(original_values)  # because of assert formatting by black ...
+    assert (
+        variables_set == original_values_cnt
+    ), "Count of variables to restore differs from count of variables set."
+
+    return variables_set
