@@ -103,11 +103,11 @@ def sysctl_set_with_restore(pyt_request, variables, values, netns=None):
 
     original_values = sysctl_get(variables, netns)
 
-    sysctl_set(variables, values, netns)
-
     def restore_original_values():
         """Cleanup function for restoring of original variables values."""
 
         sysctl_set(variables, original_values, netns)
 
     pyt_request.addfinalizer(restore_original_values)
+
+    sysctl_set(variables, values, netns)
