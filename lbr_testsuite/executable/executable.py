@@ -361,6 +361,21 @@ class Executable:
 
         return stdout, stderr
 
+    def returncode(self):
+        """Get return code of an executable.
+
+        Returns
+        -------
+        int
+            Return-code or "None" if an executable was not started
+            or did not finish yet.
+        """
+
+        if self._process:
+            return self._process.returncode
+
+        return None
+
 
 class Tool(Executable):
     """Class for command execution.

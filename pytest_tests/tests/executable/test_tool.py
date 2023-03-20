@@ -172,6 +172,77 @@ def test_tool_simple_args_expected_failure(helper_app, testing_namespace):
         cmd.run()
 
 
+def test_tool_returncode_none(helper_app, testing_namespace):
+    """Test that return code is None when executable was not started."""
+
+    cmd = executable.Tool(
+        [helper_app],
+        netns=testing_namespace,
+    )
+
+    assert cmd.returncode() is None
+
+
+def test_tool_returncode_ok(helper_app, testing_namespace):
+    """Test that return code is None when executable was not started."""
+
+    cmd = executable.Tool(
+        [helper_app],
+        netns=testing_namespace,
+    )
+
+    cmd.run()
+
+    assert cmd.returncode() == 0
+
+
+def test_tool_returncode_repeatable(helper_app, testing_namespace):
+    """Test that return code is accessible repeatedly."""
+
+    cmd = executable.Tool(
+        [helper_app],
+        netns=testing_namespace,
+    )
+
+    cmd.run()
+
+    assert cmd.returncode() == 0
+    assert cmd.returncode() == 0
+
+
+def test_tool_returncode_expected_failure(helper_app, testing_namespace):
+    """Test return code of a command which is expected to fail."""
+
+    exp_retcode = 2
+
+    cmd = executable.Tool(
+        [helper_app, "-r", str(exp_retcode)],
+        failure_verbosity="no-error",
+        netns=testing_namespace,
+    )
+
+    with pytest.raises(subprocess.CalledProcessError):
+        cmd.run()
+
+    assert cmd.returncode() == exp_retcode
+
+
+def test_tool_returncode_allowed_failure(helper_app, testing_namespace):
+    """Test return code of a command which is expected to fail."""
+
+    exp_retcode = 2
+
+    cmd = executable.Tool(
+        [helper_app, "-r", str(exp_retcode)],
+        failure_verbosity="no-exception",
+        netns=testing_namespace,
+    )
+
+    cmd.run()
+
+    assert cmd.returncode() == exp_retcode
+
+
 def test_tool_env(testing_namespace):
     """Test of environment variable setup."""
 
