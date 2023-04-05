@@ -347,6 +347,46 @@ def ifc_set_master(
         ipr.link("set", index=index, master=master_index)
 
 
+def ifc_get_master_name(
+    slave_name,
+    namespace=None,
+):
+    """Get the name of master interface of the specified slave interface.
+
+    Parameters
+    ----------
+    slave_name : str
+        Name of the slave interface.
+    namespace : str, optional
+        Name of the namespace to operate in.
+
+    Returns
+    -------
+    str or None
+        Name of the master interface.
+        None if interface does not have a master.
+    """
+
+    with _get_ipr_context(namespace) as ipr:
+        links = ipr.get_links(ifname=slave_name)
+
+        if not links:
+            raise RuntimeError(f"No such interface '{slave_name}' in namespace '{namespace}'.")
+
+        ifc = links[0]
+        index = ifc.get_attr("IFLA_MASTER")
+        if not index:
+            return None
+
+        master_links = ipr.get_links(index=index)
+
+    if not master_links:
+        raise RuntimeError(f"Interface with index {index} does not exist")
+
+    master = master_links[0]
+    return master.get_attr("IFLA_IFNAME")
+
+
 def ifc_carrier(ifc_name, namespace=None):
     """Get interface carrier.
 
