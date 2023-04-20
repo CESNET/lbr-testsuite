@@ -1,5 +1,5 @@
 """
-Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, Dominik Tran <tran@cesnet.cz>
 
 Copyright: (C) 2021 CESNET, z.s.p.o.
 
@@ -14,9 +14,42 @@ import pyroute2
 import pytest
 import pytest_cases
 
+from lbr_testsuite.executable.local_executor import LocalExecutor
+from lbr_testsuite.executable.remote_executor import RemoteExecutor
+
 
 def _this_test_dir():
     return pathlib.Path(__file__).parent.resolve()
+
+
+@pytest_cases.fixture(scope="session")
+@pytest_cases.parametrize("executor", ["local", "remote"], idgen=pytest_cases.AUTO)
+def executor(request, executor):
+    """Return executor.
+
+    Parameters
+    ----------
+    executor : str
+        Type of executor to use.
+        It is either 'local' or 'remote' executor.
+
+    Returns
+    -------
+    LocalExecutor or RemoteExecutor
+        Executor.
+    """
+
+    if executor == "local":
+        yield LocalExecutor()
+    elif executor == "remote":
+        remote_host = request.config.getoption("remote_host")
+
+        if remote_host is None:
+            pytest.skip(f"remote host not specified")
+
+        remote_executor = RemoteExecutor(remote_host)
+        yield remote_executor
+        remote_executor.close()
 
 
 @pytest_cases.fixture(scope="session")
