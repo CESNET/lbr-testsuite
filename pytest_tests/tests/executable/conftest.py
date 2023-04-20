@@ -10,12 +10,13 @@ import os
 import pathlib
 import subprocess
 
-import pyroute2
 import pytest
 import pytest_cases
 
+from lbr_testsuite.executable.executable import Tool
 from lbr_testsuite.executable.local_executor import LocalExecutor
 from lbr_testsuite.executable.remote_executor import RemoteExecutor
+from lbr_testsuite.executable.rsync import Rsync
 
 
 def _this_test_dir():
@@ -53,7 +54,7 @@ def executor(request, executor):
 
 
 @pytest_cases.fixture(scope="session")
-def helper_app(tmp_path_factory):
+def helper_app(tmp_path_factory, executor):
     """Path to testing helper application.
 
     Parameters
@@ -61,6 +62,8 @@ def helper_app(tmp_path_factory):
     tmp_path_factory : pytest.TempPathFactory
         Session-scoped fixture for acquiring of tests temporary
         directory.
+    executor : executable.Executor
+        Executor to use.
 
     Returns
     -------
@@ -71,6 +74,8 @@ def helper_app(tmp_path_factory):
     app_source = str(_this_test_dir() / "helper" / "helper_app.c")
     app = str(tmp_path_factory.getbasetemp() / "helper_app")
     subprocess.run(["gcc", app_source, "-o", app], check=True)
+
+    app = Rsync(executor).push_path(app)
 
     return app
 
@@ -138,14 +143,15 @@ def match_syscalls(file_path, expressions, segfault=False):
 
 @pytest_cases.fixture
 @pytest_cases.parametrize("netns", [None, "lbr_testsuite_ns"], idgen=pytest_cases.AUTO)
-def testing_namespace(netns):
+def testing_namespace(netns, executor):
     if netns:
         if os.geteuid() != 0:
             pytest.skip(f"namespaces are usable only under the root")
 
-        pyroute2.netns.create(netns)
+        Tool(["ip", "netns", "add", netns], executor=executor).run()
         yield netns
-        pyroute2.netns.remove(netns)
+        Tool(["ip", "netns", "delete", netns], executor=executor).run()
+
     else:
         yield None
 
