@@ -28,6 +28,7 @@ dependencies = [
     "stcrestclient",
     "pytest>=7.0",
     "pytest-cases>=3.6.11",
+    "fabric>=3.0.0",
 ]
 dynamic = ["version"]
 
