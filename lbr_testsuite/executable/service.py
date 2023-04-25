@@ -2,6 +2,7 @@
 Author(s):
 Pavel Krobot <Pavel.Krobot@cesnet.cz>
 Kamil Vojanec <vojanec@cesnet.cz>
+Dominik Tran <tran@cesnet.cz>
 
 Copyright: (C) 2023 CESNET, z.s.p.o.
 
@@ -10,7 +11,6 @@ A module providing class for using systemd services.
 
 
 import logging
-import subprocess
 import time
 from datetime import datetime
 
@@ -114,7 +114,7 @@ class Service:
         cmd = executable.Tool(["systemctl", action, self._name])
         try:
             cmd.run()
-        except subprocess.CalledProcessError:
+        except executable.ExecutableProcessError:
             self._log_failure()
 
     def _start_or_restart(self, blocking, restart=False):
@@ -141,7 +141,7 @@ class Service:
 
         Raises
         ------
-        subprocess.CalledProcessError
+        executable.ExecutableProcessError
             Service failed on startup.
         RuntimeError
             Blocking start timeout expired and service did not start.
@@ -163,7 +163,7 @@ class Service:
 
         Raises
         ------
-        subprocess.CalledProcessError
+        executable.ExecutableProcessError
             Service failed when command was issued.
         RuntimeError
             Blocking start timeout expired and service did not stop.
@@ -192,7 +192,7 @@ class Service:
 
         Raises
         ------
-        subprocess.CalledProcessError
+        executable.ExecutableProcessError
             Service failed when command was issued.
         RuntimeError
             Blocking start timeout expired and service did not stop.
@@ -208,7 +208,7 @@ class Service:
 
         Raises
         ------
-        subprocess.CalledProcessError
+        executable.ExecutableProcessError
             Service failed when command was issued.
         """
 
