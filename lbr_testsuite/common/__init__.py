@@ -1,6 +1,7 @@
 from .common import (
     case_name_contains,
     compose_output_path,
+    get_real_user,
     local_tests,
     wait_until_condition,
 )
@@ -15,4 +16,5 @@ __all__ = [
     "compose_output_path",
     "local_tests",
     "case_name_contains",
+    "get_real_user",
 ]

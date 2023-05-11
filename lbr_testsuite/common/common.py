@@ -1,11 +1,12 @@
 """
-Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, Dominik Tran <tran@cesnet.cz>
 
 Copyright: (C) 2020-2021 CESNET, z.s.p.o.
 
 Common function for all components.
 """
 
+import os
 import time
 from pathlib import Path
 
@@ -119,3 +120,18 @@ def case_name_contains(item, name_parts):
         if name_part not in item.name:
             return False
     return True
+
+
+def get_real_user():
+    """Get real user name (even when running under root).
+
+    Returns
+    -------
+    str
+        User name.
+    """
+
+    if os.getenv("USER") == "root":
+        return os.getenv("SUDO_USER")
+
+    return os.getenv("USER")
