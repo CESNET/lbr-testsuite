@@ -347,7 +347,7 @@ def test_daemon_returncode_expected_failure(helper_app, testing_namespace, execu
     assert cmd.returncode() == exp_retcode
 
 
-def test_daemon_outputs_mixed(tmp_files, helper_app, testing_namespace):
+def test_daemon_outputs_mixed(tmp_files, helper_app, testing_namespace, executor):
     """Test of outputs setting - stdout and stderr are mixed to a single
     file.
 
@@ -357,11 +357,14 @@ def test_daemon_outputs_mixed(tmp_files, helper_app, testing_namespace):
         Paths to temporary output paths.
     helper_app : str
         Path to the testing helper application in a form of string.
+    executor : executable.Executor
+        Executor to use.
     """
 
     cmd = executable.Daemon(
         f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{TESTING_OUTPUT}"',
         netns=testing_namespace,
+        executor=executor,
     )
     cmd.set_outputs(str(tmp_files["stdout"]))
 
@@ -369,13 +372,17 @@ def test_daemon_outputs_mixed(tmp_files, helper_app, testing_namespace):
     time.sleep(1)  # wait some time so helper_app can register signal handlers
     stdout, stderr = cmd.stop()
 
-    assert stdout is None and stderr is None
+    assert stdout is "" and stderr is ""
     assert tmp_files["stdout"].exists()
     with open(tmp_files["stdout"], "r") as of:
-        assert of.read() == f"{TESTING_OUTPUT}{TESTING_OUTPUT}"
+        if isinstance(executor, LocalExecutor):
+            assert of.read() == f"{TESTING_OUTPUT}{TESTING_OUTPUT}"
+        else:
+            # ^C is filtered in stdout, but not in file output
+            assert of.read() == f"{TESTING_OUTPUT}{TESTING_OUTPUT}^C"
 
 
-def test_daemon_outputs_separated(tmp_files, helper_app, testing_namespace):
+def test_daemon_outputs_separated(tmp_files, helper_app, testing_namespace, executor):
     """Test of outputs setting - stdout and stderr are separated to
     different files.
 
@@ -385,12 +392,18 @@ def test_daemon_outputs_separated(tmp_files, helper_app, testing_namespace):
         Paths to temporary output paths.
     helper_app : str
         Path to the testing helper application in a form of string.
+    executor : executable.Executor
+        Executor to use.
     """
+
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"remote executor does not support setting stderr")
 
     err_testing_output = f"err: {TESTING_OUTPUT}"
     cmd = executable.Daemon(
         f'{helper_app} -f 5 -o "{TESTING_OUTPUT}" -e "{err_testing_output}"',
         netns=testing_namespace,
+        executor=executor,
     )
     cmd.set_outputs(stdout=str(tmp_files["stdout"]), stderr=str(tmp_files["stderr"]))
 
@@ -398,13 +411,20 @@ def test_daemon_outputs_separated(tmp_files, helper_app, testing_namespace):
     time.sleep(1)  # wait some time so helper_app can register signal handlers
     stdout, stderr = cmd.stop()
 
-    assert stdout is None and stderr is None
+    assert stdout is "" and stderr is ""
     assert tmp_files["stdout"].exists()
     assert tmp_files["stderr"].exists()
     with open(tmp_files["stdout"], "r") as of:
-        assert of.read() == TESTING_OUTPUT
+        if isinstance(executor, LocalExecutor):
+            assert of.read() == TESTING_OUTPUT
+        else:
+            # ^C is filtered in stdout, but not in file output
+            assert of.read() == err_testing_output + TESTING_OUTPUT + "^C"
     with open(tmp_files["stderr"], "r") as of:
-        assert of.read() == err_testing_output
+        if isinstance(executor, LocalExecutor):
+            assert of.read() == err_testing_output
+        else:
+            assert of.read() == ""
 
 
 def test_daemon_coredump(require_root, tmp_files, helper_app, testing_namespace, executor):
