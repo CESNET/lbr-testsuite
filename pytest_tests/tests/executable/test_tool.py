@@ -309,7 +309,7 @@ def test_tool_cwd(tmp_path, testing_namespace, executor):
     assert stderr == ""
 
 
-def test_tool_outputs_mixed(tmp_files, helper_app, testing_namespace):
+def test_tool_outputs_mixed(tmp_files, helper_app, testing_namespace, executor):
     """Test of outputs setting - stdout and stderr are mixed to a single
     file.
 
@@ -319,23 +319,26 @@ def test_tool_outputs_mixed(tmp_files, helper_app, testing_namespace):
         Paths to temporary output paths.
     helper_app : str
         Path to the testing helper application in a form of string.
+    executor : executable.Executor
+        Executor to use.
     """
 
     cmd = executable.Tool(
         [helper_app, "-o", TESTING_OUTPUT, "-e", TESTING_OUTPUT],
         netns=testing_namespace,
+        executor=executor,
     )
     cmd.set_outputs(str(tmp_files["stdout"]))
 
     stdout, stderr = cmd.run()
 
-    assert stdout is None and stderr is None
+    assert stdout == "" and stderr == ""
     assert tmp_files["stdout"].exists()
     with open(tmp_files["stdout"], "r") as of:
         assert of.read() == f"{TESTING_OUTPUT}{TESTING_OUTPUT}"
 
 
-def test_tool_outputs_separated(tmp_files, helper_app, testing_namespace):
+def test_tool_outputs_separated(tmp_files, helper_app, testing_namespace, executor):
     """Test of outputs setting - stdout and stderr are separated to
     different files.
 
@@ -345,24 +348,37 @@ def test_tool_outputs_separated(tmp_files, helper_app, testing_namespace):
         Paths to temporary output paths.
     helper_app : str
         Path to the testing helper application in a form of string.
+    executor : executable.Executor
+        Executor to use.
     """
+
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"remote executor does not support setting stderr")
 
     err_testing_output = f"err: {TESTING_OUTPUT}"
     cmd = executable.Tool(
         [helper_app, "-o", TESTING_OUTPUT, "-e", err_testing_output],
         netns=testing_namespace,
+        executor=executor,
     )
     cmd.set_outputs(stdout=str(tmp_files["stdout"]), stderr=str(tmp_files["stderr"]))
 
     stdout, stderr = cmd.run()
 
-    assert stdout is None and stderr is None
+    assert stdout == "" and stderr == ""
     assert tmp_files["stdout"].exists()
     assert tmp_files["stderr"].exists()
     with open(tmp_files["stdout"], "r") as of:
-        assert of.read() == TESTING_OUTPUT
+        if isinstance(executor, LocalExecutor):
+            assert of.read() == TESTING_OUTPUT
+        else:
+            assert of.read() == err_testing_output + TESTING_OUTPUT
+
     with open(tmp_files["stderr"], "r") as of:
-        assert of.read() == err_testing_output
+        if isinstance(executor, LocalExecutor):
+            assert of.read() == err_testing_output
+        else:
+            assert of.read() == ""
 
 
 def test_tool_coredump(require_root, tmp_files, helper_app, testing_namespace, executor):
