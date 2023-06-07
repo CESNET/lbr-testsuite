@@ -572,3 +572,28 @@ def test_daemon_sigterm_ok(executor):
     cmd.start()
 
     cmd.stop()
+
+
+def test_daemon_explicit_sudo(helper_app, testing_namespace, executor, require_nonroot):
+    """Test that command started with sudo is terminated properly.
+
+    Parameters
+    ----------
+    helper_app : str
+        Path to the testing helper application in a form of string.
+    executor : executable.Executor
+        Executor to use.
+    """
+
+    cmd = executable.Daemon(
+        [helper_app, "-f", "1", "-o", TESTING_OUTPUT],
+        netns=testing_namespace,
+        executor=executor,
+        sudo=True,
+    )
+
+    cmd.start()
+    time.sleep(1)  # wait some time so helper_app can register signal handlers
+    assert cmd.is_running()
+    cmd.stop()
+    assert not cmd.is_running()
