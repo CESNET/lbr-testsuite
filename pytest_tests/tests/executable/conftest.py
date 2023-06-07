@@ -148,3 +148,13 @@ def testing_namespace(netns):
         pyroute2.netns.remove(netns)
     else:
         yield None
+
+
+@pytest_cases.fixture(scope="session")
+def require_nonroot():
+    """Fixture checking whether a test is not running under the root."""
+
+    euid = os.geteuid()
+
+    if euid == 0:
+        pytest.skip(f"test must run under non-root")
