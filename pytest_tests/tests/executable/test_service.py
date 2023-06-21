@@ -8,12 +8,15 @@ Copyright: (C) 2023 CESNET, z.s.p.o.
 Testing of executable module Service class.
 """
 
+import functools
 import pathlib
 import subprocess
 import time
+from datetime import datetime
 
 import pytest
 
+import lbr_testsuite
 from lbr_testsuite.executable import Service, executable
 
 
@@ -307,4 +310,77 @@ def test_service_is_active_after_2s_delay_exit(helper_srv_delay_exit):
     assert not srv.is_active(after=3)
     t_diff = time.time() - t_start
     assert t_diff > 3 and t_diff < 3 + TIME_MEASUREMENT_TOLERANCE
+    srv.stop(blocking=False)
+
+
+def _get_start_time():
+    stdout, _ = executable.Tool(
+        [
+            "systemctl",
+            "show",
+            HELPER_SERVICE_NAME,
+            "--property",
+            "ActiveEnterTimestamp",
+        ]
+    ).run()
+
+    t = stdout.strip().split()[2]
+    return datetime.strptime(t, "%H:%M:%S")
+
+
+def _service_is_restarted(before, max_diff=20):
+    """max_diff just to check that there is not some ridiculous values"""
+
+    after = _get_start_time()
+    return before < after and (after - before).total_seconds() < max_diff
+
+
+@pytest.mark.systemd
+def test_service_restart_nonblocking_success(helper_srv_ok):
+    """Test successful restart of a helper service.
+
+    Parameters
+    ----------
+    helper_srv_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    srv.start(blocking=True)
+    assert srv.is_active()
+
+    time.sleep(1)  # to ensure at least 1s start time diff
+
+    before = _get_start_time()
+    srv.restart(blocking=False)
+
+    assert lbr_testsuite.wait_until_condition(functools.partial(_service_is_restarted, before), 5)
+    assert srv.is_active()
+
+    srv.stop(blocking=False)
+
+
+@pytest.mark.systemd
+def test_service_restart_blocking_success(helper_srv_ok):
+    """Test successful restart of a helper service with waiting for
+    completion.
+
+    Parameters
+    ----------
+    helper_srv_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    srv.start(blocking=True)
+    assert srv.is_active()
+
+    time.sleep(1)  # to ensure at least 1s start time diff
+
+    before = _get_start_time()
+    srv.restart(blocking=True)
+
+    assert _service_is_restarted(before)
+    assert srv.is_active()
+
     srv.stop(blocking=False)
