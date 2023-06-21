@@ -178,6 +178,28 @@ class Service:
                     f"Service {self._name} did not stop (waited {self._stop_to} seconds)."
                 )
 
+    def restart(self, blocking=True):
+        """Restart the service, potentially blocking until the restart
+        is completed.
+
+        Parameters
+        ----------
+        blocking : bool
+            If set to true, this function will wait until the service
+            is restarted, up to a maximum of 'self.stop_timeout'.
+            Otherwise this function only signals the service to restart
+            and continues.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            Service failed when command was issued.
+        RuntimeError
+            Blocking start timeout expired and service did not stop.
+        """
+
+        self._start_or_restart(blocking, restart=True)
+
     def _journalctl_extract_logs(self):
         c = executable.Tool(["journalctl", "-u", self._name, "--since", self._start_time])
         return c.run()
