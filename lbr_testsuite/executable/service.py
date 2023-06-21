@@ -108,6 +108,21 @@ class Service:
         self._logger.debug(f"Captured stdout:\n{stdout}")
         self._logger.debug(f"Captured stderr:\n{stderr}")
 
+    def _start_or_restart(self, blocking, restart=False):
+        action = "start" if not restart else "restart"
+        cmd = executable.Tool(["systemctl", action, self._name])
+        try:
+            cmd.run()
+        except subprocess.CalledProcessError:
+            self._log_failure()
+
+        if blocking:
+            if not common.wait_until_condition(self._started, self._start_to):
+                self._log_failure()
+                raise RuntimeError(
+                    f"Service {self._name} did not start (waited {self._start_to} seconds)."
+                )
+
     def start(self, blocking=True):
         """Start the service, potentially blocking until it has started.
 
@@ -127,19 +142,8 @@ class Service:
             Blocking start timeout expired and service did not start.
         """
 
-        c = executable.Tool(["systemctl", "start", self._name])
         self._start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        try:
-            c.run()
-        except subprocess.CalledProcessError:
-            self._log_failure()
-
-        if blocking:
-            if not common.wait_until_condition(self._started, self._start_to):
-                self._log_failure()
-                raise RuntimeError(
-                    f"Service {self._name} did not start (waited {self._start_to} seconds)."
-                )
+        self._start_or_restart(blocking)
 
     def stop(self, blocking=True):
         """Stop the service, potentially blocking until it has stopped.
