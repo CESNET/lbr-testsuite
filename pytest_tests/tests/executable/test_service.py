@@ -35,6 +35,7 @@ Description=Systemd service unit file for lbr-testsuite testing.
 ExecStartPre={pre_start}
 ExecStart={app} {args}
 ExecStartPost={post_start}
+ExecReload=touch {reload_file}
 Type=simple
 StandardOutput=null
 StandardError=inherit
@@ -46,6 +47,10 @@ STARTUP_FAIL_ARGS = "-r 1"
 EXIT_DELAY_ARGS = "-d 2"
 
 TIME_MEASUREMENT_TOLERANCE = 0.2
+
+
+def _reload_file(tmp):
+    return tmp / "reloaded"
 
 
 def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post_start="true"):
@@ -69,13 +74,14 @@ def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post
     """
 
     @pytest.fixture
-    def helper_service(require_root, helper_app):
+    def helper_service(require_root, helper_app, tmp_path):
         HELPER_SERVICE_PATH.write_text(
             SERVICE_TEMPLATE.format(
                 pre_start=helper_pre_start,
                 post_start=helper_post_start,
                 app=helper_app,
                 args=helper_app_args,
+                reload_file=_reload_file(tmp_path),
             )
         )
 
@@ -381,6 +387,30 @@ def test_service_restart_blocking_success(helper_srv_ok):
     srv.restart(blocking=True)
 
     assert _service_is_restarted(before)
+    assert srv.is_active()
+
+    srv.stop(blocking=False)
+
+
+@pytest.mark.systemd
+def test_service_reload_success(helper_srv_ok, tmp_path):
+    """Test successful reload of a helper service.
+
+    Parameters
+    ----------
+    helper_srv_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    srv.start(blocking=True)
+    assert srv.is_active()
+
+    assert not _reload_file(tmp_path).is_file()
+
+    srv.reload()
+
+    assert _reload_file(tmp_path).is_file()
     assert srv.is_active()
 
     srv.stop(blocking=False)
