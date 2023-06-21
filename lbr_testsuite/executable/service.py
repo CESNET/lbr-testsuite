@@ -200,6 +200,20 @@ class Service:
 
         self._start_or_restart(blocking, restart=True)
 
+    def reload(self):
+        """Reload the service.
+
+        Note: Reload completion is rather application specific and it
+        cannot be checked here. Thus, there is no "blocking" version.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            Service failed when command was issued.
+        """
+
+        self._run_sysctl_action("reload")
+
     def _journalctl_extract_logs(self):
         c = executable.Tool(["journalctl", "-u", self._name, "--since", self._start_time])
         return c.run()
