@@ -10,6 +10,7 @@ mainly on executable.executable.Daemon features.
 
 import logging
 import pathlib
+import subprocess
 import time
 
 import pytest

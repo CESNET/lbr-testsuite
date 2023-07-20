@@ -2,8 +2,7 @@
 
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
-`common`, `ipconfigurer`, `executable`, `spirent`, `spirentlib` modules and
-`TRex` tools.
+`common`, `ipconfigurer`, `executable`, `spirent`, `spirentlib` modules.
 
 ## Hosting and contribution
 
@@ -78,16 +77,6 @@ from lbr_testsuite import spirent
 from lbr_testsuite.spirent import spirentlib
 ```
 Provides API for Spirent Test Center (STC).
-
-
-For `TRex` tools:
-```
-from lbr_testsuite.trex_tools.trex_instances import TRex_Instances
-from lbr_testsuite.trex_tools.trex_stl_stream_generator import TRex_Stl_Stream_Generator
-from lbr_testsuite.trex_tools.trex_astf_profile_generator import TRex_Astf_Profile_Generator
-```
-These tools provide some useful methods to work with TRex. They are
-built on top of official API and make certain things much easier.
 
 
 ## Repository Maintainer
