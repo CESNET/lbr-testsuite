@@ -12,6 +12,7 @@ and specific executable.executable.Tool features are tested.
 
 import logging
 import pathlib
+import subprocess
 
 import pytest
 
