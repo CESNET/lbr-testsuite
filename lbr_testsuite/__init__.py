@@ -5,4 +5,5 @@ from . import packet_crafter  # noqa
 from . import spirent  # noqa
 from . import throughput_runner  # noqa
 from . import topology  # noqa
+from . import trex  # noqa
 from .common import *  # noqa
