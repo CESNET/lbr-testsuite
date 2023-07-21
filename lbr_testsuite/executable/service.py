@@ -108,6 +108,26 @@ class Service:
         self._logger.debug(f"Captured stdout:\n{stdout}")
         self._logger.debug(f"Captured stderr:\n{stderr}")
 
+    def _run_sysctl_action(self, action):
+        assert action in ("start", "stop", "restart", "reload")
+
+        cmd = executable.Tool(["systemctl", action, self._name])
+        try:
+            cmd.run()
+        except subprocess.CalledProcessError:
+            self._log_failure()
+
+    def _start_or_restart(self, blocking, restart=False):
+        action = "start" if not restart else "restart"
+        self._run_sysctl_action(action)
+
+        if blocking:
+            if not common.wait_until_condition(self._started, self._start_to):
+                self._log_failure()
+                raise RuntimeError(
+                    f"Service {self._name} did not start (waited {self._start_to} seconds)."
+                )
+
     def start(self, blocking=True):
         """Start the service, potentially blocking until it has started.
 
@@ -127,19 +147,8 @@ class Service:
             Blocking start timeout expired and service did not start.
         """
 
-        c = executable.Tool(["systemctl", "start", self._name])
         self._start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        try:
-            c.run()
-        except subprocess.CalledProcessError:
-            self._log_failure()
-
-        if blocking:
-            if not common.wait_until_condition(self._started, self._start_to):
-                self._log_failure()
-                raise RuntimeError(
-                    f"Service {self._name} did not start (waited {self._start_to} seconds)."
-                )
+        self._start_or_restart(blocking)
 
     def stop(self, blocking=True):
         """Stop the service, potentially blocking until it has stopped.
@@ -160,11 +169,7 @@ class Service:
             Blocking start timeout expired and service did not stop.
         """
 
-        c = executable.Tool(["systemctl", "stop", self._name])
-        try:
-            c.run()
-        except subprocess.CalledProcessError:
-            self._log_failure()
+        self._run_sysctl_action("stop")
 
         if blocking:
             if not common.wait_until_condition(self._not_started, self._stop_to):
@@ -172,6 +177,42 @@ class Service:
                 raise RuntimeError(
                     f"Service {self._name} did not stop (waited {self._stop_to} seconds)."
                 )
+
+    def restart(self, blocking=True):
+        """Restart the service, potentially blocking until the restart
+        is completed.
+
+        Parameters
+        ----------
+        blocking : bool
+            If set to true, this function will wait until the service
+            is restarted, up to a maximum of 'self.stop_timeout'.
+            Otherwise this function only signals the service to restart
+            and continues.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            Service failed when command was issued.
+        RuntimeError
+            Blocking start timeout expired and service did not stop.
+        """
+
+        self._start_or_restart(blocking, restart=True)
+
+    def reload(self):
+        """Reload the service.
+
+        Note: Reload completion is rather application specific and it
+        cannot be checked here. Thus, there is no "blocking" version.
+
+        Raises
+        ------
+        subprocess.CalledProcessError
+            Service failed when command was issued.
+        """
+
+        self._run_sysctl_action("reload")
 
     def _journalctl_extract_logs(self):
         c = executable.Tool(["journalctl", "-u", self._name, "--since", self._start_time])
