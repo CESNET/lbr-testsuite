@@ -116,6 +116,7 @@ class Service:
             cmd.run()
         except executable.ExecutableProcessError:
             self._log_failure()
+            raise
 
     def _start_or_restart(self, blocking, restart=False):
         action = "start" if not restart else "restart"
