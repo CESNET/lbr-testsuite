@@ -1,5 +1,5 @@
 """
-Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, Dominik Tran <tran@cesnet.cz>
 
 Copyright: (C) 2021 CESNET, z.s.p.o.
 
@@ -7,6 +7,18 @@ Common pytest fixtures and hooks for testsuite tests.
 """
 
 import logging
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--remote-host",
+        type=str,
+        default=None,
+        help=(
+            "Host where remote variants of tests should run. "
+            "If not set, skip remote variants of tests."
+        ),
+    )
 
 
 def pytest_configure(config):

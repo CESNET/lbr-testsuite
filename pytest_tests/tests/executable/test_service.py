@@ -2,6 +2,7 @@
 Author(s):
 Pavel Krobot <Pavel.Krobot@cesnet.cz>
 Kamil Vojanec <vojanec@cesnet.cz>
+Dominik Tran <tran@cesnet.cz>
 
 Copyright: (C) 2023 CESNET, z.s.p.o.
 
@@ -10,7 +11,6 @@ Testing of executable module Service class.
 
 import functools
 import pathlib
-import subprocess
 import time
 from datetime import datetime
 
@@ -187,7 +187,7 @@ def test_service_start_fail(helper_srv_fail_startup):
     """
 
     srv = Service(helper_srv_fail_startup)
-    with pytest.raises((subprocess.CalledProcessError, RuntimeError)):
+    with pytest.raises((executable.ExecutableProcessError, RuntimeError)):
         srv.start(blocking=True)
 
     assert srv.is_active() is False
@@ -230,6 +230,9 @@ def test_service_is_active_failed(helper_srv_fail_startup):
     """Test that 'is_active()' returns correct value for
     service that failed when starting.
 
+    Note: when service failing to start, ExecutableException
+    is raised
+
     Parameters
     ----------
     helper_srv_fail : fixture
@@ -237,7 +240,10 @@ def test_service_is_active_failed(helper_srv_fail_startup):
     """
 
     srv = Service(helper_srv_fail_startup)
-    srv.start(blocking=False)
+    try:
+        srv.start(blocking=False)
+    except executable.ExecutableException:
+        pass
     assert srv.is_active() is False
 
 

@@ -1,5 +1,5 @@
 """
-Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
+Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>, Dominik Tran <tran@cesnet.cz>
 
 Copyright: (C) 2021 CESNET, z.s.p.o.
 
@@ -7,15 +7,35 @@ An executable module providing classes for execution of various tools
 (class Tool) and daemons (clas Daemon).
 """
 
-import functools
 import logging
-import os
 import pathlib
 import signal
 import subprocess
 import time
 
-import pyroute2
+from .local_executor import LocalExecutor
+
+
+class ExecutableException(Exception):
+    """Basic exception raised by Executable class"""
+
+
+class ExecutableProcessError(ExecutableException):
+    """Exception raised when process ends with non-zero return code."""
+
+    # Mimic subprocess.CalledProcessError
+    def __init__(self, returncode=None, cmd=None):
+        self.returncode = returncode
+        self.cmd = cmd
+
+    def __str__(self):
+        if self.returncode and self.returncode < 0:
+            try:
+                return "Command '%s' died with %r." % (self.cmd, signal.Signals(-self.returncode))
+            except ValueError:
+                return "Command '%s' died with unknown signal %d." % (self.cmd, -self.returncode)
+        else:
+            return "Command '%s' returned non-zero exit status %d." % (self.cmd, self.returncode)
 
 
 class Executable:
@@ -26,10 +46,14 @@ class Executable:
     DEFAULT_OPTIONS : dict()
         Default options for subprocess.Popen() command. For more
         information about possible options and values see documentation
-        of subprocess module.
+        of subprocess module. When executing remote commands, executable
+        uses fabric module instead of subprocess. However, options should
+        behave as close as possible to original subprocess module.
         Current default options:
         - sets capturing of stdout and stderr as text stored within
-        subprocess.CompletedProcess.stdout/.stderr,
+        subprocess.CompletedProcess.stdout (stdout and stderr is mixed
+        together into stdout, since fabric module cannot separate
+        outputs under certain conditions),
         - does not allow execution commands as strings. However, this
         option is changed automatically when the string command is
         requested upon construction.
@@ -52,7 +76,7 @@ class Executable:
 
     DEFAULT_OPTIONS = {
         "stdout": subprocess.PIPE,
-        "stderr": subprocess.PIPE,
+        "stderr": subprocess.STDOUT,
         "encoding": "utf-8",
         "shell": False,
         "start_new_session": True,  # This runs the subprocess in a new session,
@@ -72,6 +96,8 @@ class Executable:
         env=None,
         sigterm_ok=False,
         netns=None,
+        sudo=False,
+        executor=None,
     ):
         """
         Parameters
@@ -106,19 +132,21 @@ class Executable:
         netns : str, optional
             Network namespace name. If set, a command is executed in
             a namespace using the "ip netns" command. Default "None".
+        sudo : bool, optional
+            Force command to run with sudo.
+        executor : executable.Executor, optional
+            Executor to use. If not set, use local executor (run
+            commands on local machine).
         """
 
         assert failure_verbosity in self.FAILURE_VERBOSITY_LEVELS
 
-        self._process = None
         self._options = self.DEFAULT_OPTIONS.copy()
         self._output_files = dict(stdout=None, stderr=None)
         self._sigterm_ok = sigterm_ok
         self._post_exec_fn = None
-        self._popen = subprocess.Popen
-
-        if netns is not None:
-            self._popen = functools.partial(pyroute2.NSPopen, netns)
+        self._netns = netns
+        self._sudo = sudo
 
         if isinstance(command, str):
             self._options["shell"] = True
@@ -139,7 +167,14 @@ class Executable:
         if env is not None:
             self._options["env"] = env
         else:
-            self._options["env"] = os.environ.copy()
+            self._options["env"] = None
+
+        if executor is not None:
+            self._executor = executor
+            assert not self._executor.is_running(), "Executor contains unfinished process"
+            self._executor.reset_process()
+        else:
+            self._executor = LocalExecutor()
 
     def _cmd_str(self):
         """Convert command to string representation."""
@@ -186,6 +221,9 @@ class Executable:
             Value of the varible.
         """
 
+        if self._options["env"] is None:
+            self._options["env"] = {}
+
         self._options["env"][key] = value
 
     def clear_env(self):
@@ -212,7 +250,15 @@ class Executable:
         ----------
         strace : :class:`Strace`
             Configured instance of Strace class.
+
+        Raises
+        ------
+        RuntimeError
+            When trying to use strace on remote execution.
         """
+
+        if not isinstance(self._executor, LocalExecutor):
+            raise RuntimeError("Strace is supported only for local execution")
 
         self._cmd = strace.wrap_command(self._cmd)
 
@@ -223,7 +269,15 @@ class Executable:
         ----------
         coredump : :class:`Coredump`
             Configured instance of Coredump class.
+
+        Raises
+        ------
+        RuntimeError
+            When trying to use core dump on remote execution.
         """
+
+        if not isinstance(self._executor, LocalExecutor):
+            raise RuntimeError("Core dump is supported only for local execution")
 
         self._options["preexec_fn"] = coredump.popen_preexec
         self._post_exec_fn = coredump.popen_postexec
@@ -252,18 +306,28 @@ class Executable:
         ----------
         stdout : str, pathlib.Path, int or subprocess special value
             If argument is a string, it is assumed that it is path to a
-            log file. Otherwise the argument value follow rules of the
+            local log file. Otherwise the argument value follow rules of the
             subprocess module.
         stderr : str, pathlib.Path, int or subprocess special value, optional
+            Setting stderr is allowed only in local execution - only
+            exception is when setting subprocess.STDOUT.
             If argument is a string, it is assumed that it is path to a
-            log file. Otherwise the argument value follow rules of the
+            local log file. Otherwise the argument value follow rules of the
             subprocess module.
+
+        Raises
+        ------
+        RuntimeError
+            When trying to set stderr output on remote execution.
         """
 
         self._set_output("stdout", stdout)
-        if stderr is None:
+        if stderr is None or stderr == subprocess.STDOUT:
             self._options["stderr"] = subprocess.STDOUT
         else:
+            if not isinstance(self._executor, LocalExecutor):
+                raise RuntimeError("Setting stderr output is supported only in local execution")
+
             self._set_output("stderr", stderr)
 
     def _close_output_files(self):
@@ -273,7 +337,7 @@ class Executable:
             if f is not None:
                 f.close()
 
-    def _handle_failure(self, process_error, stdout, stderr):
+    def _handle_failure(self, process_cmd, process_retcode, stdout, stderr):
         """Handle failure of a command.
 
         If command is allowed to fail, only debug message is printed.
@@ -281,13 +345,13 @@ class Executable:
         an exception is reraised.
         """
 
-        if self._sigterm_ok and process_error.returncode == -signal.SIGTERM:
+        if self._sigterm_ok and process_retcode == -signal.SIGTERM:
             return
 
         if self._failure_verbosity == "silent":
             return
 
-        fail_msg = f'Command "{process_error.cmd}" has failed with code {process_error.returncode}.'
+        fail_msg = f'Command "{process_cmd}" has failed with code {process_retcode}.'
 
         if self._failure_verbosity == "normal":
             self._logger.error(fail_msg)
@@ -301,7 +365,7 @@ class Executable:
         self._logger.debug(f"Captured stderr:\n{stderr}")
 
         if self._failure_verbosity == "normal" or self._failure_verbosity == "no-error":
-            raise
+            raise ExecutableProcessError(process_retcode, process_cmd)
 
     def append_arguments(self, args):
         """Append arguments to a command.
@@ -326,38 +390,59 @@ class Executable:
 
     def _finalize(self):
         self._close_output_files()
-        if self._process is not None:
-            self._process.wait()
+        if self._executor.get_process() is not None:
+            self._executor.wait()
             if self._post_exec_fn is not None:
-                self._post_exec_fn(self._process)
+                self._post_exec_fn(self._executor.get_process())
 
     def _start(self):
         try:
-            self._process = self._popen(self._cmd, **self._options)
+            self._executor.run(
+                self._cmd,
+                netns=self._netns,
+                sudo=self._sudo,
+                **self._options,
+            )
         except Exception:
             self._finalize()
             raise
 
-    def _wait_or_kill(self, timeout):
-        try:
-            """Note from subprocess documentation:
-            This will deadlock when using stdout=PIPE or stderr=PIPE
-            and the child process generates enough output to a pipe
-            such that it blocks waiting for the OS pipe buffer to accept
-            more data. Use Popen.communicate() when using pipes to
-            avoid that.
-            """
-            stdout, stderr = self._process.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            self._process.kill()
-            stdout, stderr = self._process.communicate()
-        finally:
-            self._finalize()
+    def _standardize_outputs(self, stdout, stderr):
+        """Unify outputs between local and remote executor.
 
-            try:
-                subprocess.CompletedProcess.check_returncode(self._process)
-            except subprocess.CalledProcessError as ee:
-                self._handle_failure(ee, stdout, stderr)
+        This, however, means that distinction between
+        empty output ("") and NO output (None) is lost.
+        """
+
+        if stdout is None:
+            stdout = ""
+        if stderr is None:
+            stderr = ""
+
+        if not isinstance(self._executor, LocalExecutor):
+            # If output is redirected to file, stdout/err should be empty.
+            # But in remote executor, output is still captured:
+            #
+            # "As such, all output will appear on out_stream and
+            # be captured into the stdout result attribute"
+            # See https://docs.pyinvoke.org/en/latest/api/runners.html#invoke.runners.Runner.run.command
+            for k, v in self._output_files.items():
+                if v is not None:
+                    if k == "stdout":
+                        stdout = ""
+                    if k == "stderr":
+                        stderr = ""
+
+        return (stdout, stderr)
+
+    def _wait_or_kill(self, timeout):
+        stdout, stderr = self._executor.wait_or_kill(timeout)
+        stdout, stderr = self._standardize_outputs(stdout, stderr)
+        self._finalize()
+
+        status = self._executor.get_termination_status()
+        if status["rc"] != 0:
+            self._handle_failure(status["cmd"], status["rc"], stdout, stderr)
 
         return stdout, stderr
 
@@ -371,10 +456,12 @@ class Executable:
             or did not finish yet.
         """
 
-        if self._process:
-            return self._process.returncode
+        if self._executor.get_process() is None or self._executor.is_running():
+            return None
 
-        return None
+        status = self._executor.get_termination_status()
+
+        return status["rc"]
 
 
 class Tool(Executable):
@@ -398,8 +485,7 @@ class Tool(Executable):
         Returns
         -------
         tuple
-            A pair composed from stdout and stderr acquired using
-            subprocess.communicate() method.
+            A pair composed from stdout and stderr.
         """
 
         self._start()
@@ -417,7 +503,7 @@ class Daemon(Executable):
         self._terminated = None
 
     def _terminate(self):
-        self._process.terminate()
+        self._executor.terminate()
 
     def _finalize(self):
         super()._finalize()
@@ -429,12 +515,11 @@ class Daemon(Executable):
         Returns
         -------
         tuple or None
-            A pair composed from stdout and stderr acquired using
-            subprocess.communicate() method if start fails. Implicit
-            None otherwise.
+            A pair composed from stdout and stderr
+            if start fails. Implicit None otherwise.
         """
 
-        if self._process is not None and not self._terminated:
+        if self._executor.get_process() is not None and not self._terminated:
             raise RuntimeError("start called on a started process")
 
         self._start()
@@ -458,15 +543,16 @@ class Daemon(Executable):
         Returns
         -------
         tuple
-            A pair composed from stdout and stderr acquired using
-            subprocess.communicate() method.
+            A pair composed from stdout and stderr.
         """
 
-        if self._process is None:
+        if self._executor.get_process() is None:
             return
 
         if self._terminated:
-            return self._process.communicate()
+            stdout, stderr = self._executor.wait_or_kill(1)
+            stdout, stderr = self._standardize_outputs(stdout, stderr)
+            return (stdout, stderr)
 
         self._terminate()
         return self._wait_or_kill(timeout)
@@ -484,10 +570,10 @@ class Daemon(Executable):
             True if the process is running, False otherwise.
         """
 
-        if self._process is None or self._terminated:
+        if self._executor.get_process() is None or self._terminated:
             return False
 
         if after:
             time.sleep(after)
 
-        return self._process.poll() is None
+        return self._executor.is_running()
