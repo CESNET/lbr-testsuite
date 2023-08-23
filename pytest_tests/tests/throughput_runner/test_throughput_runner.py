@@ -32,7 +32,7 @@ import pytest
 from pytest import fixture
 
 from lbr_testsuite import ipconfigurer, sysctl_set_with_restore
-from lbr_testsuite.spirent import STC_API_PROPRIETARY, Spirent, StreamBlock
+from lbr_testsuite.spirent import STC_API_PROPRIETARY, Device, Spirent, StreamBlock
 from lbr_testsuite.throughput_runner.spirent_throughput_runner import (
     SpirentThroughputRunner,
 )
@@ -133,6 +133,39 @@ def test_throughput_runner(
     hosts = itertools.islice(LOCAL_IPV4.network.hosts(), 100)
     for host in hosts:
         ipconfigurer.add_ip_neigh(interface_configured, str(host), src_mac)
+
+    runner.generate_traffic(1, 1024)
+    result = runner.evaluate()
+    global_logger.info(f"TX: {result[0]}, RX: {result[1]}")
+
+    assert result[1] == result[0]
+
+
+@pytest.mark.spirent
+def test_throughput_runner_device(
+    spirent,
+    interface_configured,
+    routing_configured,
+    forwarding_enabled,
+    access_vlan,
+):
+    """Test that the throughput_runner module can send
+    and receive traffic using spirent."""
+
+    src_mac = spirent.determine_src_mac_address()
+
+    sb = StreamBlock(
+        spirent,
+        "ipv4_192.168.0.1-10.0.0.33",
+        src_mac=src_mac,
+        dst_mac=ipconfigurer.ifc_status(interface_configured)["IFLA_ADDRESS"],
+        vlan=access_vlan,
+    )
+    device = Device(spirent, "device_192.168.0.11", mac=src_mac, vlan=access_vlan)
+    device.apply()
+    device.resolve_neighbours()
+
+    runner = SpirentThroughputRunner(spirent, [sb])
 
     runner.generate_traffic(1, 1024)
     result = runner.evaluate()
