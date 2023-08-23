@@ -1,3 +1,4 @@
+from . import data_table  # noqa
 from . import executable  # noqa
 from . import ipconfigurer  # noqa
 from . import spirent  # noqa
