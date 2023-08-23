@@ -296,8 +296,7 @@ class StreamBlock(AbstractStreamBlock):
         self._working_config.vlan = vlan
 
     def apply(self):
-        """Apply the working configuration. In this case, only the
-        packet length is going to be applied.
+        """Apply the working configuration.
 
         This method should also be called by the 'apply()'
         method in inherited classes. To be used correctly, it
