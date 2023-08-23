@@ -10,7 +10,7 @@ Stream block helper class.
 
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional
 
 from .spirent import Spirent
@@ -320,4 +320,4 @@ class StreamBlock(AbstractStreamBlock):
         if self._working_config.dst_mac != self._applied_config.dst_mac:
             self._apply_dst_mac(self._working_config.dst_mac)
 
-        self._applied_config = self._working_config
+        self._applied_config = replace(self._working_config)
