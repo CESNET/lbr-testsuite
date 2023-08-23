@@ -104,7 +104,7 @@ class SpirentThroughputRunner:
                 block.set_packet_len(packet_len)
 
         for block in self._stream_blocks:
-            block.configure()
+            block.apply()
 
         self._warm_up()
 

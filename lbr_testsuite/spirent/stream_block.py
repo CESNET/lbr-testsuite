@@ -42,8 +42,8 @@ class AbstractStreamBlock(ABC):
         return self._name
 
     @abstractmethod
-    def configure(self):
-        """Configure the stream block using instance attributes."""
+    def apply(self):
+        """Apply the stream block using instance attributes."""
 
         pass
 
@@ -207,7 +207,7 @@ class StreamBlock(AbstractStreamBlock):
     class Config:
         """Dynamic stream block configuration. Properties of this object
         represent values that can be modified during runtime. However,
-        the properties may not be applied instantly. Instead, the 'configure'
+        the properties may not be applied instantly. Instead, the 'apply()'
         method should be used to apply the dynamic configuration in inherited
         classes.
         """
@@ -295,11 +295,11 @@ class StreamBlock(AbstractStreamBlock):
 
         self._working_config.vlan = vlan
 
-    def configure(self):
-        """Configure the working configuration. In this case, only the
+    def apply(self):
+        """Apply the working configuration. In this case, only the
         packet length is going to be applied.
 
-        This method should also be called by the 'configure()'
+        This method should also be called by the 'apply()'
         method in inherited classes. To be used correctly, it
         should be called after all configuration of the inherited
         classes is done.
