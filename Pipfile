@@ -18,6 +18,7 @@ fabric = "*"
 matplotlib = "*"
 pandas = "*"
 faker = "*"
+scapy = "*"
 
 [dev-packages]
 twine = "*"
