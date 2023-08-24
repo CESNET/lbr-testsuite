@@ -17,6 +17,7 @@ pytest-cases = ">=3.6.11"
 fabric = "*"
 matplotlib = "*"
 pandas = "*"
+faker = "*"
 
 [dev-packages]
 twine = "*"
