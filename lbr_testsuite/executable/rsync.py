@@ -123,13 +123,12 @@ class Rsync:
             Data directory is not in path or target could not be deleted.
         """
 
-        if Path(target).is_absolute():
-            if Path(self._data_dir) not in Path(target).parents:
-                raise RsyncException(
-                    f"Can't remove a path outside the data directory {self._data_dir}"
-                )
-        else:
-            target = Path(self._data_dir) / target
+        try:
+            target = self._resolve_data_dir_path(target)
+        except ValueError as err:
+            raise RsyncException(
+                f"Can't remove a path outside the data directory {self._data_dir}"
+            ) from err
 
         try:
             Tool(["rm", "-rf", str(target)], executor=self._executor).run()
@@ -259,13 +258,12 @@ class Rsync:
             Could not pull file.
         """
 
-        if Path(source).is_absolute():
-            if not Path(self._data_dir) in Path(source).parents:
-                raise RsyncException(
-                    f"Can't pull a path outside the data directory {self._data_dir}"
-                )
-        else:
-            source = Path(self._data_dir) / source
+        try:
+            source = self._resolve_data_dir_path(source)
+        except ValueError as err:
+            raise RsyncException(
+                f"Can't pull a path outside the data directory {self._data_dir}"
+            ) from err
 
         if isinstance(self._executor, LocalExecutor):
             try:
@@ -348,3 +346,15 @@ class Rsync:
         connection_details = {"sshpass": sshpass, "checksum": checksum, "rsh": rsh}
 
         return connection_details
+
+    def _resolve_data_dir_path(self, path):
+        """Resolve relative path and verify that it is inside the data directory."""
+
+        path = Path(path)
+        path = Path(self._data_dir) / path if not path.is_absolute() else path
+        path = path.resolve()
+
+        if Path(self._data_dir) not in path.parents:
+            raise ValueError
+
+        return path
