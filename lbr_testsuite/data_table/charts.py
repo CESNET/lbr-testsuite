@@ -13,6 +13,8 @@ from typing import List, Union
 import matplotlib
 import matplotlib.pyplot as plt
 
+from .line_colors import LineColors
+
 
 @dataclass
 class PlotLineSpec:
@@ -28,6 +30,11 @@ class PlotLineSpec:
         combining same kind of lines with different parameters. (e.g.
         measured value for 8 and 16 workers would have same
         base - "measured").
+    color_shade : int
+        Color shade for lines with same color of different shade.
+        Currently only 2 values of shade are available: 0 - darker,
+        1 - lighter. If it is not set, no automatic color derivation
+        is done and color is set automatically or via line_kwargs.
     line_kwargs : dict
         Additional arguments for pandas.Series.plot method. "label"
         argument is not allowed as it is created automatically from
@@ -36,13 +43,20 @@ class PlotLineSpec:
 
     column: str
     label_base: str = None
+    color_shade: int = None
     line_kwargs: dict = field(default_factory=dict)
 
     def __post_init__(self):
         if not self.label_base:
             self.label_base = self.column
 
+        # fmt: off
+        # ...as black really does not work well with asserts
         assert "label" not in self.line_kwargs, "Do not use 'label' directly in line kwargs"
+        assert self.color_shade in [None, 0, 1], (
+            "Invalid value of color shade. Only 0 and 1 is allowed."
+        )
+        # fmt: on
 
 
 @dataclass
@@ -131,6 +145,8 @@ class DataTableCharts:
 
         self._n_rows = None
         self._n_cols = None
+
+        self._colors = LineColors()
 
     def set_data(self, data):
         """Set source data"""
@@ -270,9 +286,30 @@ class DataTableCharts:
         else:
             return [data]
 
+    def _get_colors_by_params(self, ch_spec, data):
+        """Lines in current plot are defined by:
+        1) filtering - selects data to plot
+        2) parametrization - unique combination of parameters defines
+        particular lines in chart.
+        Thus, a color pair is bound to a key created from filter_by and
+        parametrized_by values from chart specification.
+        """
+
+        color_key = dict()
+        if ch_spec.filter_by:
+            for k, v in ch_spec.filter_by.items():
+                color_key[k] = v
+        if ch_spec.parametrized_by:
+            for p in ch_spec.parametrized_by:
+                color_key[p] = data[p].iloc[0]
+        return self._colors.bind_color(**color_key)
+
     def _plot_data_lines(self, sub_frames, ch_spec, ax):
         for data in sub_frames:
             for line_spec in ch_spec.lines:
+                if line_spec.color_shade is not None:
+                    colors = self._get_colors_by_params(ch_spec, data.get_data())
+                    line_spec.line_kwargs["color"] = colors[line_spec.color_shade]
                 self._plot_line(
                     ax,
                     data.get_data(),
