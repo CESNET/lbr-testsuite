@@ -74,6 +74,7 @@ class RemoteExecutor(Executor):
         key_filename=None,
     ):
         self._process = None
+        self._result = None
         connect_kwargs = {}
 
         if password is not None:
@@ -129,6 +130,7 @@ class RemoteExecutor(Executor):
             self.wait_or_kill(1)
 
         self._process = None
+        self._result = None
 
     def get_host(self):
         """Get name of host where executor is running.
@@ -396,7 +398,12 @@ class RemoteExecutor(Executor):
         return {"rc": result.exited, "cmd": result.command}
 
     def _join_process(self):
-        """Wrapper for invoke process join.
+        """Wrapper for invoke process join. Prevents calling
+        join method more than once.
+
+        Process runner is finished and stopped while calling
+        join method. Repeated call of join returns different
+        result object.
 
         Returns
         -------
@@ -404,7 +411,10 @@ class RemoteExecutor(Executor):
             Result of process execution.
         """
 
-        try:
-            return self._process.join()
-        except invoke.exceptions.UnexpectedExit as ee:
-            return ee.result
+        if self._result is None:
+            try:
+                self._result = self._process.join()
+            except invoke.exceptions.UnexpectedExit as ee:
+                self._result = ee.result
+
+        return self._result
