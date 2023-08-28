@@ -31,6 +31,8 @@ dependencies = [
     "fabric>=3.0.0",
     "faker",
     "scapy",
+    "matplotlib",
+    "pandas",
 ]
 dynamic = ["version"]
 
