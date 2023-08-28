@@ -33,6 +33,7 @@ dependencies = [
     "scapy",
     "matplotlib",
     "pandas",
+    "ansible",
 ]
 dynamic = ["version"]
 
