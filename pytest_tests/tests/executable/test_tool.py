@@ -513,3 +513,50 @@ def test_tool_strace_expressions_coredump(
     assert pathlib.Path(st.get_output_file()).exists()
     assert pathlib.Path(cd.get_output_file()).exists()
     assert match_syscalls(st.get_output_file(), strace_expressions, segfault=True)
+
+
+def test_tool_repeated_single_instance(testing_namespace, executor):
+    """Test that Tool object can call the 'run()' method repeatedly
+    without any errors. This tests correct garbage cleanup by the
+    executable module.
+
+    Parameters
+    ----------
+    testing_namespace : str
+        Namespace to run commands in.
+    executor : executable.Executor
+        Executor to use.
+    """
+
+    repeat_count = 500
+
+    cmd = executable.Tool(["pwd"], netns=testing_namespace, executor=executor)
+
+    for i in range(repeat_count):
+        stdout, stderr = cmd.run()
+
+        assert len(stdout) > 0
+        assert stderr == ""
+
+
+def test_tool_repeated_individual_instances(testing_namespace, executor):
+    """Test that Tool object can be constructed multiple times.
+    This tests correct garbage collection when objects are created
+    repeatedly.
+
+    Parameters
+    ----------
+    testing_namespace : str
+        Namespace to run commands in.
+    executor : executable.Executor
+        Executor to use.
+    """
+
+    repeat_count = 500
+
+    for i in range(repeat_count):
+        cmd = executable.Tool(["pwd"], netns=testing_namespace, executor=executor)
+        stdout, stderr = cmd.run()
+
+        assert len(stdout) > 0
+        assert stderr == ""
