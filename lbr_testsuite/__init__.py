@@ -1,3 +1,21 @@
+# isort: off
+import sys
+from ._trex_imports import _deimport_scapy as ds
+
+if "scapy" in sys.modules:
+    # If Scapy was imported before lbr_testsuite, deimport
+    # it as TRex deimport mechanism isn't good enough
+    ds._deimport_from_sys_modules()
+    ds._deimport_from_builtins()
+
+# Preload TRex Scapy into TRex modules
+from ._trex_imports import _preload_trex_scapy  # noqa
+
+# Remove TRex Scapy completely
+ds._deimport_completely()
+
+# isort: on
+
 from . import data_table  # noqa
 from . import executable  # noqa
 from . import ipconfigurer  # noqa
