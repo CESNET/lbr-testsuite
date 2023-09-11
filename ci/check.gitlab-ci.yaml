@@ -18,7 +18,7 @@ isort:
     stage: check
     needs: [docker-build]
     script:
-        - isort --check-only --diff lbr_testsuite/ pytest_tests/ | tee isort.log
+        - isort --check-only --diff lbr_testsuite/ pytest_tests/ examples/ | tee isort.log
     artifacts:
         paths: [isort.log]
         when: always
@@ -27,7 +27,7 @@ black:
     stage: check
     needs: [docker-build]
     script:
-        - black --check --diff lbr_testsuite/ pytest_tests/ | tee black.log
+        - black --check --diff lbr_testsuite/ pytest_tests/ examples/ | tee black.log
     artifacts:
         paths: [black.log]
         when: always
