@@ -128,6 +128,7 @@ class BenchmarkCharts:
             charts.PlotLineSpec(
                 column=f"Measured ({kind})",
                 label_base="Measured",
+                color_shade=0,
                 line_kwargs=dict(marker="x"),
             ),
         ]
@@ -137,6 +138,7 @@ class BenchmarkCharts:
                 charts.PlotLineSpec(
                     column=f"Expected ({kind})",
                     label_base="Expected",
+                    color_shade=1,
                     line_kwargs=dict(
                         linestyle="dashdot",
                         marker="s",
