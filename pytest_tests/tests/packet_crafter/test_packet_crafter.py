@@ -17,6 +17,9 @@ from lbr_testsuite.packet_crafter import random_types, scapy_packet_crafter
 from .conftest import _is_equal
 
 
+pytestmark = pytest.mark.skip("Currently not compatible with TRex Scapy used by Packet Crafter.")
+
+
 def test_ipv4_udp():
     """Ensure scapy_packet_crafter.ScapyPacketCrafter returns expected Scapy
     packets based on given specification.

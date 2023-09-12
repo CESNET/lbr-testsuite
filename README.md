@@ -2,7 +2,7 @@
 
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
-`common`, `ipconfigurer`, `executable`, `spirent`, `spirentlib` modules.
+`common`, `ipconfigurer`, `executable`, `spirent`, `spirentlib`, `trex` modules.
 
 ## Hosting and contribution
 
@@ -77,6 +77,14 @@ from lbr_testsuite import spirent
 from lbr_testsuite.spirent import spirentlib
 ```
 Provides API for Spirent Test Center (STC).
+
+
+For `trex`:
+```
+from lbr_testsuite import trex
+```
+Provides our custom API for Cisco TRex traffic generator.
+Official API is provided by required package [lbr_trex_client](https://gitlab.liberouter.org/testing/trex-client).
 
 
 ## Repository Maintainer
