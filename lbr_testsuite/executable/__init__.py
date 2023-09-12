@@ -1,5 +1,5 @@
 from .coredump import Coredump
-from .executable import Daemon, ExecutableProcessError, Tool
+from .executable import AsyncTool, Daemon, ExecutableProcessError, Tool
 from .executor import Executor, OutputIterator
 from .local_executor import LocalExecutor
 from .remote_executor import RemoteExecutor
@@ -9,6 +9,7 @@ from .strace import Strace
 
 
 __all__ = [
+    "AsyncTool",
     "Tool",
     "Daemon",
     "Service",
