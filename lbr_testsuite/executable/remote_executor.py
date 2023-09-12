@@ -241,6 +241,11 @@ class RemoteExecutor(Executor):
             See executable.Executable for more info.
         """
 
+        if self._process is not None:
+            raise RuntimeError(
+                "The previous process is running or the executor has not been reset."
+            )
+
         use_sudo = False
 
         # Convert to string
