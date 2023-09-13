@@ -244,6 +244,13 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
 
         return [scapy.ARP(pdst=dst_ip)]
 
+    def _get_l4_flags(self, flags):
+        """Get L4 flags as one string."""
+        if isinstance(flags, list):
+            return "".join([i.value for i in flags])
+
+        return flags.value
+
     def _prepare_l4_udp_tcp_sctp(self, spec, context=None):
         """Prepare L4 scapy headers: UDP(), TCP(), SCTP()"""
         if spec["l4"] == "udp":
@@ -273,6 +280,11 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
 
         context.extend(l4_src_instr)
         context.extend(l4_dst_instr)
+
+        if spec["l4"] == "tcp":
+            return [
+                L4_hdr(sport=src_port, dport=dst_port, flags=self._get_l4_flags(spec["l4_flags"]))
+            ]
 
         return [L4_hdr(sport=src_port, dport=dst_port)]
 
@@ -332,6 +344,8 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
                 10, (10-20), [10,12,17,20]. For more info see ``packet_crafter.ports.L4Ports``.
             l4_dst : int or list or tuple
                 Destination port(s). Same format as ``l4_src``.
+            l4_flag : TRexL4Flag or list(TRexL4Flag), optional
+                Any combination of TCP flags.
             pkt_len : int
                 Packet length (without Ethernet's FCS).
             pkt_paylen : int
