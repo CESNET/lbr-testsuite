@@ -182,6 +182,7 @@ class TRexAdvancedStateful(TRexBase):
         """
 
         self._handler.reset()
+        self._profile = None
 
     def wait_on_traffic(self, timeout=None):
         """Wait until traffic generation finishes.
