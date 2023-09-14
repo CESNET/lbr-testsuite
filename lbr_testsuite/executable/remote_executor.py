@@ -350,10 +350,7 @@ class RemoteExecutor(Executor):
             self.terminate()
             self._process.runner.kill()
 
-        try:
-            finished = self._process.join()
-        except invoke.exceptions.UnexpectedExit as ee:
-            finished = ee.result
+        finished = self._join_process()
 
         stdout = finished.stdout
         stderr = finished.stderr
@@ -395,9 +392,19 @@ class RemoteExecutor(Executor):
         if self._process is None:
             raise RuntimeError("Process was not started yet")
 
-        try:
-            result = self._process.join()
-        except invoke.exceptions.UnexpectedExit as ee:
-            return {"rc": ee.result.exited, "cmd": ee.result.command}
-
+        result = self._join_process()
         return {"rc": result.exited, "cmd": result.command}
+
+    def _join_process(self):
+        """Wrapper for invoke process join.
+
+        Returns
+        -------
+        invoke.runners.Result
+            Result of process execution.
+        """
+
+        try:
+            return self._process.join()
+        except invoke.exceptions.UnexpectedExit as ee:
+            return ee.result
