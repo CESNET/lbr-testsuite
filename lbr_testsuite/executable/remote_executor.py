@@ -8,16 +8,18 @@ Remote executor.
 Implement remote command execution via fabric module.
 """
 
+import io
 import logging
 import os
 import shlex
 import subprocess
+import time
 
 import fabric
 import invoke
 
 from .. import common
-from .executor import Executor
+from .executor import Executor, OutputIterator
 
 
 def ssh_agent_enabled():
@@ -65,6 +67,91 @@ class RemoteExecutor(Executor):
         SSH agent is required only if ``password`` or
         ``key_filename`` is not provided.
     """
+
+    class RemoteOutputIterator(OutputIterator):
+        """Class for creating iterators to read the output (stdout or stderr)
+        of a running process.
+        """
+
+        def __init__(self, executor, output_type):
+            """Initialize iterator.
+
+            Parameters
+            ----------
+            executor : RemoteExecutor
+                Executor with process from which the output is read.
+            output_type : str
+                "stdout" or "stderr"
+
+            Raises
+            ------
+            AssertionError
+                When output_type is not standard output (stdout, stderr).
+            """
+
+            assert output_type in ["stdout", "stderr"]
+
+            self._executor = executor
+            self._stdout = output_type == "stdout"
+            self._lines = None
+            self._buffer = []
+
+        @staticmethod
+        def _process_line(line):
+            line = line.replace("^C", "")
+            line = line.strip()
+            return line
+
+        @staticmethod
+        def _ends_endl(line):
+            return line.endswith("\n") or line.endswith("\r\n")
+
+        def __iter__(self):
+            """Return the iterator object itself."""
+
+            if not self._executor.is_running():
+                raise RuntimeError("Cannot read output of non-running process.")
+
+            if self._stdout:
+                self._lines = self._executor.get_process().runner.stdout
+            else:
+                self._lines = self._executor.get_process().runner.stderr
+            return self
+
+        def __next__(self):
+            """Retrieve the next line of output from the process.
+            Method blocks until the line is read or the process
+            is terminated.
+
+            Returns
+            -------
+            str
+                The next line of output as a string.
+
+            Raises
+            ------
+            StopIteration
+                When process ended.
+            """
+
+            while True:
+                if len(self._buffer) > 0 and self._ends_endl(self._buffer[0]):
+                    return self._process_line(self._buffer.pop(0))
+
+                if not self._executor.is_running():
+                    raise StopIteration
+
+                if len(self._lines) > 0:
+                    lines = io.StringIO(self._lines.pop(0)).readlines()
+
+                    if len(self._buffer) > 0:
+                        # append to discontinued line from last read
+                        self._buffer[0] += lines[0]
+                        self._buffer += lines[1:]
+                    else:
+                        self._buffer.extend(lines)
+
+                time.sleep(0.1)
 
     def __init__(
         self,
