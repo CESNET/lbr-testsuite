@@ -74,6 +74,7 @@ class RemoteExecutor(Executor):
         key_filename=None,
     ):
         self._process = None
+        self._result = None
         connect_kwargs = {}
 
         if password is not None:
@@ -129,6 +130,7 @@ class RemoteExecutor(Executor):
             self.wait_or_kill(1)
 
         self._process = None
+        self._result = None
 
     def get_host(self):
         """Get name of host where executor is running.
@@ -238,6 +240,11 @@ class RemoteExecutor(Executor):
             Optional arguments for run command.
             See executable.Executable for more info.
         """
+
+        if self._process is not None:
+            raise RuntimeError(
+                "The previous process is running or the executor has not been reset."
+            )
 
         use_sudo = False
 
@@ -350,10 +357,7 @@ class RemoteExecutor(Executor):
             self.terminate()
             self._process.runner.kill()
 
-        try:
-            finished = self._process.join()
-        except invoke.exceptions.UnexpectedExit as ee:
-            finished = ee.result
+        finished = self._join_process()
 
         stdout = finished.stdout
         stderr = finished.stderr
@@ -395,9 +399,27 @@ class RemoteExecutor(Executor):
         if self._process is None:
             raise RuntimeError("Process was not started yet")
 
-        try:
-            result = self._process.join()
-        except invoke.exceptions.UnexpectedExit as ee:
-            return {"rc": ee.result.exited, "cmd": ee.result.command}
-
+        result = self._join_process()
         return {"rc": result.exited, "cmd": result.command}
+
+    def _join_process(self):
+        """Wrapper for invoke process join. Prevents calling
+        join method more than once.
+
+        Process runner is finished and stopped while calling
+        join method. Repeated call of join returns different
+        result object.
+
+        Returns
+        -------
+        invoke.runners.Result
+            Result of process execution.
+        """
+
+        if self._result is None:
+            try:
+                self._result = self._process.join()
+            except invoke.exceptions.UnexpectedExit as ee:
+                self._result = ee.result
+
+        return self._result
