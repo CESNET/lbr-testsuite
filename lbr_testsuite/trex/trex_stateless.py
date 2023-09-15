@@ -42,6 +42,19 @@ class TRexStreamModeSelector(Enum):
     BURST = 2
 
 
+class TRexL4Flag(Enum):
+    """Enum for tcp flag selection"""
+
+    SYN = "S"
+    ACK = "A"
+    RST = "R"
+    URG = "U"
+    PSH = "P"
+    FIN = "F"
+    ECE = "E"
+    CWR = "C"
+
+
 @dataclass(frozen=True)
 class TRexStream:
     """Class representing TRex stream.
@@ -101,6 +114,8 @@ class TRexStream:
             | List: [80, 443, 8080]
     l4_dst : various, optional
         Destination ports. It has same format as ``l4_src``.
+    l4_flags : various, optional
+        Any combination of TCP flags. Default value/flag is SYN.
 
     pkt_len : int, optional
         Packet length including Ethernet FCS field.
@@ -144,6 +159,7 @@ class TRexStream:
     l4: Optional[str] = None
     l4_src: Optional[Union[int, tuple, list]] = None
     l4_dst: Optional[Union[int, tuple, list]] = None
+    l4_flags: Optional[Union[list, TRexL4Flag]] = TRexL4Flag.SYN
     pkt_len: int = 100
     rate: str = "1kpps"
     mode_selector: TRexStreamModeSelector = TRexStreamModeSelector.CONTINUOUS
