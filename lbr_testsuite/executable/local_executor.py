@@ -10,11 +10,71 @@ Implement local command execution via subprocess module.
 
 import subprocess
 
-from .executor import Executor
+from .executor import Executor, OutputIterator
 
 
 class LocalExecutor(Executor):
     """Implement local command execution via subprocess module."""
+
+    class LocalOutputIterator(OutputIterator):
+        """Class for creating iterators to read the output (stdout or stderr)
+        of a running process.
+        """
+
+        def __init__(self, executor, output_type):
+            """Initialize iterator.
+
+            Parameters
+            ----------
+            executor : LocalExecutor
+                Executor with process from which the output is read.
+            output_type : str
+                "stdout" or "stderr"
+
+            Raises
+            ------
+            AssertionError
+                When output_type is not standard output (stdout, stderr).
+            """
+
+            assert output_type in ["stdout", "stderr"]
+
+            self._executor = executor
+            self._stdout = output_type == "stdout"
+            self._lines = None
+
+        def __iter__(self):
+            """Return the iterator object itself."""
+
+            if not self._executor.is_running():
+                raise RuntimeError("Cannot read output of non-running process.")
+
+            if self._stdout:
+                self._lines = iter(self._executor.get_process().stdout)
+            else:
+                self._lines = iter(self._executor.get_process().stderr)
+            return self
+
+        def __next__(self):
+            """Retrieve the next line of output from the process.
+            Method blocks until the line is read or the process
+            is terminated.
+
+            Returns
+            -------
+            str
+                The next line of output as a string.
+
+            Raises
+            ------
+            StopIteration
+                When process ended.
+            """
+
+            if not self._executor.is_running():
+                raise StopIteration
+
+            return next(self._lines).strip()
 
     def __init__(self):
         self._process = None
