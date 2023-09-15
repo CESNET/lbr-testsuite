@@ -301,3 +301,23 @@ class LocalExecutor(Executor):
             "rc": self._process.returncode,
             "cmd": self._process.args,
         }
+
+    def get_output_iterators(self):
+        """Get iterators for stdout and stderr.
+
+        Iterators are intended to be used only while the process is running.
+        Reading output should be realized only by one instance of iterator.
+
+        Note: each line which is read by iterator is removed from the final
+        output (wait_or_kill method).
+
+        Returns
+        -------
+        tuple(OutputIterator, OutputIterator)
+            Tuple containing stdout and stderr iterator.
+        """
+
+        return (
+            self.LocalOutputIterator(self, "stdout"),
+            self.LocalOutputIterator(self, "stderr"),
+        )

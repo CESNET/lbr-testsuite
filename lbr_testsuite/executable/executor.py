@@ -188,3 +188,15 @@ class Executor(ABC):
         """
 
         pass
+
+    @abstractmethod
+    def get_output_iterators(self):
+        """Get iterators for stdout and stderr.
+
+        Returns
+        -------
+        tuple(OutputIterator, OutputIterator)
+            Tuple containing stdout and stderr iterator.
+        """
+
+        pass

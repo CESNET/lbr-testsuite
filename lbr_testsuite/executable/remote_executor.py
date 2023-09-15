@@ -489,6 +489,26 @@ class RemoteExecutor(Executor):
         result = self._join_process()
         return {"rc": result.exited, "cmd": result.command}
 
+    def get_output_iterators(self):
+        """Get iterators for stdout and stderr.
+
+        Iterators are intended to be used only while the process is running.
+        Reading output should be realized only by one instance of iterator.
+
+        Note: each line which is read by iterator is removed from the final
+        output (wait_or_kill method).
+
+        Returns
+        -------
+        tuple(OutputIterator, OutputIterator)
+            Tuple containing stdout and stderr iterator.
+        """
+
+        return (
+            self.RemoteOutputIterator(self, "stdout"),
+            self.RemoteOutputIterator(self, "stderr"),
+        )
+
     def _join_process(self):
         """Wrapper for invoke process join. Prevents calling
         join method more than once.
