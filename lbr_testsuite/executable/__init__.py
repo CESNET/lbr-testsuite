@@ -1,6 +1,6 @@
 from .coredump import Coredump
 from .executable import Daemon, ExecutableProcessError, Tool
-from .executor import Executor
+from .executor import Executor, OutputIterator
 from .local_executor import LocalExecutor
 from .remote_executor import RemoteExecutor
 from .rsync import Rsync, RsyncException
@@ -20,4 +20,5 @@ __all__ = [
     "RemoteExecutor",
     "ExecutableProcessError",
     "RsyncException",
+    "OutputIterator",
 ]
