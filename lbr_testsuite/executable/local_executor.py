@@ -120,15 +120,21 @@ class LocalExecutor(Executor):
         self._process.wait()
 
     @staticmethod
-    def _prepend_sudo_to_command(cmd):
+    def _prepend_to_command(prepend, cmd):
         if isinstance(cmd, str):
-            cmd = "sudo " + cmd
+            cmd = f"{prepend} {cmd}"
         elif isinstance(cmd, list):
-            cmd = ["sudo"] + cmd
+            prepend = prepend.split()
+            cmd = prepend + cmd
         elif isinstance(cmd, tuple):
-            cmd = ("sudo",) + cmd
+            prepend = tuple(prepend.split())
+            cmd = prepend + cmd
 
         return cmd
+
+    @staticmethod
+    def _prepend_sudo_to_command(cmd):
+        return LocalExecutor._prepend_to_command("sudo", cmd)
 
     def run(self, cmd, netns=None, sudo=False, **options):
         """Run command.
