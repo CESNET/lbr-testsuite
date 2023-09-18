@@ -10,8 +10,6 @@ Implement local command execution via subprocess module.
 
 import subprocess
 
-import pyroute2
-
 from .executor import Executor
 
 
@@ -136,6 +134,11 @@ class LocalExecutor(Executor):
     def _prepend_sudo_to_command(cmd):
         return LocalExecutor._prepend_to_command("sudo", cmd)
 
+    @staticmethod
+    def _prepend_netns_to_command(cmd, netns):
+        ip_path = "/usr/sbin/ip"
+        return LocalExecutor._prepend_to_command(f"{ip_path} netns exec {netns}", cmd)
+
     def run(self, cmd, netns=None, sudo=False, **options):
         """Run command.
 
@@ -159,9 +162,9 @@ class LocalExecutor(Executor):
             cmd = self._prepend_sudo_to_command(cmd)
 
         if netns:
-            self._process = pyroute2.NSPopen(netns, cmd, **options)
-        else:
-            self._process = subprocess.Popen(cmd, **options)
+            cmd = self._prepend_netns_to_command(cmd, netns)
+
+        self._process = subprocess.Popen(cmd, **options)
 
     def wait_or_kill(self, timeout=None):
         """Wait for process to finish within given timeout.
