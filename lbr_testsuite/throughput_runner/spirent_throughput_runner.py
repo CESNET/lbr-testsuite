@@ -62,7 +62,7 @@ class SpirentThroughputRunner:
         tx = stats["tx"]["FrameCount"]
         rx = stats["rx"]["FrameCount"]
 
-        self._logger.debug(f"Stream block '{block.name}':")
+        self._logger.debug(f"Stream block '{block.name()}':")
         self._logger.debug(
             f"TX: {tx} frames (100 %), "
             f"RX: {rx} frames ({rx / tx:.1%}), "
@@ -104,7 +104,7 @@ class SpirentThroughputRunner:
                 block.set_packet_len(packet_len)
 
         for block in self._stream_blocks:
-            block.configure()
+            block.apply()
 
         self._warm_up()
 

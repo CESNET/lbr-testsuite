@@ -10,7 +10,7 @@ Stream block helper class.
 
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional
 
 from .spirent import Spirent
@@ -42,8 +42,8 @@ class AbstractStreamBlock(ABC):
         return self._name
 
     @abstractmethod
-    def configure(self):
-        """Configure the stream block using instance attributes."""
+    def apply(self):
+        """Apply the stream block using instance attributes."""
 
         pass
 
@@ -207,7 +207,7 @@ class StreamBlock(AbstractStreamBlock):
     class Config:
         """Dynamic stream block configuration. Properties of this object
         represent values that can be modified during runtime. However,
-        the properties may not be applied instantly. Instead, the 'configure'
+        the properties may not be applied instantly. Instead, the 'apply()'
         method should be used to apply the dynamic configuration in inherited
         classes.
         """
@@ -295,11 +295,10 @@ class StreamBlock(AbstractStreamBlock):
 
         self._working_config.vlan = vlan
 
-    def configure(self):
-        """Configure the working configuration. In this case, only the
-        packet length is going to be applied.
+    def apply(self):
+        """Apply the working configuration.
 
-        This method should also be called by the 'configure()'
+        This method should also be called by the 'apply()'
         method in inherited classes. To be used correctly, it
         should be called after all configuration of the inherited
         classes is done.
@@ -320,4 +319,4 @@ class StreamBlock(AbstractStreamBlock):
         if self._working_config.dst_mac != self._applied_config.dst_mac:
             self._apply_dst_mac(self._working_config.dst_mac)
 
-        self._applied_config = self._working_config
+        self._applied_config = replace(self._working_config)
