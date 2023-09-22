@@ -40,7 +40,7 @@ class Service:
         self._name = name
         self._start_to = start_timeout
         self._stop_to = stop_timeout
-        self._last_start_time = None
+        self._last_start_time = self._get_activation_time()
         self._logger = logging.getLogger(self._name)
 
     def is_active(self, after=None):
@@ -83,6 +83,24 @@ class Service:
             properties_dict[key] = val
 
         return properties_dict
+
+    def _get_activation_time(self):
+        """Obtain the activation time of the service.
+
+        Returns
+        -------
+        datetime.datetime
+            Activation time of managed service.
+        """
+
+        if not self.is_active():
+            return None
+
+        props = self._parse_systemd_properties()
+        timestamp_str = props["ActiveEnterTimestamp"]
+
+        timestamp = datetime.strptime(timestamp_str, "%a %Y-%m-%d %H:%M:%S %Z")
+        return timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
     def returncode(self):
         """Check the exit return code of the service.
