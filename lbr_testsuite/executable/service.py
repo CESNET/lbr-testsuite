@@ -67,6 +67,23 @@ class Service:
         stdout, _ = c.run()
         return stdout.strip() == "active"
 
+    def _parse_systemd_properties(self):
+        cmd = [
+            "systemctl",
+            "show",
+            self._name,
+        ]
+
+        properties_str, _ = executable.Tool(cmd).run()
+        properties_dict = {}
+
+        for prop_line in properties_str.splitlines():
+            prop_line_strip = prop_line.strip()
+            key, val = prop_line_strip.split("=", maxsplit=1)
+            properties_dict[key] = val
+
+        return properties_dict
+
     def returncode(self):
         """Check the exit return code of the service.
 
