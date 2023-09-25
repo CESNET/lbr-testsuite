@@ -106,12 +106,8 @@ class Service:
         if self.is_active():
             raise RuntimeError(f"Service '{self._name}' is running, cannot retrieve return code.")
 
-        c = executable.Tool(["systemctl", "show", self._name, "--property", "ExecMainStatus"])
-        stdout, _ = c.run()
-        out_split = stdout.split("=")
-
-        # Return just the code
-        return int(out_split[1])
+        ec = self._parse_systemd_properties()["ExecMainStatus"]
+        return int(ec)
 
     def _started(self):
         if self._last_start_time is not None:
