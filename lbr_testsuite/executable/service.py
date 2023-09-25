@@ -151,6 +151,7 @@ class Service:
 
     def _start_or_restart(self, blocking, restart=False):
         action = "start" if not restart else "restart"
+        self._last_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._run_sysctl_action(action)
 
         if blocking:
@@ -179,7 +180,6 @@ class Service:
             Blocking start timeout expired and service did not start.
         """
 
-        self._last_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._start_or_restart(blocking)
 
     def stop(self, blocking=True):
