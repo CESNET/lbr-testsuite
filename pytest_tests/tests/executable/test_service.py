@@ -404,6 +404,26 @@ def test_service_restart_blocking_success(helper_srv_ok):
 
 
 @pytest.mark.systemd
+def test_service_start_by_restart(helper_srv_ok):
+    """Test successful restart of a service that has not been
+    started. This should just start the service.
+
+    Parameters
+    ----------
+    helper_srv_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    assert not srv.is_active()
+
+    srv.restart(blocking=True)
+    assert srv.is_active()
+
+    srv.stop(blocking=False)
+
+
+@pytest.mark.systemd
 def test_service_reload_success(helper_srv_ok, tmp_path):
     """Test successful reload of a helper service.
 
