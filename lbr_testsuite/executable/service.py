@@ -40,7 +40,7 @@ class Service:
         self._name = name
         self._start_to = start_timeout
         self._stop_to = stop_timeout
-        self._start_time = None
+        self._last_start_time = None
         self._logger = logging.getLogger(self._name)
 
     def is_active(self, after=None):
@@ -82,7 +82,7 @@ class Service:
             no return code can be retrieved.
         """
 
-        if self._start_time is None:
+        if self._last_start_time is None:
             raise RuntimeError(
                 f"Service '{self._name}' has not been started, cannot retrieve return code."
             )
@@ -97,7 +97,7 @@ class Service:
         return int(out_split[1])
 
     def _started(self):
-        if self._start_time is not None:
+        if self._last_start_time is not None:
             return self.is_active()
 
     def _not_started(self):
@@ -148,7 +148,7 @@ class Service:
             Blocking start timeout expired and service did not start.
         """
 
-        self._start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._last_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._start_or_restart(blocking)
 
     def stop(self, blocking=True):
@@ -216,5 +216,5 @@ class Service:
         self._run_sysctl_action("reload")
 
     def _journalctl_extract_logs(self):
-        c = executable.Tool(["journalctl", "-u", self._name, "--since", self._start_time])
+        c = executable.Tool(["journalctl", "-u", self._name, "--since", self._last_start_time])
         return c.run()
