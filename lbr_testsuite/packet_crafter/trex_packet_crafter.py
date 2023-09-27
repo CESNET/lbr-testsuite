@@ -261,21 +261,23 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
         src_port = 0
         dst_port = 0
 
-        if "l4_src" in spec and ports.L4Ports(spec["l4_src"]).is_single_port():
-            src_port = ports.L4Ports(spec["l4_src"]).ports()
+        if "l4_src" in spec:
+            l4_ports = ports.L4Ports(spec["l4_src"])
 
-        if "l4_dst" in spec and ports.L4Ports(spec["l4_dst"]).is_single_port():
-            dst_port = ports.L4Ports(spec["l4_dst"]).ports()
+            if l4_ports.is_single_port():
+                src_port = l4_ports.ports()
 
-        l4_src_instr = self._fe_builder.prepare_l4_instructions(
-            spec, ports.L4Ports(spec["l4_src"]), "src"
-        )
-        l4_dst_instr = self._fe_builder.prepare_l4_instructions(
-            spec, ports.L4Ports(spec["l4_dst"]), "dst"
-        )
+            l4_src_instr = self._fe_builder.prepare_l4_instructions(spec, l4_ports, "src")
+            context.extend(l4_src_instr)
 
-        context.extend(l4_src_instr)
-        context.extend(l4_dst_instr)
+        if "l4_dst" in spec:
+            l4_ports = ports.L4Ports(spec["l4_dst"])
+
+            if l4_ports.is_single_port():
+                dst_port = l4_ports.ports()
+
+            l4_dst_instr = self._fe_builder.prepare_l4_instructions(spec, l4_ports, "dst")
+            context.extend(l4_dst_instr)
 
         if spec["l4"] == "tcp":
             return [
