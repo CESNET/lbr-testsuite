@@ -209,21 +209,17 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
         else:
             RuntimeError(f'unsupported l3: {spec["l3"]}')
 
-        if "l3_src" in spec and IPAddresses(spec["l3_src"]).is_single_ip():
-            src_ip = str(IPAddresses(spec["l3_src"]).addresses_as_list()[0])
+        if "l3_src" in spec:
+            addrs = IPAddresses(spec["l3_src"])
+            src_ip = addrs.first_ip()
+            l3_src_instr = self._fe_builder.prepare_l3_instructions(spec, addrs, "src")
+            context.extend(l3_src_instr)
 
-        if "l3_dst" in spec and IPAddresses(spec["l3_dst"]).is_single_ip():
-            dst_ip = str(IPAddresses(spec["l3_dst"]).addresses_as_list()[0])
-
-        l3_src_instr = self._fe_builder.prepare_l3_instructions(
-            spec, IPAddresses(spec["l3_src"]), "src"
-        )
-        l3_dst_instr = self._fe_builder.prepare_l3_instructions(
-            spec, IPAddresses(spec["l3_dst"]), "dst"
-        )
-
-        context.extend(l3_src_instr)
-        context.extend(l3_dst_instr)
+        if "l3_dst" in spec:
+            addrs = IPAddresses(spec["l3_dst"])
+            dst_ip = addrs.first_ip()
+            l3_dst_instr = self._fe_builder.prepare_l3_instructions(spec, addrs, "dst")
+            context.extend(l3_dst_instr)
 
         return [IP_hdr(src=src_ip, dst=dst_ip)]
 
