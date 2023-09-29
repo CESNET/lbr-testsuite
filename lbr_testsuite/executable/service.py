@@ -40,7 +40,7 @@ class Service:
         self._name = name
         self._start_to = start_timeout
         self._stop_to = stop_timeout
-        self._start_time = None
+        self._last_start_time = self._get_activation_time()
         self._logger = logging.getLogger(self._name)
 
     def is_active(self, after=None):
@@ -67,6 +67,41 @@ class Service:
         stdout, _ = c.run()
         return stdout.strip() == "active"
 
+    def _parse_systemd_properties(self):
+        cmd = [
+            "systemctl",
+            "show",
+            self._name,
+        ]
+
+        properties_str, _ = executable.Tool(cmd).run()
+        properties_dict = {}
+
+        for prop_line in properties_str.splitlines():
+            prop_line_strip = prop_line.strip()
+            key, val = prop_line_strip.split("=", maxsplit=1)
+            properties_dict[key] = val
+
+        return properties_dict
+
+    def _get_activation_time(self):
+        """Obtain the activation time of the service.
+
+        Returns
+        -------
+        datetime.datetime
+            Activation time of managed service.
+        """
+
+        if not self.is_active():
+            return None
+
+        props = self._parse_systemd_properties()
+        timestamp_str = props["ActiveEnterTimestamp"]
+
+        timestamp = datetime.strptime(timestamp_str, "%a %Y-%m-%d %H:%M:%S %Z")
+        return timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
     def returncode(self):
         """Check the exit return code of the service.
 
@@ -82,22 +117,18 @@ class Service:
             no return code can be retrieved.
         """
 
-        if self._start_time is None:
+        if self._last_start_time is None:
             raise RuntimeError(
                 f"Service '{self._name}' has not been started, cannot retrieve return code."
             )
         if self.is_active():
             raise RuntimeError(f"Service '{self._name}' is running, cannot retrieve return code.")
 
-        c = executable.Tool(["systemctl", "show", self._name, "--property", "ExecMainStatus"])
-        stdout, _ = c.run()
-        out_split = stdout.split("=")
-
-        # Return just the code
-        return int(out_split[1])
+        ec = self._parse_systemd_properties()["ExecMainStatus"]
+        return int(ec)
 
     def _started(self):
-        if self._start_time is not None:
+        if self._last_start_time is not None:
             return self.is_active()
 
     def _not_started(self):
@@ -120,6 +151,7 @@ class Service:
 
     def _start_or_restart(self, blocking, restart=False):
         action = "start" if not restart else "restart"
+        self._last_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._run_sysctl_action(action)
 
         if blocking:
@@ -148,7 +180,6 @@ class Service:
             Blocking start timeout expired and service did not start.
         """
 
-        self._start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._start_or_restart(blocking)
 
     def stop(self, blocking=True):
@@ -216,5 +247,5 @@ class Service:
         self._run_sysctl_action("reload")
 
     def _journalctl_extract_logs(self):
-        c = executable.Tool(["journalctl", "-u", self._name, "--since", self._start_time])
+        c = executable.Tool(["journalctl", "-u", self._name, "--since", self._last_start_time])
         return c.run()

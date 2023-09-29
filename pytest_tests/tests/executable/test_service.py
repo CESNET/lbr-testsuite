@@ -25,18 +25,21 @@ SYSTEMD_SERVICE_PATH = pathlib.Path("/usr/lib/systemd/system")
 HELPER_SERVICE_NAME = "lbr-testsuite-testing-helper.service"
 HELPER_SERVICE_PATH = SYSTEMD_SERVICE_PATH / HELPER_SERVICE_NAME
 
+SERVICE_DESCRIPTION = "Systemd service unit file for lbr-testsuite testing."
+SERVICE_TYPE = "simple"
+
 # Note: old version of systemd on our systems does not support
 # "file" for StandardOutput/StandardError
 SERVICE_TEMPLATE = """
 [Unit]
-Description=Systemd service unit file for lbr-testsuite testing.
+Description={description}
 
 [Service]
 ExecStartPre={pre_start}
 ExecStart={app} {args}
 ExecStartPost={post_start}
 ExecReload=touch {reload_file}
-Type=simple
+Type={service_type}
 StandardOutput=null
 StandardError=inherit
 """
@@ -77,6 +80,8 @@ def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post
     def helper_service(require_root, helper_app, tmp_path):
         HELPER_SERVICE_PATH.write_text(
             SERVICE_TEMPLATE.format(
+                description=SERVICE_DESCRIPTION,
+                service_type=SERVICE_TYPE,
                 pre_start=helper_pre_start,
                 post_start=helper_post_start,
                 app=helper_app,
@@ -399,6 +404,26 @@ def test_service_restart_blocking_success(helper_srv_ok):
 
 
 @pytest.mark.systemd
+def test_service_start_by_restart(helper_srv_ok):
+    """Test successful restart of a service that has not been
+    started. This should just start the service.
+
+    Parameters
+    ----------
+    helper_srv_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    assert not srv.is_active()
+
+    srv.restart(blocking=True)
+    assert srv.is_active()
+
+    srv.stop(blocking=False)
+
+
+@pytest.mark.systemd
 def test_service_reload_success(helper_srv_ok, tmp_path):
     """Test successful reload of a helper service.
 
@@ -418,5 +443,31 @@ def test_service_reload_success(helper_srv_ok, tmp_path):
 
     assert _reload_file(tmp_path).is_file()
     assert srv.is_active()
+
+    srv.stop(blocking=False)
+
+
+@pytest.mark.systemd
+def test_service_parse_systemd_properties(helper_srv_ok):
+    """Test correct reading of systemd properties from helper service.
+
+    The test checks correct values of 'Description' and 'Type' properties
+    as these are among the explicitly specified properties. Other properties
+    may be present in the extracted dictionary, but their value can vary
+    between runs or they can be different based on the specific service.
+
+    Parameters
+    ----------
+    helper_src_ok : fixture
+        Fixture generating a systemd service.
+    """
+
+    srv = Service(helper_srv_ok)
+    srv.start(blocking=True)
+    assert srv.is_active()
+
+    prop_dict = srv._parse_systemd_properties()
+    assert prop_dict["Description"] == SERVICE_DESCRIPTION
+    assert prop_dict["Type"] == SERVICE_TYPE
 
     srv.stop(blocking=False)
