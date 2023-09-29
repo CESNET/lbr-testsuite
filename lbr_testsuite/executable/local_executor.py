@@ -231,6 +231,9 @@ class LocalExecutor(Executor):
 
         If process fails to finish, it will be killed.
 
+        Note: None timeout can make it impossible to read the outputs repeatedly
+        (communicate method). Therefore, None is converted to a very long timeout.
+
         Parameters
         ----------
         timeout : float, optional
@@ -247,6 +250,9 @@ class LocalExecutor(Executor):
         RuntimeError
             If process doesn't exist yet (command was not run).
         """
+
+        if timeout is None:
+            timeout = 1e6
 
         if not self._process:
             raise RuntimeError("Process was not started yet")
