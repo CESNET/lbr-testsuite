@@ -287,6 +287,34 @@ class BaseIPAddresses:
 
         return list(map(str, hosts))
 
+    def first_ip(self):
+        """Return first IP address.
+
+        It is the first address in the list or the
+        first address in the IP prefix (i.e. network address).
+
+        Returns
+        -------
+        str
+            IP address.
+        """
+
+        return str(ipaddress.ip_network(self._addr_list[0]).network_address)
+
+    def last_ip(self):
+        """Return last IP address.
+
+        It is the last address in the list or the
+        last address in the IP prefix (i.e. broadcast address).
+
+        Returns
+        -------
+        str
+            IP address.
+        """
+
+        return str(ipaddress.ip_network(self._addr_list[-1]).broadcast_address)
+
 
 class IPv4Addresses(BaseIPAddresses):
     """Common interface for IPv4 addresses format.

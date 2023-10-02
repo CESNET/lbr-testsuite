@@ -97,6 +97,8 @@ def test_ipv4_single_address():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "10.0.0.0"
+        assert addr.last_ip() == "10.0.0.0"
 
 
 def test_ipv6_single_address():
@@ -116,6 +118,8 @@ def test_ipv6_single_address():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "aaaa::"
+        assert addr.last_ip() == "aaaa::"
 
 
 def test_ipv4_single_prefix():
@@ -137,6 +141,8 @@ def test_ipv4_single_prefix():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "10.0.0.0"
+        assert addr.last_ip() == "10.0.0.255"
 
 
 def test_ipv6_single_prefix():
@@ -157,6 +163,8 @@ def test_ipv6_single_prefix():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "aaaa::"
+        assert addr.last_ip() == "aaaa::ff"
 
 
 def test_ipv4_dict_without_step():
@@ -191,6 +199,8 @@ def test_ipv4_dict_without_step():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "10.0.0.0"
+        assert addr.last_ip() == "10.0.0.9"
 
 
 def test_ipv6_dict_without_step():
@@ -225,6 +235,8 @@ def test_ipv6_dict_without_step():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "aaaa::"
+        assert addr.last_ip() == "aaaa::9"
 
 
 def test_ipv4_dict_with_step():
@@ -258,6 +270,8 @@ def test_ipv4_dict_with_step():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "10.0.0.0"
+        assert addr.last_ip() == "10.0.0.180"
 
 
 def test_ipv6_dict_with_step():
@@ -291,6 +305,8 @@ def test_ipv6_dict_with_step():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "aaaa::"
+        assert addr.last_ip() == "aaaa::b4"
 
 
 def test_ipv4_dict_wrong_testing_datas():
@@ -352,6 +368,8 @@ def test_ipv4_random():
     ip_gen, host_gen = _get_generator_output(addr)
     assert _is_equal(ip_gen, addr.addresses_as_list())
     assert _is_equal(host_gen, addr.hosts_as_list())
+    assert addr.first_ip() == "184.135.155.222"
+    assert addr.last_ip() == "69.148.119.107"
 
 
 def test_ipv6_random():
@@ -375,6 +393,8 @@ def test_ipv6_random():
     ip_gen, host_gen = _get_generator_output(addr)
     assert _is_equal(ip_gen, addr.addresses_as_list())
     assert _is_equal(host_gen, addr.hosts_as_list())
+    assert addr.first_ip() == "2293:202c:28df:a298:d49:6d4c:da22:594f"
+    assert addr.last_ip() == "d6a8:2a95:1b92:3e0a:443c:def4:6840:ff07"
 
 
 def test_ipv4_list():
@@ -405,6 +425,8 @@ def test_ipv4_list():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "10.0.0.1"
+        assert addr.last_ip() == "10.0.0.4"
 
 
 def test_ipv6_list():
@@ -435,6 +457,8 @@ def test_ipv6_list():
         ip_gen, host_gen = _get_generator_output(addr)
         assert _is_equal(ip_gen, addr.addresses_as_list())
         assert _is_equal(host_gen, addr.hosts_as_list())
+        assert addr.first_ip() == "aaaa::1"
+        assert addr.last_ip() == "aaaa::4"
 
 
 def test_ipv4_restricted_range():
@@ -668,6 +692,8 @@ def test_ipv4_complex_list():
     ip_gen, host_gen = _get_generator_output(addr)
     assert _is_equal(ip_gen, addr.addresses_as_list())
     assert _is_equal(host_gen, addr.hosts_as_list())
+    assert addr.first_ip() == "10.0.0.0"
+    assert addr.last_ip() == "69.148.119.107"
 
 
 def test_ipv6_complex_list():
@@ -733,3 +759,5 @@ def test_ipv6_complex_list():
     ip_gen, host_gen = _get_generator_output(addr)
     assert _is_equal(ip_gen, addr.addresses_as_list())
     assert _is_equal(host_gen, addr.hosts_as_list())
+    assert addr.first_ip() == "aaa0::"
+    assert addr.last_ip() == "d6a8:2a95:1b92:3e0a:443c:def4:6840:ff07"
