@@ -325,7 +325,7 @@ class IPv4Addresses(BaseIPAddresses):
     _PREFIX_MAXLEN = 32
 
     def addresses_as_list(self):
-        """Return addresses in form of list.
+        """Return addresses in form of sorted list.
 
         Returns
         ------
@@ -345,7 +345,7 @@ class IPv4Addresses(BaseIPAddresses):
         return addresses
 
     def hosts_as_list(self):
-        """Return usable hosts in form of list.
+        """Return usable hosts in form of sorted list.
 
         This method differs from ``addresses_as_list`` as it does
         **not** include network and broadcast address when prefix
@@ -458,7 +458,7 @@ class IPv6Addresses(BaseIPAddresses):
     _PREFIX_MAXLEN = 128
 
     def addresses_as_list(self):
-        """Return addresses in form of list.
+        """Return addresses in form of sorted list.
 
         Returns
         ------
@@ -478,7 +478,7 @@ class IPv6Addresses(BaseIPAddresses):
         return addresses
 
     def hosts_as_list(self):
-        """Return usable hosts in form of list.
+        """Return usable hosts in form of sorted list.
 
         This method differs from ``addresses_as_list`` as it does
         **not** include network address (Subnet-Router anycast address) when prefix
