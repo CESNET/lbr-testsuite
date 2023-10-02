@@ -286,6 +286,10 @@ class DataTableCharts:
         else:
             return [data]
 
+    @staticmethod
+    def _cast_value_to_column_type(data, column, value):
+        return data.dtypes[column].type(value)
+
     def _get_colors_by_params(self, ch_spec, data):
         """Lines in current plot are defined by:
         1) filtering - selects data to plot
@@ -298,7 +302,18 @@ class DataTableCharts:
         color_key = dict()
         if ch_spec.filter_by:
             for k, v in ch_spec.filter_by.items():
-                color_key[k] = v
+                """Filtering values - key (column) + value - comes from
+                a user. However, user does not know about data type used
+                in underlying data table. This can lead to situations
+                where an inconsistent data types are used. E.g. integer
+                is passed as a value but in the data table a related
+                column has a float data type. Using such mixed data
+                types might than lead to non-matching keys.
+
+                With normalization, values are always converted to data
+                table data type.
+                """
+                color_key[k] = self._cast_value_to_column_type(data, k, v)
         if ch_spec.parametrized_by:
             for p in ch_spec.parametrized_by:
                 color_key[p] = data[p].iloc[0]
