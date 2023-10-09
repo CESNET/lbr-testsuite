@@ -428,6 +428,30 @@ class TRexStateless(TRexBase):
 
         return self._handler.get_stats(ports=port)
 
+    def start_capture(self, limit, port=None, bpf_filter=""):
+        """Start capturing traffic (both RX and TX) on given port.
+
+        Reimplementation of parent method. For details
+        see TRexBase.start_capture.
+        """
+
+        port = self._preprocess_ports(port)
+        self._handler.set_service_mode(ports=port, enabled=True)
+
+        return super().start_capture(limit, port, bpf_filter)
+
+    def stop_capture(self, capture_id, pcap_file=None):
+        """Stop capture and provide captured traffic.
+
+        Reimplementation of parent method. For details
+        see TRexBase.stop_capture.
+        """
+
+        ret = super().stop_capture(capture_id, pcap_file)
+        self._handler.set_service_mode(ports=capture_id["port"], enabled=False)
+
+        return ret
+
     def _start_trex(self, host, remote_cfg_file, sync_port, async_port):
         """Start TRex and return its handler.
 

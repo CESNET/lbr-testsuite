@@ -279,10 +279,6 @@ class TRexBase:
             Packet capture is not enabled.
         """
 
-        port = self._preprocess_ports(port)
-
-        self._handler.set_service_mode(ports=port, enabled=True)
-
         cid = self._handler.start_capture(
             tx_ports=port,
             rx_ports=port,
@@ -312,8 +308,6 @@ class TRexBase:
 
         if pcap_file is not None:
             self._handler.stop_capture(capture_id["id"], pcap_file)
-            self._handler.set_service_mode(ports=capture_id["port"], enabled=False)
-
             return None
 
         def _extract_packet_data(pkt):
@@ -321,6 +315,5 @@ class TRexBase:
 
         packets = []
         self._handler.stop_capture(capture_id["id"], packets)
-        self._handler.set_service_mode(ports=capture_id["port"], enabled=False)
 
         return list(map(_extract_packet_data, packets))
