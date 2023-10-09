@@ -240,6 +240,16 @@ class TRexBase:
 
         return self._handler.get_port_attr(port)["src_mac"]
 
+    def _preprocess_ports(self, port):
+        """Validate ports and transform None value to all available ports."""
+
+        if port is not None:
+            self._check_valid_port(port)
+        else:
+            port = self._ports
+
+        return port
+
     def start_capture(self, limit, port=None, bpf_filter=""):
         """Start capturing traffic (both RX and TX) on given port.
 
@@ -269,10 +279,7 @@ class TRexBase:
             Packet capture is not enabled.
         """
 
-        if port is not None:
-            self._check_valid_port(port)
-        else:
-            port = self._ports
+        port = self._preprocess_ports(port)
 
         self._handler.set_service_mode(ports=port, enabled=True)
 
