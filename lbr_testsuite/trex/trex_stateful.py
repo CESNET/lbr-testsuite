@@ -356,6 +356,17 @@ class TRexAdvancedStateful(TRexBase):
 
         return self._handler.get_stats(skip_zero=False)
 
+    def start_capture(self, limit, port=None, bpf_filter=""):
+        """Start capturing traffic (both RX and TX) on given port.
+
+        Reimplementation of parent method. For details
+        see TRexBase.start_capture.
+        """
+
+        port = self._preprocess_ports(port)
+
+        return super().start_capture(limit, port, bpf_filter)
+
     def _start_trex(self, host, remote_cfg_file, sync_port, async_port):
         """Start TRex and return its handler.
 

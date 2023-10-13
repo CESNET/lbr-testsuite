@@ -240,6 +240,16 @@ class TRexBase:
 
         return self._handler.get_port_attr(port)["src_mac"]
 
+    def _preprocess_ports(self, port):
+        """Validate ports and transform None value to all available ports."""
+
+        if port is not None:
+            self._check_valid_port(port)
+        else:
+            port = self._ports
+
+        return port
+
     def start_capture(self, limit, port=None, bpf_filter=""):
         """Start capturing traffic (both RX and TX) on given port.
 
@@ -268,13 +278,6 @@ class TRexBase:
         RuntimeError
             Packet capture is not enabled.
         """
-
-        if port is not None:
-            self._check_valid_port(port)
-        else:
-            port = self._ports
-
-        self._handler.set_service_mode(ports=port, enabled=True)
 
         cid = self._handler.start_capture(
             tx_ports=port,
@@ -305,8 +308,6 @@ class TRexBase:
 
         if pcap_file is not None:
             self._handler.stop_capture(capture_id["id"], pcap_file)
-            self._handler.set_service_mode(ports=capture_id["port"], enabled=False)
-
             return None
 
         def _extract_packet_data(pkt):
@@ -314,6 +315,5 @@ class TRexBase:
 
         packets = []
         self._handler.stop_capture(capture_id["id"], packets)
-        self._handler.set_service_mode(ports=capture_id["port"], enabled=False)
 
         return list(map(_extract_packet_data, packets))
