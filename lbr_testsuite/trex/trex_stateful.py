@@ -14,7 +14,7 @@ device.
 
 import ipaddress
 from dataclasses import dataclass
-from typing import Tuple
+from typing import List, Tuple
 
 import lbr_trex_client.paths  # noqa: F401
 import trex.astf.trex_astf_client as trex_astf_client
@@ -97,12 +97,50 @@ class TRexProfile:
             assert server_net.prefixlen >= 96, "Only prefix lengths 96-128 are supported."
 
 
+@dataclass(frozen=True)
+class TRexProfilePcap:
+    """Class representing TRex profile for sending existing .pcap files.
+
+    Strings in parameters are case-insensitive.
+
+    Parameters
+    ----------
+    pcap_files : list(tuple(str, int))
+        List of tuples that contain .pcap file to be
+        loaded into profile and a speed at which to send .pcaps.
+        Stated in connections per second.
+    client_net : str
+        Client IP network, eg. '10.0.0.0/24'.
+        IPv6 addresses must have prefix length in 96-128 range
+        due to 32bit limitations in TRex engine.
+    server_net : str
+        Server IP network, eg. '10.0.1.0/26'.
+        IPv6 addresses must have prefix length in 96-128 range
+        due to 32bit limitations in TRex engine.
+    """
+
+    pcap_files: List[Tuple[str, float]]
+    client_net: str
+    server_net: str
+
+    def __post_init__(self):
+        """Post-init check of parameters."""
+
+        client_net = ipaddress.ip_network(self.client_net)
+        server_net = ipaddress.ip_network(self.server_net)
+        assert client_net.version == server_net.version, "Cannot mix IPv4 and IPv6"
+
+        if client_net.version == 6:
+            assert client_net.prefixlen >= 96, "Only prefix lengths 96-128 are supported."
+            assert server_net.prefixlen >= 96, "Only prefix lengths 96-128 are supported."
+
+
 class TRexAdvancedStateful(TRexBase):
     """Advanced Stateful TRex generator class.
 
     Attributes
     ----------
-    _profile : TRexProfile
+    _profile : TRexProfile or TRexProfilePcap
         TRex profile.
     """
 
@@ -114,7 +152,7 @@ class TRexAdvancedStateful(TRexBase):
         """Start generating traffic.
 
         Traffic generation is determined by profile
-        (see ``TRexProfile``). It repeatedly creates new
+        (see ``TRexProfile`` or ``TRexProfilePcap``). It repeatedly creates new
         connections for given duration of time. Each new
         connection has different TCP sequence number,
         source port and possibly IP address (IP range is set in
@@ -144,6 +182,7 @@ class TRexAdvancedStateful(TRexBase):
         """
 
         self._handler.reset()
+        self._profile = None
 
     def wait_on_traffic(self, timeout=None):
         """Wait until traffic generation finishes.
@@ -162,7 +201,7 @@ class TRexAdvancedStateful(TRexBase):
 
         Parameters
         ----------
-        profile : TRexProfile
+        profile : TRexProfile or TRexProfilePcap
             TRex profile.
         """
 
@@ -180,29 +219,44 @@ class TRexAdvancedStateful(TRexBase):
         s_ip_dist = trex_astf_profile.ASTFIPGenDist(ip_range=s_ip_range, distribution="seq")
         ip_gen = trex_astf_profile.ASTFIPGen(dist_client=c_ip_dist, dist_server=s_ip_dist)
 
-        c_template = trex_astf_profile.ASTFTCPClientTemplate(
-            program=profile.program[0],
-            ip_gen=ip_gen,
-            port=profile.l4_dst,
-            cps=profile.conn_rate,
-        )
-        s_template = trex_astf_profile.ASTFTCPServerTemplate(
-            program=profile.program[1],
-            assoc=trex_astf_profile.ASTFAssociationRule(port=profile.l4_dst),
-        )
-        template = trex_astf_profile.ASTFTemplate(
-            client_template=c_template, server_template=s_template
-        )
+        if isinstance(profile, TRexProfile):
+            c_template = trex_astf_profile.ASTFTCPClientTemplate(
+                program=profile.program[0],
+                ip_gen=ip_gen,
+                port=profile.l4_dst,
+                cps=profile.conn_rate,
+            )
+            s_template = trex_astf_profile.ASTFTCPServerTemplate(
+                program=profile.program[1],
+                assoc=trex_astf_profile.ASTFAssociationRule(port=profile.l4_dst),
+            )
+            template = trex_astf_profile.ASTFTemplate(
+                client_template=c_template, server_template=s_template
+            )
 
-        astf_profile = trex_astf_profile.ASTFProfile(
-            default_ip_gen=ip_gen,
-            templates=template,
-            default_c_glob_info=c_global_info,
-            default_s_glob_info=s_global_info,
-        )
+            astf_profile = trex_astf_profile.ASTFProfile(
+                default_ip_gen=ip_gen,
+                templates=template,
+                default_c_glob_info=c_global_info,
+                default_s_glob_info=s_global_info,
+            )
 
-        self._handler.load_profile(astf_profile)
-        self._profile = profile
+            self._handler.load_profile(astf_profile)
+            self._profile = profile
+
+        elif isinstance(profile, TRexProfilePcap):
+            pcap_profile = trex_astf_profile.ASTFProfile(
+                default_ip_gen=ip_gen,
+                cap_list=[
+                    trex_astf_profile.ASTFCapInfo(file=prf, cps=con_s)
+                    for prf, con_s in profile.pcap_files
+                ],
+                default_c_glob_info=c_global_info,
+                default_s_glob_info=s_global_info,
+            )
+
+            self._handler.load_profile(pcap_profile)
+            self._profile = profile
 
     def get_profile(self):
         """Get loaded profile.
@@ -211,7 +265,7 @@ class TRexAdvancedStateful(TRexBase):
 
         Returns
         -------
-        TRexProfile or None
+        TRexProfile or TRexProfilePcap or None
             TRex profile if it exists, None otherwise.
         """
 
