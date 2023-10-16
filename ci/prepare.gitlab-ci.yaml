@@ -1,6 +1,6 @@
 docker-build:
     stage: prepare
-    tags: [docker-shell]
+    tags: [docker-ci-shell]
     variables: { DOCKER_BUILDKIT: 1 }
     script: [docker build -t $IMAGE_BUILD -f Dockerfile.build .]
 
