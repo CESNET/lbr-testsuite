@@ -492,6 +492,134 @@ class Tool(Executable):
         return self._wait_or_kill(timeout)
 
 
+class AsyncTool(Executable):
+    """Class for command execution.
+
+    This class is used for asynchronous one-shot commands. A command is started
+    and then user awaits result with wait_or_kill method. Stdout and stderr could
+    be read continuously while the command is running.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stdout, self._stderr = None, None
+        self._terminated = None
+
+    def run(self):
+        """Run the command. Start and don't wait for completion."""
+
+        self._start()
+        self._stdout, self._stderr = self._executor.get_output_iterators()
+        self._terminated = False
+
+    def is_running(self, after=None):
+        """Check whether process is running.
+
+        after : float, optional
+            How many seconds to wait before check. No waiting by
+            default. The waiting operation blocks execution.
+
+        Returns
+        -------
+        bool
+            True if the process is running, False otherwise.
+        """
+
+        if self._executor.get_process() is None:
+            return False
+
+        if after:
+            time.sleep(after)
+
+        return self._executor.is_running()
+
+    def wait_or_kill(self, timeout=None):
+        """Wait for command to terminate.
+
+        When timeout is not None, process is killed if it does not
+        terminate after timeout in seconds.
+
+        Parameters
+        ----------
+        timeout : int, optional
+            Timeout in seconds after that is process killed.
+            Note: depending on the implementation of the executor,
+            None value may not mean an infinite wait for the process
+            to complete, but a very long timeout (hundreds of hours).
+
+        Returns
+        -------
+        tuple
+            A pair composed from stdout and stderr.
+        """
+
+        if self._executor.get_process() is None:
+            return ("", "")
+
+        if self._terminated:
+            stdout, stderr = self._executor.wait_or_kill(1)
+            stdout, stderr = self._standardize_outputs(stdout, stderr)
+            return (stdout, stderr)
+
+        return self._wait_or_kill(timeout)
+
+    @property
+    def stdout(self):
+        """Get iterator for continuous read of stdout while process is running.
+
+        Note: each line which is read by iterator is removed from the final
+        output (wait_or_kill method).
+
+        Returns
+        -------
+        OutputIterator
+            Stdout iterator object.
+
+        Raises
+        ------
+        RuntimeError
+            When process is not running or stdout is redirected to file.
+        """
+
+        if self._output_files.get("stdout", None) is not None:
+            raise RuntimeError("Cannot read output which is redirected to file.")
+
+        if not self.is_running():
+            raise RuntimeError("Output can be continuously read only while the process is running.")
+
+        return self._stdout
+
+    @property
+    def stderr(self):
+        """Get iterator for continuous read of stderr while process is running.
+
+        Note: each line which is read by iterator is removed from the final
+        output (wait_or_kill method).
+
+        Returns
+        -------
+        OutputIterator
+            Stderr iterator object.
+
+        Raises
+        ------
+        RuntimeError
+            When process is not running or stderr is redirected to file.
+        """
+
+        if self._output_files.get("stderr", None) is not None:
+            raise RuntimeError("Cannot read output which is redirected to file.")
+
+        if not self.is_running():
+            raise RuntimeError("Output can be continuously read only while the process is running.")
+
+        return self._stderr
+
+    def _finalize(self):
+        super()._finalize()
+        self._terminated = True
+
+
 class Daemon(Executable):
     """Class for execution of a command as a daemon.
 

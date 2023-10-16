@@ -14,6 +14,40 @@ to control and get status of launched command.
 from abc import ABC, abstractmethod
 
 
+class OutputIterator(ABC):
+    """Abstract base class for creating iterators to read the output (stdout or stderr)
+    of a running process.
+
+    Subclasses should implement the `__iter__` and `__next__` methods to define
+    how the process output should be iterated and read.
+    """
+
+    @abstractmethod
+    def __iter__(self):
+        """Return the iterator object itself."""
+
+        pass
+
+    @abstractmethod
+    def __next__(self):
+        """Retrieve the next line of output from the process.
+        Method blocks until the line is read or the process
+        is terminated.
+
+        Returns
+        -------
+        str
+            The next line of output as a string.
+
+        Raises
+        ------
+        StopIteration
+            When process ended.
+        """
+
+        pass
+
+
 class Executor(ABC):
     """Executor interface.
 
@@ -151,6 +185,18 @@ class Executor(ABC):
             Dict with two keys - "rc" and "cmd".
             "rc" contains return code.
             "cmd" contains command that was used to run the process.
+        """
+
+        pass
+
+    @abstractmethod
+    def get_output_iterators(self):
+        """Get iterators for stdout and stderr.
+
+        Returns
+        -------
+        tuple(OutputIterator, OutputIterator)
+            Tuple containing stdout and stderr iterator.
         """
 
         pass

@@ -10,11 +10,71 @@ Implement local command execution via subprocess module.
 
 import subprocess
 
-from .executor import Executor
+from .executor import Executor, OutputIterator
 
 
 class LocalExecutor(Executor):
     """Implement local command execution via subprocess module."""
+
+    class LocalOutputIterator(OutputIterator):
+        """Class for creating iterators to read the output (stdout or stderr)
+        of a running process.
+        """
+
+        def __init__(self, executor, output_type):
+            """Initialize iterator.
+
+            Parameters
+            ----------
+            executor : LocalExecutor
+                Executor with process from which the output is read.
+            output_type : str
+                "stdout" or "stderr"
+
+            Raises
+            ------
+            AssertionError
+                When output_type is not standard output (stdout, stderr).
+            """
+
+            assert output_type in ["stdout", "stderr"]
+
+            self._executor = executor
+            self._stdout = output_type == "stdout"
+            self._lines = None
+
+        def __iter__(self):
+            """Return the iterator object itself."""
+
+            if not self._executor.is_running():
+                raise RuntimeError("Cannot read output of non-running process.")
+
+            if self._stdout:
+                self._lines = iter(self._executor.get_process().stdout)
+            else:
+                self._lines = iter(self._executor.get_process().stderr)
+            return self
+
+        def __next__(self):
+            """Retrieve the next line of output from the process.
+            Method blocks until the line is read or the process
+            is terminated.
+
+            Returns
+            -------
+            str
+                The next line of output as a string.
+
+            Raises
+            ------
+            StopIteration
+                When process ended.
+            """
+
+            if not self._executor.is_running():
+                raise StopIteration
+
+            return next(self._lines).strip()
 
     def __init__(self):
         self._process = None
@@ -171,6 +231,9 @@ class LocalExecutor(Executor):
 
         If process fails to finish, it will be killed.
 
+        Note: None timeout can make it impossible to read the outputs repeatedly
+        (communicate method). Therefore, None is converted to a very long timeout.
+
         Parameters
         ----------
         timeout : float, optional
@@ -187,6 +250,9 @@ class LocalExecutor(Executor):
         RuntimeError
             If process doesn't exist yet (command was not run).
         """
+
+        if timeout is None:
+            timeout = 1e6
 
         if not self._process:
             raise RuntimeError("Process was not started yet")
@@ -241,3 +307,23 @@ class LocalExecutor(Executor):
             "rc": self._process.returncode,
             "cmd": self._process.args,
         }
+
+    def get_output_iterators(self):
+        """Get iterators for stdout and stderr.
+
+        Iterators are intended to be used only while the process is running.
+        Reading output should be realized only by one instance of iterator.
+
+        Note: each line which is read by iterator is removed from the final
+        output (wait_or_kill method).
+
+        Returns
+        -------
+        tuple(OutputIterator, OutputIterator)
+            Tuple containing stdout and stderr iterator.
+        """
+
+        return (
+            self.LocalOutputIterator(self, "stdout"),
+            self.LocalOutputIterator(self, "stderr"),
+        )
