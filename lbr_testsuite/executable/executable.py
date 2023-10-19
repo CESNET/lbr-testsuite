@@ -489,6 +489,7 @@ class Tool(Executable):
             A pair composed from stdout and stderr.
         """
 
+        self._executor.reset_process()
         self._start()
         return self._wait_or_kill(timeout)
 
