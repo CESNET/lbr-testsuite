@@ -43,6 +43,9 @@ def pytest_configure(config):
         "urllib3.connectionpool",
         "lbr_testsuite.spirent.spirent",
         "STC",
+        "invoke",
+        "fabric",
+        "paramiko.transport",
     ]
     for rl in restricted_loggers:
         logging.getLogger(rl).setLevel(logging.WARNING)
