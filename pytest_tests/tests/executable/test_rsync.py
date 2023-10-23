@@ -26,6 +26,12 @@ def host_workdir(executor):
 
     workdir_path = "/tmp/testsuite_testing/rsync_workdir"
     Tool(f"mkdir -p {workdir_path}", executor=executor).run()
+
+    # If pytest runs under root, created file would have
+    # root-only access, but remote connection via Rsync is as non-root user
+    if os.geteuid() == 0:
+        Tool(f"chmod -f --recursive 777 {workdir_path}", executor=executor).run()
+
     yield workdir_path
     Tool(f"rm -rf {workdir_path}", executor=executor).run()
 
