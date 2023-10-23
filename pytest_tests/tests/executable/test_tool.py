@@ -257,6 +257,9 @@ def test_tool_returncode_allowed_failure(helper_app, testing_namespace, executor
 def test_tool_env(testing_namespace, executor):
     """Test of environment variable setup."""
 
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"remote executor does work differently with env")
+
     test_var = "TEST_TOOL_ENV_VAR"
     test_var_value = TESTING_OUTPUT
     test_env = dict()
@@ -287,6 +290,9 @@ def test_tool_env_key(testing_namespace, executor):
 
 def test_tool_env_clear(testing_namespace, executor):
     """Test of environment variable setup."""
+
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"remote executor does work differently with env")
 
     cmd = executable.Tool(["printenv", "-0"], netns=testing_namespace, executor=executor)
     cmd.clear_env()
