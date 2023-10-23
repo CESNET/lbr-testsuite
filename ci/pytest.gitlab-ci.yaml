@@ -6,7 +6,7 @@ pytest:
     script:
         - sudo pip install dist/lbr_testsuite*.whl
         - mkdir -p pytest_tests/output
-        - cd pytest_tests && sudo -E pytest --color=yes --basetemp=output --log-level=debug --junitxml=report.xml --remote-host $CI_REMOTE_HOST | tee report.log
+        - cd pytest_tests && sudo -E pytest --color=yes --basetemp=output --log-level=debug --junitxml=report.xml --remote-host $CI_REMOTE_HOST -s | tee report.log
     artifacts:
         paths: [pytest_tests/output, pytest_tests/report.*]
         reports: { junit: pytest_tests/report.xml }
