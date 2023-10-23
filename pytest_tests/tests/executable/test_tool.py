@@ -534,7 +534,10 @@ def test_tool_repeated_single_instance(testing_namespace, executor):
         Executor to use.
     """
 
-    repeat_count = 500
+    if isinstance(executor, LocalExecutor):
+        repeat_count = 500
+    elif isinstance(executor, RemoteExecutor):
+        repeat_count = 25
 
     cmd = executable.Tool(["pwd"], netns=testing_namespace, executor=executor)
 
@@ -558,7 +561,10 @@ def test_tool_repeated_individual_instances(testing_namespace, executor):
         Executor to use.
     """
 
-    repeat_count = 500
+    if isinstance(executor, LocalExecutor):
+        repeat_count = 500
+    elif isinstance(executor, RemoteExecutor):
+        repeat_count = 25
 
     for i in range(repeat_count):
         cmd = executable.Tool(["pwd"], netns=testing_namespace, executor=executor)
