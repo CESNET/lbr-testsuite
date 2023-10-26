@@ -2,5 +2,5 @@
 - hosts: all
   gather_facts: no
   roles:
-    - sudo_local_paths
-    - python38_venv
+    - liberouter.dev.sudo_local_paths
+    - pytest_venv
