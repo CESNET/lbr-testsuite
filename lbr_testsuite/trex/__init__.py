@@ -1,3 +1,4 @@
+from .trex_common import parse_bandwidth
 from .trex_generator import TRexMachinesPool
 from .trex_manager import TRexManager
 from .trex_stateful import TRexAdvancedStateful, TRexProfile, TRexProfilePcap
@@ -13,4 +14,5 @@ __all__ = [
     "TRexAdvancedStateful",
     "TRexManager",
     "TRexProfilePcap",
+    "parse_bandwidth",
 ]
