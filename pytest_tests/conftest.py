@@ -32,13 +32,6 @@ def pytest_addoption(parser):
         ),
     )
 
-    parser.addoption(
-        "--access-vlan",
-        type=int,
-        action="store",
-        help="Access VLAN used by this machine. Used for throughput runner tests.",
-    )
-
 
 def pytest_configure(config):
     """pytest_configure hook is used here to restrict selected loggers
@@ -69,7 +62,7 @@ def local_interface(request):
 
 
 @fixture(scope="session")
-def access_vlan(request):
+def access_vlan(vlans_config):
     """Access VLAN used by this machine.
 
     Returns
@@ -78,4 +71,4 @@ def access_vlan(request):
         Access VLAN.
     """
 
-    return request.config.getoption("access_vlan")
+    return vlans_config.access_vlan()

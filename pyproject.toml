@@ -46,6 +46,7 @@ lbr_testsuite = "lbr_testsuite._pytest_plugins.plugin"
 lbr_keyboard_interrupt = "lbr_testsuite._pytest_plugins.keyboard_interrupt.plugin"
 lbr_renamer = "lbr_testsuite._pytest_plugins.renamer.plugin"
 lbr_topology = "lbr_testsuite._pytest_plugins.topology.plugin"
+lbr_vlan_config = "lbr_testsuite._pytest_plugins.vlan_config.plugin"
 
 [tool.setuptools-git-versioning]
 enabled = true
