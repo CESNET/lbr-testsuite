@@ -56,6 +56,20 @@ class TRexInstructionCrafter:
 
         return values
 
+    def _prepare_ipv6_values(self, l3_addrs):
+        """Prepare values for IPv6. See build_instructions.values parameter.
+        Returns tuple of 2 values for first and second half of IPv6.
+        Some values might be empty.
+        """
+        first_half = {"value_list": []}
+        second_half = {"value_list": []}
+
+        for addr in l3_addrs.addresses_as_list():
+            first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
+            second_half["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
+
+        return (first_half, second_half)
+
     def prepare_l3_instructions(self, spec, l3_addrs, direction):
         """Create Field Engine instructions for L3 layer."""
         fe_instructions = []
@@ -68,15 +82,7 @@ class TRexInstructionCrafter:
         elif spec["l3"] == "arp":
             self.build_instructions(fe_instructions, str(uuid.uuid4()), values0, 4, "ARP.pdst")
         elif spec["l3"] == "ipv6":
-            values1 = {}
-            values0["value_list"] = []
-            values1["value_list"] = []
-
-            # Single instruction can rewrite max. 8B. It is necessary to use
-            # two instructions to rewrite all 16B of IPv6 addresses
-            for addr in l3_addrs.addresses_as_list():
-                values0["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
-                values1["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
+            values0, values1 = self._prepare_ipv6_values(l3_addrs)
 
             self.build_instructions(
                 fe_instructions, str(uuid.uuid4()), values0, 8, f"IPv6.{direction}"
