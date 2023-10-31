@@ -101,12 +101,18 @@ class TRexInstructionCrafter:
                 )
 
         elif l3_addrs.is_ip_list():
-            first_half["value_list"] = []
-            second_half["value_list"] = []
+            first_half, second_half = self._prepare_ipv6_list_values(l3_addrs)
 
-            for addr in l3_addrs.addresses_as_list():
-                first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
-                second_half["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
+        return (first_half, second_half)
+
+    def _prepare_ipv6_list_values(self, l3_addrs):
+        """Prepare values for list of IPv6 addresses."""
+        first_half = {"value_list": []}
+        second_half = {"value_list": []}
+
+        for addr in l3_addrs.addresses_as_list():
+            first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
+            second_half["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
 
         return (first_half, second_half)
 
