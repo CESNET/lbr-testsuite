@@ -48,11 +48,18 @@ class TRexInstructionCrafter:
         )
         fe_instructions.extend([instr1, instr2])
 
+    def _prepare_ipv4_values(self, l3_addrs):
+        """Prepare values for IPv4. See build_instructions.values parameter."""
+        values = {}
+
+        values["value_list"] = list(map(str, l3_addrs.addresses_as_list()))
+
+        return values
+
     def prepare_l3_instructions(self, spec, l3_addrs, direction):
         """Create Field Engine instructions for L3 layer."""
         fe_instructions = []
-        values0 = {}
-        values0["value_list"] = list(map(str, l3_addrs.addresses_as_list()))
+        values0 = self._prepare_ipv4_values(l3_addrs)
 
         if spec["l3"] == "ipv4":
             self.build_instructions(
