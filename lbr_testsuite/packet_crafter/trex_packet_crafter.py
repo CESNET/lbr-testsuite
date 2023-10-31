@@ -52,7 +52,11 @@ class TRexInstructionCrafter:
         """Prepare values for IPv4. See build_instructions.values parameter."""
         values = {}
 
-        values["value_list"] = list(map(str, l3_addrs.addresses_as_list()))
+        if l3_addrs.is_single_prefix():
+            values["min_value"] = l3_addrs.first_ip()
+            values["max_value"] = l3_addrs.last_ip()
+        elif l3_addrs.is_ip_list():
+            values["value_list"] = list(map(str, l3_addrs.addresses_as_list()))
 
         return values
 
