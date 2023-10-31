@@ -124,6 +124,11 @@ class TRexInstructionCrafter:
 
         return (first_half, second_half)
 
+    def _build_arp_instructions(self, fe_instructions, l3_addrs):
+        """Build ARP instructions."""
+        values = self._prepare_ipv4_values(l3_addrs)
+        self.build_instructions(fe_instructions, str(uuid.uuid4()), values, 4, "ARP.pdst")
+
     def _build_ipv4_instructions(self, fe_instructions, l3_addrs, direction):
         """Build IPv4 instructions."""
         values = self._prepare_ipv4_values(l3_addrs)
@@ -137,12 +142,10 @@ class TRexInstructionCrafter:
         if l3_addrs.is_single_ip():
             return fe_instructions
 
-        values0 = self._prepare_ipv4_values(l3_addrs)
-
         if spec["l3"] == "ipv4":
             self._build_ipv4_instructions(fe_instructions, l3_addrs, direction)
         elif spec["l3"] == "arp":
-            self.build_instructions(fe_instructions, str(uuid.uuid4()), values0, 4, "ARP.pdst")
+            self._build_arp_instructions(fe_instructions, l3_addrs)
         elif spec["l3"] == "ipv6":
             values0, values1 = self._prepare_ipv6_values(l3_addrs)
 
