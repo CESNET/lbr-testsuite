@@ -124,6 +124,11 @@ class TRexInstructionCrafter:
 
         return (first_half, second_half)
 
+    def _build_ipv4_instructions(self, fe_instructions, l3_addrs, direction):
+        """Build IPv4 instructions."""
+        values = self._prepare_ipv4_values(l3_addrs)
+        self.build_instructions(fe_instructions, str(uuid.uuid4()), values, 4, f"IP.{direction}")
+
     def prepare_l3_instructions(self, spec, l3_addrs, direction):
         """Create Field Engine instructions for L3 layer."""
         fe_instructions = []
@@ -135,9 +140,7 @@ class TRexInstructionCrafter:
         values0 = self._prepare_ipv4_values(l3_addrs)
 
         if spec["l3"] == "ipv4":
-            self.build_instructions(
-                fe_instructions, str(uuid.uuid4()), values0, 4, f"IP.{direction}"
-            )
+            self._build_ipv4_instructions(fe_instructions, l3_addrs, direction)
         elif spec["l3"] == "arp":
             self.build_instructions(fe_instructions, str(uuid.uuid4()), values0, 4, "ARP.pdst")
         elif spec["l3"] == "ipv6":
