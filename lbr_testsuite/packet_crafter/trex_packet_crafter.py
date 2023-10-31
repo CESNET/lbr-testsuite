@@ -84,22 +84,7 @@ class TRexInstructionCrafter:
                     "0-63 range is not currently supported"
                 )
 
-            # TRex allows only 8B per instruction. If 16B IPv6 address has
-            # non-zero first half (eg. 2001::aaaa), it must be zeroed
-            # so that only second half of address is left (::aaaa).
-            second_half_bitmask = 0xFFFFFFFFFFFFFFFF
-            second_half["min_value"] = first_ip & second_half_bitmask
-            second_half["max_value"] = last_ip & second_half_bitmask
-
-            if second_half["max_value"] == 0xFFFFFFFFFFFFFFFF:
-                # TRex currently crashes when (2^64)-1 is set as a value (all bits are 1).
-                # Workaround: lower value by 1.
-                # Should be removed when fixed TRex version is released.
-                second_half["max_value"] -= 1
-                global_logger.warning(
-                    f"Cannot generate {ipaddress.IPv6Address(last_ip)} due to bug in TRex"
-                )
-
+            first_half, second_half = self._prepare_ipv6_prefix_values(first_ip, last_ip)
         elif l3_addrs.is_ip_list():
             first_half, second_half = self._prepare_ipv6_list_values(l3_addrs)
 
@@ -113,6 +98,29 @@ class TRexInstructionCrafter:
         for addr in l3_addrs.addresses_as_list():
             first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
             second_half["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
+
+        return (first_half, second_half)
+
+    def _prepare_ipv6_prefix_values(self, first_ip, last_ip):
+        """Prepare values for single IPv6 prefix that has prefix length in 64-128 range."""
+        first_half = {}
+        second_half = {}
+
+        # TRex allows only 8B per instruction. If 16B IPv6 address has
+        # non-zero first half (eg. 2001::aaaa), it must be zeroed
+        # so that only second half of address is left (::aaaa).
+        second_half_bitmask = 0xFFFFFFFFFFFFFFFF
+        second_half["min_value"] = first_ip & second_half_bitmask
+        second_half["max_value"] = last_ip & second_half_bitmask
+
+        if second_half["max_value"] == 0xFFFFFFFFFFFFFFFF:
+            # TRex currently crashes when (2^64)-1 is set as a value (all bits are 1).
+            # Workaround: lower value by 1.
+            # Should be removed when fixed TRex version is released.
+            second_half["max_value"] -= 1
+            global_logger.warning(
+                f"Cannot generate {ipaddress.IPv6Address(last_ip)} due to bug in TRex"
+            )
 
         return (first_half, second_half)
 
