@@ -134,6 +134,27 @@ class TRexInstructionCrafter:
         values = self._prepare_ipv4_values(l3_addrs)
         self.build_instructions(fe_instructions, str(uuid.uuid4()), values, 4, f"IP.{direction}")
 
+    def _build_ipv6_instructions(self, fe_instructions, l3_addrs, direction):
+        """Build IPv6 instructions.
+
+        IPv6 can build 2 instructions because single instruction
+        can rewrite maximum of 8B, but IPv6 has 16B.
+        """
+
+        first_half, second_half = self._prepare_ipv6_values(l3_addrs)
+
+        if l3_addrs.is_single_prefix():
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"IPv6.{direction}", 8
+            )
+        elif l3_addrs.is_ip_list():
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), first_half, 8, f"IPv6.{direction}"
+            )
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"IPv6.{direction}", 8
+            )
+
     def prepare_l3_instructions(self, spec, l3_addrs, direction):
         """Create Field Engine instructions for L3 layer."""
         fe_instructions = []
@@ -147,19 +168,7 @@ class TRexInstructionCrafter:
         elif spec["l3"] == "arp":
             self._build_arp_instructions(fe_instructions, l3_addrs)
         elif spec["l3"] == "ipv6":
-            values0, values1 = self._prepare_ipv6_values(l3_addrs)
-
-            if l3_addrs.is_single_prefix():
-                self.build_instructions(
-                    fe_instructions, str(uuid.uuid4()), values1, 8, f"IPv6.{direction}", 8
-                )
-            elif l3_addrs.is_ip_list():
-                self.build_instructions(
-                    fe_instructions, str(uuid.uuid4()), values0, 8, f"IPv6.{direction}"
-                )
-                self.build_instructions(
-                    fe_instructions, str(uuid.uuid4()), values1, 8, f"IPv6.{direction}", 8
-                )
+            self._build_ipv6_instructions(fe_instructions, l3_addrs, direction)
 
         if "l4" not in spec and spec["l3"] == "ipv4":
             csum_instruction = trex_packet_builder.STLVmFixIpv4(
