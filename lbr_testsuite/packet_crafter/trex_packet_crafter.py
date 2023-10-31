@@ -73,6 +73,11 @@ class TRexInstructionCrafter:
     def prepare_l3_instructions(self, spec, l3_addrs, direction):
         """Create Field Engine instructions for L3 layer."""
         fe_instructions = []
+
+        # Single IP is provided by Scapy packet template
+        if l3_addrs.is_single_ip():
+            return fe_instructions
+
         values0 = self._prepare_ipv4_values(l3_addrs)
 
         if spec["l3"] == "ipv4":
