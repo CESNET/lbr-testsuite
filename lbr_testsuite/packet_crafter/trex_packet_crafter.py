@@ -181,17 +181,19 @@ class TRexInstructionCrafter:
     def prepare_ndp_instructions(self, l3_addrs):
         """Create Field Engine instructions for NDP header."""
         fe_instructions = []
-        values0 = {"value_list": []}
-        values1 = {"value_list": []}
+        first_half, second_half = self._prepare_ipv6_values(l3_addrs)
 
-        for addr in l3_addrs.addresses_as_list():
-            values0["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
-            values1["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
-
-        self.build_instructions(fe_instructions, str(uuid.uuid4()), values0, 8, "ICMPv6ND_NS.tgt")
-        self.build_instructions(
-            fe_instructions, str(uuid.uuid4()), values1, 8, "ICMPv6ND_NS.tgt", 8
-        )
+        if l3_addrs.is_single_prefix():
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"ICMPv6ND_NS.tgt", 8
+            )
+        else:
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), first_half, 8, f"ICMPv6ND_NS.tgt"
+            )
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"ICMPv6ND_NS.tgt", 8
+            )
 
         return fe_instructions
 
