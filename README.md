@@ -2,13 +2,19 @@
 
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
-`common`, `ipconfigurer`, `executable`, `spirent`, `spirentlib`, `trex` modules.
+`common`, `data_table`, `executable`, `ipconfigurer`, `packet_crafter`,
+`spirent`, `trex` and `vlan_config`.
+
+The package also includes the `Topology` plugin for pytest. The plugin provides
+a set of fixtures and pre-defined pytest arguments that can be used to prepare
+a testing environment. The `Topology` plugin is automatically installed into
+pytest with the `lbr_testsuite` package.
+
 
 ## Hosting and contribution
 
-Package `lbr_testsuite` is hosted in GitLab's Package Registry
-under PyPI package manager. You can list all available versions
-by following this [link](https://gitlab.liberouter.org/tmc/pypi-liberouter/-/packages).
+Package `lbr_testsuite` is hosted in [PyPI index](https://pypi.org/project/lbr-testsuite/).
+You can list all available versions by following this [link](https://pypi.org/project/lbr-testsuite/#history).
 
 This project uses GitLab CI pipeline which is triggered
 with every new commit. If coding style (PEP8) check passes, then
@@ -16,36 +22,29 @@ pipeline creates .whl package from contents inside [lbr_testsuite](./lbr_testsui
 folder. This package can be found in `build` step of pipeline and downloaded
 for manual installation.
 
-If pipeline triggers on `master` branch, then package is also uploaded into
-the Package Registry. Version of the package is controlled using git tags.
-Package names are composed from current version and hash of last commit.
+If the pipeline triggers on the `master` branch, the package is also published.
+Releases (tagged commits) are uploaded to PyPI, development versions are uploaded
+to internal GitLab's Package Registry.
+Version of the package is controlled using git tags. Development package names
+are composed from current version and the hash of the last commit.
+
+Development of this repository is done mainly through GitLab. The repository is
+mirrored to GitHub for the purpose of publishing the code.
 
 
 ## Installation
 
-You can click on some specific version of package from [list](https://gitlab.liberouter.org/tmc/pypi-liberouter/-/packages)
-and GitLab will show you details of that package. This also
-includes pip command for installation of package. Command looks like this:
-
+Install from PyPI index via command:
 ```
-pip install lbr-testsuite --extra-index-url https://__token__:<your_personal_token>@gitlab.liberouter.org/api/v4/projects/95/packages/pypi/simple
+pip install lbr-testsuite
 ```
 
-`lbr_testsuite` package is hosted on GitLab and isn't
-included in official PyPI index, so you need to specify extra URL
-for pip. And since this project is private, you need credentials
-to access Package Registry. This project uses **deploy token**, but
-you can also use [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with
-scope set to `api`.
+The PyPI index contains only **release** versions. The development version of
+the package can be obtained by installing it from the GitLab's Package Registry.
+The Package Registry have to be specified as index url. Authentication via
+[personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
+with scope set to `api` must be used.
 
-
-For installation of `lbr_testsuite` you can use one of these commands:
-
-```
-python3.8 -m pip install lbr-testsuite --extra-index-url https://gitlab+deploy-token-13:dPyQaA7ypwhNLxSttz2r@gitlab.liberouter.org/api/v4/projects/95/packages/pypi/simple
-*or*
-python3.8 -m pip install lbr-testsuite --extra-index-url http://cisticka-devel.liberouter.org/piproxy/tmc/pypi-liberouter/simple --trusted-host cisticka-devel.liberouter.org
-```
 
 ## Usage
 
@@ -56,6 +55,23 @@ import lbr_testsuite
 All stuff from common module are available directly under the lbr_testsuite
 package.
 
+
+For `data_table`:
+```
+from lbr_testsuite import data_table
+```
+Provides tools for storing results and generating graphs not only for
+throughput tests.
+
+
+For `executable`:
+```
+from lbr_testsuite import executable
+```
+Executable module provides Tool, AsyncTool and Daemon convenient classes for
+**local** or **remote** execution of various commands.
+
+
 For `ipconfigurer`:
 ```
 from lbr_testsuite import ipconfigurer
@@ -63,18 +79,16 @@ from lbr_testsuite import ipconfigurer
 Ipconfigurer provides API for ip configuration using pyroute2 library.
 
 
-For `executable`:
+For `packet_crafter`:
 ```
-from lbr_testsuite import executable
+from lbr_testsuite import packet_crafter
 ```
-Executable module provides Tool and Daemon convenient classes for execution of
-various commands.
+Classes providing high-level packet crafting. Used for `trex` module.
 
 
-For `spirent` and `spirentlib`:
+For `spirent`:
 ```
 from lbr_testsuite import spirent
-from lbr_testsuite.spirent import spirentlib
 ```
 Provides API for Spirent Test Center (STC).
 
@@ -84,12 +98,27 @@ For `trex`:
 from lbr_testsuite import trex
 ```
 Provides our custom API for Cisco TRex traffic generator.
-Official API is provided by required package [lbr_trex_client](https://gitlab.liberouter.org/testing/trex-client).
+Official API is provided by required package [lbr_trex_client](https://pypi.org/project/lbr-trex-client/).
 
 
-## Repository Maintainer
+For `vlan_config`:
+```
+from lbr_testsuite import vlan_config
+```
+Helper class for VLAN configuration management.
 
+
+## Repository Maintainers
+
+- Jan Sobol, Jan.Sobol@cesnet.cz
 - Pavel Krobot, Pavel.Krobot@cesnet.cz
+- Dominik Tran, Dominik.Tran@cesnet.cz
+
+
+## License
+
+This project is licensed under the BSD-3-Clause License - see the
+[LICENSE](LICENSE) file for details.
 
 
 ## Acknowledgement
