@@ -6,6 +6,7 @@ Copyright: (C) 2022-2023 CESNET, z.s.p.o.
 Packet crafter for TRex traffic generator.
 """
 
+import ipaddress
 import uuid
 
 import lbr_trex_client.paths  # noqa: F401
@@ -67,6 +68,17 @@ class TRexInstructionCrafter:
         """
         first_half = {"value_list": []}
         second_half = {"value_list": []}
+
+        first_ip = int(ipaddress.IPv6Address(l3_addrs.first_ip()))
+        last_ip = int(ipaddress.IPv6Address(l3_addrs.last_ip()))
+
+        if l3_addrs.is_single_prefix():
+            xor = first_ip ^ last_ip
+            if xor.bit_length() > 64:
+                raise RuntimeError(
+                    "Generating IPv6 prefix with prefix length in "
+                    "0-63 range is not currently supported"
+                )
 
         for addr in l3_addrs.addresses_as_list():
             first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
