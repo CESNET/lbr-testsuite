@@ -7,6 +7,7 @@ Packet crafter for TRex traffic generator.
 """
 
 import ipaddress
+import logging
 import uuid
 
 import lbr_trex_client.paths  # noqa: F401
@@ -14,6 +15,9 @@ import scapy.all as scapy
 import trex.stl.trex_stl_packet_builder_scapy as trex_packet_builder
 
 from . import abstract_packet_crafter, ipaddresses, ports
+
+
+global_logger = logging.getLogger(__name__)
 
 
 class TRexInstructionCrafter:
@@ -66,8 +70,8 @@ class TRexInstructionCrafter:
         Returns tuple of 2 values for first and second half of IPv6.
         Some values might be empty.
         """
-        first_half = {"value_list": []}
-        second_half = {"value_list": []}
+        first_half = {}
+        second_half = {}
 
         first_ip = int(ipaddress.IPv6Address(l3_addrs.first_ip()))
         last_ip = int(ipaddress.IPv6Address(l3_addrs.last_ip()))
@@ -80,9 +84,29 @@ class TRexInstructionCrafter:
                     "0-63 range is not currently supported"
                 )
 
-        for addr in l3_addrs.addresses_as_list():
-            first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
-            second_half["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
+            # TRex allows only 8B per instruction. If 16B IPv6 address has
+            # non-zero first half (eg. 2001::aaaa), it must be zeroed
+            # so that only second half of address is left (::aaaa).
+            second_half_bitmask = 0xFFFFFFFFFFFFFFFF
+            second_half["min_value"] = first_ip & second_half_bitmask
+            second_half["max_value"] = last_ip & second_half_bitmask
+
+            if second_half["max_value"] == 0xFFFFFFFFFFFFFFFF:
+                # TRex currently crashes when (2^64)-1 is set as a value (all bits are 1).
+                # Workaround: lower value by 1.
+                # Should be removed when fixed TRex version is released.
+                second_half["max_value"] -= 1
+                global_logger.warning(
+                    f"Cannot generate {ipaddress.IPv6Address(last_ip)} due to bug in TRex"
+                )
+
+        elif l3_addrs.is_ip_list():
+            first_half["value_list"] = []
+            second_half["value_list"] = []
+
+            for addr in l3_addrs.addresses_as_list():
+                first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
+                second_half["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
 
         return (first_half, second_half)
 
@@ -105,12 +129,17 @@ class TRexInstructionCrafter:
         elif spec["l3"] == "ipv6":
             values0, values1 = self._prepare_ipv6_values(l3_addrs)
 
-            self.build_instructions(
-                fe_instructions, str(uuid.uuid4()), values0, 8, f"IPv6.{direction}"
-            )
-            self.build_instructions(
-                fe_instructions, str(uuid.uuid4()), values1, 8, f"IPv6.{direction}", 8
-            )
+            if l3_addrs.is_single_prefix():
+                self.build_instructions(
+                    fe_instructions, str(uuid.uuid4()), values1, 8, f"IPv6.{direction}", 8
+                )
+            elif l3_addrs.is_ip_list():
+                self.build_instructions(
+                    fe_instructions, str(uuid.uuid4()), values0, 8, f"IPv6.{direction}"
+                )
+                self.build_instructions(
+                    fe_instructions, str(uuid.uuid4()), values1, 8, f"IPv6.{direction}", 8
+                )
 
         if "l4" not in spec and spec["l3"] == "ipv4":
             csum_instruction = trex_packet_builder.STLVmFixIpv4(
