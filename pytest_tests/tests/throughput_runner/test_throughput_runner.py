@@ -113,7 +113,7 @@ def test_throughput_runner(
     interface_configured,
     routing_configured,
     forwarding_enabled,
-    access_vlan,
+    vlans_config,
 ):
     """Test that the throughput_runner module can send
     and receive traffic using spirent."""
@@ -125,7 +125,7 @@ def test_throughput_runner(
         "ipv4_192.168.0.1-10.0.0.33",
         src_mac=src_mac,
         dst_mac=ipconfigurer.ifc_status(interface_configured)["IFLA_ADDRESS"],
-        vlan=access_vlan,
+        vlan=vlans_config.access_vlan(),
     )
     runner = SpirentThroughputRunner(spirent, [sb])
 
@@ -147,21 +147,22 @@ def test_throughput_runner_device(
     interface_configured,
     routing_configured,
     forwarding_enabled,
-    access_vlan,
+    vlans_config,
 ):
     """Test that the throughput_runner module can send
     and receive traffic using spirent."""
 
     src_mac = spirent.determine_src_mac_address()
+    vlan = vlans_config.access_vlan()
 
     sb = StreamBlock(
         spirent,
         "ipv4_192.168.0.1-10.0.0.33",
         src_mac=src_mac,
         dst_mac=ipconfigurer.ifc_status(interface_configured)["IFLA_ADDRESS"],
-        vlan=access_vlan,
+        vlan=vlan,
     )
-    device = Device(spirent, "device_192.168.0.11", mac=src_mac, vlan=access_vlan)
+    device = Device(spirent, "device_192.168.0.11", mac=src_mac, vlan=vlan)
     device.apply()
     device.resolve_neighbours()
 

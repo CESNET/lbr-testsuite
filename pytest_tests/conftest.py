@@ -59,16 +59,3 @@ def local_interface(request):
     """
 
     return request.config.getoption("local_interface")
-
-
-@fixture(scope="session")
-def access_vlan(vlans_config):
-    """Access VLAN used by this machine.
-
-    Returns
-    -------
-    int
-        Access VLAN.
-    """
-
-    return vlans_config.access_vlan()
