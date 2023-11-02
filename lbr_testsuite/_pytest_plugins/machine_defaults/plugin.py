@@ -48,17 +48,6 @@ def pytest_addoption(parser):
         ),
     )
 
-    parser.addoption(
-        "--no-machine-defaults",
-        dest="machine_defaults",
-        action="store_false",
-        default=True,
-        help=(
-            "Disable loading machine specific defaults using its hostname "
-            "(machine specific arguments are enabled by default)"
-        ),
-    )
-
 
 def get_machine_name():
     """It returns this machine's name, i.e., the first part of
@@ -256,7 +245,7 @@ def machine_defaults_setup(config):
         Pytest config object
     """
 
-    if not config.getoption("machine_defaults") or not config.getoption("machines_path"):
+    if not config.getoption("machines_path"):
         return
 
     path = config.getoption("machines_path")
