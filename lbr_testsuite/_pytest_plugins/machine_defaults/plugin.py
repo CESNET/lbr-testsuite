@@ -40,7 +40,8 @@ def pytest_addoption(parser):
 
     parser.addoption(
         "--machines-path",
-        default="machines.json",
+        type=str,
+        default=None,
         help=(
             "Path to machines.json file containing default arguments "
             "for running pytest on all machines"
@@ -255,7 +256,7 @@ def machine_defaults_setup(config):
         Pytest config object
     """
 
-    if not config.getoption("machine_defaults"):
+    if not config.getoption("machine_defaults") or not config.getoption("machines_path"):
         return
 
     path = config.getoption("machines_path")
