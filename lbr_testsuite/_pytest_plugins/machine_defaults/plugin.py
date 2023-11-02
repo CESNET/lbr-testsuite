@@ -29,7 +29,7 @@ DEFAULT_MACHINE_NAME = "DEFAULT"
 
 def pytest_addoption(parser):
     """Standard pytest hook to handle command line or `pytest.ini`
-    file options. It defines `--machines_path` command line option
+    file options. It defines `--machines-path` command line option
     and a pair of `--[no-]machines-defaults` command line options.
 
     Parameters
@@ -39,7 +39,7 @@ def pytest_addoption(parser):
     """
 
     parser.addoption(
-        "--machines_path",
+        "--machines-path",
         default="machines.json",
         help=(
             "Path to machines.json file containing default arguments "
