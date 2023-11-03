@@ -213,6 +213,8 @@ class DataTableCharts:
         if spec.ylabel:
             ax.set_ylabel(spec.ylabel)
         ax.grid(linestyle=":", color="silver")
+        _, top = ax.get_ylim()
+        ax.set_ylim(bottom=0, top=top * 1.1)
 
     def _subframes_by_params(self, data, params):
         """Filter sub-frames per unique values of selected parameters.
