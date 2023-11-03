@@ -1,3 +1,9 @@
+"""
+Copyright: (C) 2023 CESNET, z.s.p.o.
+
+Spirent server connector.
+"""
+
 # Run this script only with the Python packed with the Spirent Test Center
 
 # Prepare PATHs to Spirent Python API
