@@ -355,14 +355,15 @@ class Executable:
 
         if self._failure_verbosity == "normal":
             self._logger.error(fail_msg)
+            self._logger.error(f"Captured stdout:\n{stdout}")
+            self._logger.error(f"Captured stderr:\n{stderr}")
         else:
             assert (
                 self._failure_verbosity == "no-error" or self._failure_verbosity == "no-exception"
             )
             self._logger.debug(fail_msg)
-
-        self._logger.debug(f"Captured stdout:\n{stdout}")
-        self._logger.debug(f"Captured stderr:\n{stderr}")
+            self._logger.debug(f"Captured stdout:\n{stdout}")
+            self._logger.debug(f"Captured stderr:\n{stderr}")
 
         if self._failure_verbosity == "normal" or self._failure_verbosity == "no-error":
             raise ExecutableProcessError(process_retcode, process_cmd)
