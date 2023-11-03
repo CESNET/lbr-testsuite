@@ -287,6 +287,34 @@ class BaseIPAddresses:
 
         return list(map(str, hosts))
 
+    def first_ip(self):
+        """Return first IP address.
+
+        It is the first address in the list or the
+        first address in the IP prefix (i.e. network address).
+
+        Returns
+        -------
+        str
+            IP address.
+        """
+
+        return str(ipaddress.ip_network(self._addr_list[0]).network_address)
+
+    def last_ip(self):
+        """Return last IP address.
+
+        It is the last address in the list or the
+        last address in the IP prefix (i.e. broadcast address).
+
+        Returns
+        -------
+        str
+            IP address.
+        """
+
+        return str(ipaddress.ip_network(self._addr_list[-1]).broadcast_address)
+
 
 class IPv4Addresses(BaseIPAddresses):
     """Common interface for IPv4 addresses format.
@@ -325,7 +353,7 @@ class IPv4Addresses(BaseIPAddresses):
     _PREFIX_MAXLEN = 32
 
     def addresses_as_list(self):
-        """Return addresses in form of list.
+        """Return addresses in form of sorted list.
 
         Returns
         ------
@@ -345,7 +373,7 @@ class IPv4Addresses(BaseIPAddresses):
         return addresses
 
     def hosts_as_list(self):
-        """Return usable hosts in form of list.
+        """Return usable hosts in form of sorted list.
 
         This method differs from ``addresses_as_list`` as it does
         **not** include network and broadcast address when prefix
@@ -458,7 +486,7 @@ class IPv6Addresses(BaseIPAddresses):
     _PREFIX_MAXLEN = 128
 
     def addresses_as_list(self):
-        """Return addresses in form of list.
+        """Return addresses in form of sorted list.
 
         Returns
         ------
@@ -478,7 +506,7 @@ class IPv6Addresses(BaseIPAddresses):
         return addresses
 
     def hosts_as_list(self):
-        """Return usable hosts in form of list.
+        """Return usable hosts in form of sorted list.
 
         This method differs from ``addresses_as_list`` as it does
         **not** include network address (Subnet-Router anycast address) when prefix

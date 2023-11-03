@@ -6,6 +6,8 @@ Copyright: (C) 2022-2023 CESNET, z.s.p.o.
 Packet crafter for TRex traffic generator.
 """
 
+import ipaddress
+import logging
 import uuid
 
 import lbr_trex_client.paths  # noqa: F401
@@ -13,6 +15,9 @@ import scapy.all as scapy
 import trex.stl.trex_stl_packet_builder_scapy as trex_packet_builder
 
 from . import abstract_packet_crafter, ipaddresses, ports
+
+
+global_logger = logging.getLogger(__name__)
 
 
 class TRexInstructionCrafter:
@@ -48,35 +53,122 @@ class TRexInstructionCrafter:
         )
         fe_instructions.extend([instr1, instr2])
 
+    def _prepare_ipv4_values(self, l3_addrs):
+        """Prepare values for IPv4. See build_instructions.values parameter."""
+        values = {}
+
+        if l3_addrs.is_single_prefix():
+            values["min_value"] = l3_addrs.first_ip()
+            values["max_value"] = l3_addrs.last_ip()
+        elif l3_addrs.is_ip_list():
+            values["value_list"] = list(map(str, l3_addrs.addresses_as_list()))
+
+        return values
+
+    def _prepare_ipv6_values(self, l3_addrs):
+        """Prepare values for IPv6. See build_instructions.values parameter.
+        Returns tuple of 2 values for first and second half of IPv6.
+        Some values might be empty.
+        """
+        first_half = {}
+        second_half = {}
+
+        first_ip = int(ipaddress.IPv6Address(l3_addrs.first_ip()))
+        last_ip = int(ipaddress.IPv6Address(l3_addrs.last_ip()))
+
+        if l3_addrs.is_single_prefix():
+            xor = first_ip ^ last_ip
+            if xor.bit_length() > 64:
+                raise RuntimeError(
+                    "Generating IPv6 prefix with prefix length in "
+                    "0-63 range is not currently supported"
+                )
+
+            first_half, second_half = self._prepare_ipv6_prefix_values(first_ip, last_ip)
+        elif l3_addrs.is_ip_list():
+            first_half, second_half = self._prepare_ipv6_list_values(l3_addrs)
+
+        return (first_half, second_half)
+
+    def _prepare_ipv6_list_values(self, l3_addrs):
+        """Prepare values for list of IPv6 addresses."""
+        first_half = {"value_list": []}
+        second_half = {"value_list": []}
+
+        for addr in l3_addrs.addresses_as_list():
+            first_half["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
+            second_half["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
+
+        return (first_half, second_half)
+
+    def _prepare_ipv6_prefix_values(self, first_ip, last_ip):
+        """Prepare values for single IPv6 prefix that has prefix length in 64-128 range."""
+        first_half = {}
+        second_half = {}
+
+        # TRex allows only 8B per instruction. If 16B IPv6 address has
+        # non-zero first half (eg. 2001::aaaa), it must be zeroed
+        # so that only second half of address is left (::aaaa).
+        second_half_bitmask = 0xFFFFFFFFFFFFFFFF
+        second_half["min_value"] = first_ip & second_half_bitmask
+        second_half["max_value"] = last_ip & second_half_bitmask
+
+        if second_half["max_value"] == 0xFFFFFFFFFFFFFFFF:
+            # TRex currently crashes when (2^64)-1 is set as a value (all bits are 1).
+            # Workaround: lower value by 1.
+            # Should be removed when fixed TRex version is released.
+            second_half["max_value"] -= 1
+            global_logger.warning(
+                f"Cannot generate {ipaddress.IPv6Address(last_ip)} due to bug in TRex"
+            )
+
+        return (first_half, second_half)
+
+    def _build_arp_instructions(self, fe_instructions, l3_addrs):
+        """Build ARP instructions."""
+        values = self._prepare_ipv4_values(l3_addrs)
+        self.build_instructions(fe_instructions, str(uuid.uuid4()), values, 4, "ARP.pdst")
+
+    def _build_ipv4_instructions(self, fe_instructions, l3_addrs, direction):
+        """Build IPv4 instructions."""
+        values = self._prepare_ipv4_values(l3_addrs)
+        self.build_instructions(fe_instructions, str(uuid.uuid4()), values, 4, f"IP.{direction}")
+
+    def _build_ipv6_instructions(self, fe_instructions, l3_addrs, direction):
+        """Build IPv6 instructions.
+
+        IPv6 can build 2 instructions because single instruction
+        can rewrite maximum of 8B, but IPv6 has 16B.
+        """
+
+        first_half, second_half = self._prepare_ipv6_values(l3_addrs)
+
+        if l3_addrs.is_single_prefix():
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"IPv6.{direction}", 8
+            )
+        elif l3_addrs.is_ip_list():
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), first_half, 8, f"IPv6.{direction}"
+            )
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"IPv6.{direction}", 8
+            )
+
     def prepare_l3_instructions(self, spec, l3_addrs, direction):
         """Create Field Engine instructions for L3 layer."""
         fe_instructions = []
-        values0 = {}
-        values0["value_list"] = list(map(str, l3_addrs.addresses_as_list()))
+
+        # Single IP is provided by Scapy packet template
+        if l3_addrs.is_single_ip():
+            return fe_instructions
 
         if spec["l3"] == "ipv4":
-            self.build_instructions(
-                fe_instructions, str(uuid.uuid4()), values0, 4, f"IP.{direction}"
-            )
+            self._build_ipv4_instructions(fe_instructions, l3_addrs, direction)
         elif spec["l3"] == "arp":
-            self.build_instructions(fe_instructions, str(uuid.uuid4()), values0, 4, "ARP.pdst")
+            self._build_arp_instructions(fe_instructions, l3_addrs)
         elif spec["l3"] == "ipv6":
-            values1 = {}
-            values0["value_list"] = []
-            values1["value_list"] = []
-
-            # Single instruction can rewrite max. 8B. It is necessary to use
-            # two instructions to rewrite all 16B of IPv6 addresses
-            for addr in l3_addrs.addresses_as_list():
-                values0["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
-                values1["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
-
-            self.build_instructions(
-                fe_instructions, str(uuid.uuid4()), values0, 8, f"IPv6.{direction}"
-            )
-            self.build_instructions(
-                fe_instructions, str(uuid.uuid4()), values1, 8, f"IPv6.{direction}", 8
-            )
+            self._build_ipv6_instructions(fe_instructions, l3_addrs, direction)
 
         if "l4" not in spec and spec["l3"] == "ipv4":
             csum_instruction = trex_packet_builder.STLVmFixIpv4(
@@ -89,17 +181,19 @@ class TRexInstructionCrafter:
     def prepare_ndp_instructions(self, l3_addrs):
         """Create Field Engine instructions for NDP header."""
         fe_instructions = []
-        values0 = {"value_list": []}
-        values1 = {"value_list": []}
+        first_half, second_half = self._prepare_ipv6_values(l3_addrs)
 
-        for addr in l3_addrs.addresses_as_list():
-            values0["value_list"].append(int.from_bytes(addr.packed[0:8], byteorder="big"))
-            values1["value_list"].append(int.from_bytes(addr.packed[8:16], byteorder="big"))
-
-        self.build_instructions(fe_instructions, str(uuid.uuid4()), values0, 8, "ICMPv6ND_NS.tgt")
-        self.build_instructions(
-            fe_instructions, str(uuid.uuid4()), values1, 8, "ICMPv6ND_NS.tgt", 8
-        )
+        if l3_addrs.is_single_prefix():
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"ICMPv6ND_NS.tgt", 8
+            )
+        else:
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), first_half, 8, f"ICMPv6ND_NS.tgt"
+            )
+            self.build_instructions(
+                fe_instructions, str(uuid.uuid4()), second_half, 8, f"ICMPv6ND_NS.tgt", 8
+            )
 
         return fe_instructions
 
@@ -209,21 +303,17 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
         else:
             RuntimeError(f'unsupported l3: {spec["l3"]}')
 
-        if "l3_src" in spec and IPAddresses(spec["l3_src"]).is_single_ip():
-            src_ip = str(IPAddresses(spec["l3_src"]).addresses_as_list()[0])
+        if "l3_src" in spec:
+            addrs = IPAddresses(spec["l3_src"])
+            src_ip = addrs.first_ip()
+            l3_src_instr = self._fe_builder.prepare_l3_instructions(spec, addrs, "src")
+            context.extend(l3_src_instr)
 
-        if "l3_dst" in spec and IPAddresses(spec["l3_dst"]).is_single_ip():
-            dst_ip = str(IPAddresses(spec["l3_dst"]).addresses_as_list()[0])
-
-        l3_src_instr = self._fe_builder.prepare_l3_instructions(
-            spec, IPAddresses(spec["l3_src"]), "src"
-        )
-        l3_dst_instr = self._fe_builder.prepare_l3_instructions(
-            spec, IPAddresses(spec["l3_dst"]), "dst"
-        )
-
-        context.extend(l3_src_instr)
-        context.extend(l3_dst_instr)
+        if "l3_dst" in spec:
+            addrs = IPAddresses(spec["l3_dst"])
+            dst_ip = addrs.first_ip()
+            l3_dst_instr = self._fe_builder.prepare_l3_instructions(spec, addrs, "dst")
+            context.extend(l3_dst_instr)
 
         return [IP_hdr(src=src_ip, dst=dst_ip)]
 
@@ -265,21 +355,23 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
         src_port = 0
         dst_port = 0
 
-        if "l4_src" in spec and ports.L4Ports(spec["l4_src"]).is_single_port():
-            src_port = ports.L4Ports(spec["l4_src"]).ports()
+        if "l4_src" in spec:
+            l4_ports = ports.L4Ports(spec["l4_src"])
 
-        if "l4_dst" in spec and ports.L4Ports(spec["l4_dst"]).is_single_port():
-            dst_port = ports.L4Ports(spec["l4_dst"]).ports()
+            if l4_ports.is_single_port():
+                src_port = l4_ports.ports()
 
-        l4_src_instr = self._fe_builder.prepare_l4_instructions(
-            spec, ports.L4Ports(spec["l4_src"]), "src"
-        )
-        l4_dst_instr = self._fe_builder.prepare_l4_instructions(
-            spec, ports.L4Ports(spec["l4_dst"]), "dst"
-        )
+            l4_src_instr = self._fe_builder.prepare_l4_instructions(spec, l4_ports, "src")
+            context.extend(l4_src_instr)
 
-        context.extend(l4_src_instr)
-        context.extend(l4_dst_instr)
+        if "l4_dst" in spec:
+            l4_ports = ports.L4Ports(spec["l4_dst"])
+
+            if l4_ports.is_single_port():
+                dst_port = l4_ports.ports()
+
+            l4_dst_instr = self._fe_builder.prepare_l4_instructions(spec, l4_ports, "dst")
+            context.extend(l4_dst_instr)
 
         if spec["l4"] == "tcp":
             return [
