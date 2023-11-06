@@ -1,5 +1,0 @@
----
-dependencies:
-  - role: python38
-  - role: sudo_variables
-    var_name: VIRTUAL_ENV

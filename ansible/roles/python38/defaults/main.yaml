@@ -1,5 +1,0 @@
----
-python38_env:
-  PATH: '{{ ansible_env.PATH | default("") }}'
-  LD_LIBRARY_PATH: '{{ ansible_env.LD_LIBRARY_PATH | default("") }}'
-pipenv_version: '2022.8.5'

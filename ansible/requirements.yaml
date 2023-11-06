@@ -1,0 +1,4 @@
+collections:
+  - name: https://gitlab.liberouter.org/testing/ansible.git#liberouter/dev/
+    type: git
+    version: main

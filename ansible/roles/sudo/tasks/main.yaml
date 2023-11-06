@@ -1,6 +1,0 @@
----
-- name: sudo is installed
-  yum:
-    name:
-      - sudo
-    state: latest
