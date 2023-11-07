@@ -131,7 +131,7 @@ class Rsync:
             ) from err
 
         try:
-            Tool(["rm", "-rf", str(target)], executor=self._executor).run()
+            Tool(["rm", "-rf", target], executor=self._executor).run()
         except ExecutableProcessError as err:
             raise RsyncException(
                 f"Could not delete file or directory {target}, err: {err}"
@@ -357,4 +357,4 @@ class Rsync:
         if Path(self._data_dir) not in path.parents:
             raise ValueError
 
-        return path
+        return str(path)

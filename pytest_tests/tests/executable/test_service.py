@@ -77,14 +77,14 @@ def helper_service_factory(helper_app_args, helper_pre_start="true", helper_post
     """
 
     @pytest.fixture
-    def helper_service(require_root, helper_app, tmp_path):
+    def helper_service(require_root, helper_app_local, tmp_path):
         HELPER_SERVICE_PATH.write_text(
             SERVICE_TEMPLATE.format(
                 description=SERVICE_DESCRIPTION,
                 service_type=SERVICE_TYPE,
                 pre_start=helper_pre_start,
                 post_start=helper_post_start,
-                app=helper_app,
+                app=helper_app_local,
                 args=helper_app_args,
                 reload_file=_reload_file(tmp_path),
             )

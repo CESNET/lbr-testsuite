@@ -7,6 +7,7 @@ stages:
 
 default:
     image: $IMAGE_BUILD
+    tags: [docker-ci-image]
 
 include:
     - local: 'ci/prepare.gitlab-ci.yaml'

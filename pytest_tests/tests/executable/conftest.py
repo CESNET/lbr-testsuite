@@ -54,7 +54,7 @@ def executor(request, executor):
 
 
 @pytest_cases.fixture(scope="session")
-def helper_app(tmp_path_factory, executor):
+def helper_app_local(tmp_path_factory):
     """Path to testing helper application.
 
     Parameters
@@ -62,8 +62,6 @@ def helper_app(tmp_path_factory, executor):
     tmp_path_factory : pytest.TempPathFactory
         Session-scoped fixture for acquiring of tests temporary
         directory.
-    executor : executable.Executor
-        Executor to use.
 
     Returns
     -------
@@ -75,9 +73,30 @@ def helper_app(tmp_path_factory, executor):
     app = str(tmp_path_factory.getbasetemp() / "helper_app")
     subprocess.run(["gcc", app_source, "-o", app], check=True)
 
-    app = Rsync(executor).push_path(app)
-
     return app
+
+
+@pytest_cases.fixture(scope="function")
+def helper_app(helper_app_local, executor):
+    """Path to testing helper application.
+
+    It will return either local or remote path
+    to application depending on executor.
+
+    Parameters
+    ----------
+    helper_app_local : str
+        Path to local testing helper application.
+    executor : executable.Executor
+        Executor to use.
+
+    Returns
+    -------
+    str
+        Path to the application.
+    """
+
+    return Rsync(executor).push_path(helper_app_local)
 
 
 @pytest_cases.fixture

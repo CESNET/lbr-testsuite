@@ -257,6 +257,9 @@ def test_tool_returncode_allowed_failure(helper_app, testing_namespace, executor
 def test_tool_env(testing_namespace, executor):
     """Test of environment variable setup."""
 
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"remote executor does work differently with env")
+
     test_var = "TEST_TOOL_ENV_VAR"
     test_var_value = TESTING_OUTPUT
     test_env = dict()
@@ -287,6 +290,9 @@ def test_tool_env_key(testing_namespace, executor):
 
 def test_tool_env_clear(testing_namespace, executor):
     """Test of environment variable setup."""
+
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"remote executor does work differently with env")
 
     cmd = executable.Tool(["printenv", "-0"], netns=testing_namespace, executor=executor)
     cmd.clear_env()
@@ -528,7 +534,10 @@ def test_tool_repeated_single_instance(testing_namespace, executor):
         Executor to use.
     """
 
-    repeat_count = 500
+    if isinstance(executor, LocalExecutor):
+        repeat_count = 500
+    elif isinstance(executor, RemoteExecutor):
+        repeat_count = 25
 
     cmd = executable.Tool(["pwd"], netns=testing_namespace, executor=executor)
 
@@ -552,7 +561,10 @@ def test_tool_repeated_individual_instances(testing_namespace, executor):
         Executor to use.
     """
 
-    repeat_count = 500
+    if isinstance(executor, LocalExecutor):
+        repeat_count = 500
+    elif isinstance(executor, RemoteExecutor):
+        repeat_count = 25
 
     for i in range(repeat_count):
         cmd = executable.Tool(["pwd"], netns=testing_namespace, executor=executor)

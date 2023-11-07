@@ -489,6 +489,7 @@ class Tool(Executable):
             A pair composed from stdout and stderr.
         """
 
+        self._executor.reset_process()
         self._start()
         return self._wait_or_kill(timeout)
 
@@ -509,6 +510,10 @@ class AsyncTool(Executable):
     def run(self):
         """Run the command. Start and don't wait for completion."""
 
+        if self._executor.get_process() is not None and not self._terminated:
+            raise RuntimeError("start called on a started process")
+
+        self._executor.reset_process()
         self._start()
         self._stdout, self._stderr = self._executor.get_output_iterators()
         self._terminated = False
@@ -651,6 +656,7 @@ class Daemon(Executable):
         if self._executor.get_process() is not None and not self._terminated:
             raise RuntimeError("start called on a started process")
 
+        self._executor.reset_process()
         self._start()
 
         if not self.is_running():
