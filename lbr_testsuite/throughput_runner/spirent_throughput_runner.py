@@ -162,8 +162,6 @@ class SpirentThroughputRunner:
         upper_bound = max_load_mbps
         lower_bound = 0
         test_load = max_load_mbps
-        tx = 0
-        rx = 0
         duration = 5
 
         while upper_bound - lower_bound > precision_mbps:
