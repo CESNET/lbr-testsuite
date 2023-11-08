@@ -159,6 +159,9 @@ class SpirentThroughputRunner:
         self._last_measurement.rx = total_rx
         return self._last_measurement.tx, self._last_measurement.rx
 
+    def _no_packet_missed(self) -> bool:
+        return self._last_measurement.tx == self._last_measurement.rx
+
     def measure_max(
         self,
         max_load_mbps: int,
@@ -189,7 +192,7 @@ class SpirentThroughputRunner:
         while upper_bound - lower_bound > precision_mbps:
             self.generate_traffic(test_load, packet_len, duration)
             self.evaluate()
-            if self._last_measurement.tx == self._last_measurement.rx:
+            if self._no_packet_missed():
                 lower_bound = test_load
             else:
                 upper_bound = test_load
