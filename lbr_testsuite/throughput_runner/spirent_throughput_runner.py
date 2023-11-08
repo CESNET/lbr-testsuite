@@ -81,9 +81,9 @@ class SpirentThroughputRunner:
     def generate_traffic(
         self,
         load_mbps: int,
-        packet_len: Optional[int],
-        duration: int = 5,
-    ) -> Tuple[int, int]:
+        packet_len: int,
+        duration: Optional[int] = 5,
+    ):
         """Generate traffic from a spirent instance for a given
         number of seconds.
 
@@ -141,7 +141,7 @@ class SpirentThroughputRunner:
         self,
         max_load_mbps: int,
         packet_len: int,
-        precision_mbps: int = 100,
+        precision_mbps: Optional[int] = 100,
     ) -> Tuple[int, int]:
         """Measure maximum zero packet loss throughput using binary search.
 
