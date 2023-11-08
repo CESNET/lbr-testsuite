@@ -68,6 +68,14 @@ class SpirentThroughputRunner:
             tx = stats["tx"]["FrameCount"]
             assert tx > 0, "No packets transmitted."
 
+    def _pre_test_traffic_gen(self):
+        """Execute some steps before test traffic generating.
+
+        Note: Method is not used here. Its purpose is to provide
+        finer control for derived classes.
+        """
+        ...
+
     def _evaluate_stream_block(self, block: StreamBlock) -> Tuple[int, int]:
         """Evaluate spirent statistics for given stream block.
 
@@ -131,6 +139,8 @@ class SpirentThroughputRunner:
             block.apply()
 
         self._warm_up()
+
+        self._pre_test_traffic_gen()
 
         # Main test traffic
         self._spirent._stc_handler.stc_clear_results()
