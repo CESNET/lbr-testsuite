@@ -53,6 +53,8 @@ class SpirentThroughputRunner:
         for block in stream_blocks:
             block.set_active(True)
 
+        self._last_measurement = ThroughputRunnerMeasurementData()
+
     def _warm_up(self):
         """Generate a short burst of packets before the actual
         test to warm up caches.
@@ -153,7 +155,9 @@ class SpirentThroughputRunner:
             total_tx += tx
             total_rx += rx
 
-        return total_tx, total_rx
+        self._last_measurement.tx = total_tx
+        self._last_measurement.rx = total_rx
+        return self._last_measurement.tx, self._last_measurement.rx
 
     def measure_max(
         self,
@@ -184,14 +188,14 @@ class SpirentThroughputRunner:
 
         while upper_bound - lower_bound > precision_mbps:
             self.generate_traffic(test_load, packet_len, duration)
-            tx, rx = self.evaluate()
-            if tx == rx:
+            self.evaluate()
+            if self._last_measurement.tx == self._last_measurement.rx:
                 lower_bound = test_load
             else:
                 upper_bound = test_load
 
             test_load = (upper_bound + lower_bound) // 2
 
-        throughput_mpps = (rx / duration) / 1000000
+        throughput_mpps = (self._last_measurement.rx / duration) / 1000000
 
         return lower_bound, throughput_mpps
