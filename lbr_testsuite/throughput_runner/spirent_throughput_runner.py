@@ -8,10 +8,28 @@ Base class for running throughput tests
 
 
 import logging
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from lbr_testsuite.spirent.spirent import Spirent
 from lbr_testsuite.spirent.stream_block import StreamBlock
+
+
+@dataclass
+class ThroughputRunnerMeasurementData:
+    """Data class storing data from a throughput measurement.
+
+    Parameters
+    ----------
+    tx : int
+        Count of packets transmitted from a generator (TX).
+    rx : int
+        Count of packets received on an analyzer (might be as same
+        as generator; RX).
+    """
+
+    tx: int = None
+    rx: str = None
 
 
 class SpirentThroughputRunner:
