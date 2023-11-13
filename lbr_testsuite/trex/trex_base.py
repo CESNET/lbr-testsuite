@@ -15,6 +15,12 @@ import scapy.all as scapy
 import yaml
 
 
+class TRexZMQPortsUsedError(Exception):
+    """Custom exception raised when TRex fails to start
+    due to ZMQ ports being used by another process.
+    """
+
+
 class TRexBase:
     """Base TRex class.
 
@@ -54,6 +60,12 @@ class TRexBase:
         -------
         TRexBase
             Connected TRex.
+
+        Raises
+        ------
+        TRexZMQPortsUsedError
+            When TRex fails to start due to ZMQ ports
+            being used by another process.
         """
 
         self._daemon = generator.get_daemon()
@@ -68,9 +80,32 @@ class TRexBase:
         with open(conf_file, "r") as f:
             cfg = yaml.safe_load(f)
 
-        self._handler = self._start_trex(
-            generator.get_host(), remote_cfg_file, cfg[0]["zmq_rpc_port"], cfg[0]["zmq_pub_port"]
-        )
+        try:
+            self._handler = self._start_trex(
+                generator.get_host(),
+                remote_cfg_file,
+                cfg[0]["zmq_rpc_port"],
+                cfg[0]["zmq_pub_port"],
+            )
+        except Exception as err:
+            # TRex can provide general Exception during startup failure.
+            # It contains full startup log. If log contains certain
+            # strings, raise custom exception.
+            if (
+                len(err.args) >= 1
+                and isinstance(err.args[0], str)
+                and (
+                    "ZMQ: Address already in use" in err.args[0]
+                    or "ZMQ port is used by the following process" in err.args[0]
+                    or "unable to bind ZMQ server at" in err.args[0]
+                )
+            ):
+                raise TRexZMQPortsUsedError(
+                    f"ZMQ ports {cfg[0]['zmq_rpc_port']} or {cfg[0]['zmq_pub_port']} already used."
+                )
+            else:
+                raise
+
         self._handler.connect()
         request.addfinalizer(self.terminate)
 

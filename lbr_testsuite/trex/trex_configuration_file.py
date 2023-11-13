@@ -217,6 +217,35 @@ def _create_yaml_configuration(
     return cfg
 
 
+def randomize_ports(request, generator, conf_file):
+    """Generate new random ZMQ ports in existing config.
+
+    Also rewrite file on TRex server.
+
+    Parameters
+    ----------
+    request : fixture
+        Special pytest fixture.
+    generator: TRexGenerator
+        TRex generator.
+    conf_file : str
+        Path to configuration file on local machine.
+    """
+
+    with open(conf_file, "r") as f:
+        cfg = yaml.safe_load(f)
+
+    port = random.randint(49152, 65534)
+    cfg[0]["zmq_pub_port"] = port
+    cfg[0]["zmq_rpc_port"] = port + 1
+
+    with open(conf_file, "w") as f:
+        yaml.dump(cfg, f)
+
+    daemon = generator.get_daemon()
+    daemon.push_files(conf_file)
+
+
 def setup_cfg_file(
     request,
     generator,

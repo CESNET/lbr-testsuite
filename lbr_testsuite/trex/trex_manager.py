@@ -15,7 +15,8 @@ import pathlib
 
 import ansible_runner
 
-from .trex_configuration_file import setup_cfg_file
+from .trex_base import TRexZMQPortsUsedError
+from .trex_configuration_file import randomize_ports, setup_cfg_file
 from .trex_stateful import TRexAdvancedStateful
 from .trex_stateless import TRexStateless
 
@@ -31,11 +32,21 @@ class TRexManager:
     Manager can also configure machine with
     Ansible playbook.
 
+    Attributes
+    ----------
+    STARTUP_ATTEMPTS : int
+        Number of attempts to start TRex.
+        In case TRex fails to start because ZMQ (communication)
+        ports are already used by another process.
+        Use another ports and try again.
+
     Parameters
     ----------
     machine_pool : TRexMachinesPool
         Pool of available TRex machines.
     """
+
+    STARTUP_ATTEMPTS = 5
 
     def __init__(self, machine_pool):
         self._pool = machine_pool
@@ -222,12 +233,25 @@ class TRexManager:
             role,
         )
 
-        return trex_class().connect(
-            request,
-            generator,
-            cfg,
-            request.config.getoption("trex_force_use"),
-        )
+        for cnt in range(self.STARTUP_ATTEMPTS):
+            try:
+                return trex_class().connect(
+                    request,
+                    generator,
+                    cfg,
+                    request.config.getoption("trex_force_use"),
+                )
+            except TRexZMQPortsUsedError:
+                if cnt >= self.STARTUP_ATTEMPTS - 1:
+                    raise
+                else:
+                    global_logger.info(
+                        f"TRex startup failed due to ZMQ port being used by another "
+                        "process. Will try again with different ports "
+                        f"({self.STARTUP_ATTEMPTS - 1 - cnt} retries left)."
+                    )
+                    randomize_ports(request, generator, cfg)
+                    continue
 
     def _prepare_generator(
         self,
