@@ -31,6 +31,10 @@ class SpirentThroughputRunner:
         self._stream_blocks = stream_blocks
         self._logger = logging.getLogger(self.__class__.__name__)
 
+        self._spirent.deactivate_all_stream_blocks()
+        for block in stream_blocks:
+            block.set_active(True)
+
     def _warm_up(self):
         """Generate a short burst of packets before the actual
         test to warm up caches.

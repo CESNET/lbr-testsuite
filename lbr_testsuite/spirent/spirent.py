@@ -239,6 +239,12 @@ class Spirent(Generator):
 
         return stream_blocks_handler
 
+    def deactivate_all_stream_blocks(self):
+        """Deactivate all stream blocks in current configuration."""
+
+        all_stream_blocks = self._stc_handler.stc_stream_block()
+        self._stc_handler.stc_attribute(all_stream_blocks, "Active", "FALSE")
+
     def activate_stream_blocks(self, stream_block_names):
         """Activate stream blocks by names.
 
@@ -255,8 +261,7 @@ class Spirent(Generator):
         """
 
         # deactivate all stream blocks
-        all_stream_blocks = self._stc_handler.stc_stream_block()
-        self._stc_handler.stc_attribute(all_stream_blocks, "Active", "FALSE")
+        self.deactivate_stream_blocks()
 
         # activate requested stream blocks
         stream_blocks = self._stream_blocks_handler(stream_block_names)
