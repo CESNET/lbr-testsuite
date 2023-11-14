@@ -8,10 +8,28 @@ Base class for running throughput tests
 
 
 import logging
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from lbr_testsuite.spirent.spirent import Spirent
 from lbr_testsuite.spirent.stream_block import StreamBlock
+
+
+@dataclass
+class ThroughputRunnerMeasurementData:
+    """Data class storing data from a throughput measurement.
+
+    Parameters
+    ----------
+    tx : int
+        Count of packets transmitted from a generator (TX).
+    rx : int
+        Count of packets received on an analyzer (might be as same
+        as generator; RX).
+    """
+
+    tx: int = None
+    rx: str = None
 
 
 class SpirentThroughputRunner:
@@ -35,6 +53,8 @@ class SpirentThroughputRunner:
         for block in stream_blocks:
             block.set_active(True)
 
+        self._last_measurement = ThroughputRunnerMeasurementData()
+
     def _warm_up(self):
         """Generate a short burst of packets before the actual
         test to warm up caches.
@@ -47,6 +67,14 @@ class SpirentThroughputRunner:
             stats = block.get_tx_rx_stats()
             tx = stats["tx"]["FrameCount"]
             assert tx > 0, "No packets transmitted."
+
+    def _pre_test_traffic_gen(self):
+        """Execute some steps before test traffic generating.
+
+        Note: Method is not used here. Its purpose is to provide
+        finer control for derived classes.
+        """
+        ...
 
     def _evaluate_stream_block(self, block: StreamBlock) -> Tuple[int, int]:
         """Evaluate spirent statistics for given stream block.
@@ -81,9 +109,9 @@ class SpirentThroughputRunner:
     def generate_traffic(
         self,
         load_mbps: int,
-        packet_len: Optional[int],
-        duration: int = 5,
-    ) -> Tuple[int, int]:
+        packet_len: int,
+        duration: Optional[int] = 5,
+    ):
         """Generate traffic from a spirent instance for a given
         number of seconds.
 
@@ -112,6 +140,8 @@ class SpirentThroughputRunner:
 
         self._warm_up()
 
+        self._pre_test_traffic_gen()
+
         # Main test traffic
         self._spirent._stc_handler.stc_clear_results()
         self._spirent.generate_traffic(duration)
@@ -135,13 +165,18 @@ class SpirentThroughputRunner:
             total_tx += tx
             total_rx += rx
 
-        return total_tx, total_rx
+        self._last_measurement.tx = total_tx
+        self._last_measurement.rx = total_rx
+        return self._last_measurement.tx, self._last_measurement.rx
+
+    def _no_packet_missed(self) -> bool:
+        return self._last_measurement.tx == self._last_measurement.rx
 
     def measure_max(
         self,
         max_load_mbps: int,
         packet_len: int,
-        precision_mbps: int = 100,
+        precision_mbps: Optional[int] = 100,
     ) -> Tuple[int, int]:
         """Measure maximum zero packet loss throughput using binary search.
 
@@ -162,20 +197,18 @@ class SpirentThroughputRunner:
         upper_bound = max_load_mbps
         lower_bound = 0
         test_load = max_load_mbps
-        tx = 0
-        rx = 0
         duration = 5
 
         while upper_bound - lower_bound > precision_mbps:
             self.generate_traffic(test_load, packet_len, duration)
-            tx, rx = self.evaluate()
-            if tx == rx:
+            self.evaluate()
+            if self._no_packet_missed():
                 lower_bound = test_load
             else:
                 upper_bound = test_load
 
             test_load = (upper_bound + lower_bound) // 2
 
-        throughput_mpps = (rx / duration) / 1000000
+        throughput_mpps = (self._last_measurement.rx / duration) / 1000000
 
         return lower_bound, throughput_mpps
