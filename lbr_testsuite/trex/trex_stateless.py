@@ -15,7 +15,7 @@ from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 from typing import Optional, Union
 
-import lbr_trex_client.paths  # noqa: F401
+import lbr_trex_client  # noqa: F401
 import trex.stl.trex_stl_client as trex_stl_client
 import trex.stl.trex_stl_packet_builder_scapy as trex_packet_builder
 import trex.stl.trex_stl_streams as trex_stl_streams

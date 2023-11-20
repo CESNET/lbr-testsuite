@@ -16,7 +16,7 @@ import ipaddress
 from dataclasses import dataclass
 from typing import List, Tuple
 
-import lbr_trex_client.paths  # noqa: F401
+import lbr_trex_client  # noqa: F401
 import trex.astf.trex_astf_client as trex_astf_client
 import trex.astf.trex_astf_profile as trex_astf_profile
 

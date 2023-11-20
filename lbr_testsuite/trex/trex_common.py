@@ -7,7 +7,7 @@ File implements common TRex functions or utilities.
 """
 
 
-import lbr_trex_client.paths  # noqa: F401
+import lbr_trex_client  # noqa: F401
 from trex.utils.parsing_opts import decode_multiplier
 
 

@@ -8,7 +8,7 @@ Modules keep local references to loaded modules.
 """
 
 # isort: off
-import lbr_trex_client.paths  # noqa
+import lbr_trex_client  # noqa
 from trex.stl.api import *  # noqa
 
 # Since we can load packet from packet crafter into

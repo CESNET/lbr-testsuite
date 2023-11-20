@@ -10,7 +10,7 @@ both stateless and advanced stateful TRexes.
 import os
 import pathlib
 
-import lbr_trex_client.paths  # noqa: F401
+import lbr_trex_client  # noqa: F401
 import scapy.all as scapy
 import yaml
 
