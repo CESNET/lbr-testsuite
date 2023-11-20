@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7ec8a2bcd1f20cec5bb16b0f8115a74062b03780ff4ada24371b52c8263d049c"
+            "sha256": "283762b0e0f94accefa046d9ed86a42da7712f84ff7ac6e54894b6e4cd17df9f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -12,11 +12,6 @@
                 "name": "pypi",
                 "url": "https://pypi.org/simple",
                 "verify_ssl": true
-            },
-            {
-                "name": "liberouter-pypi",
-                "url": "http://cisticka-devel.liberouter.org/piproxy/tmc/pypi-liberouter/simple",
-                "verify_ssl": false
             }
         ]
     },
@@ -551,10 +546,11 @@
         },
         "lbr-trex-client": {
             "hashes": [
-                "sha256:ca708a63f3c5fe5e6f5845964b3fcdec753d7d9e012036fe4c17b658b9b253e6"
+                "sha256:7e8b70737cc6355859636cade837748e7c693a59329431efabff799861d7184d"
             ],
-            "index": "liberouter-pypi",
-            "version": "==2.0.1"
+            "index": "pypi",
+            "markers": "python_version >= '3.8'",
+            "version": "==3.2.2"
         },
         "lockfile": {
             "hashes": [
