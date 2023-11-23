@@ -29,6 +29,11 @@ class LineColors:
             ("#f57c00", "#ffe082"),  # orange
             ("#ad1457", "#e91e63"),  # pink-red
             ("#455a64", "#90a4ae"),  # grayish
+            ("#c1ae4f", "#fce367"),  # yellow-grey
+            ("#244475", "#2c2475"),  # navy blue
+            ("#80ad0f", "#a6e014"),  # apple green
+            ("#96247f", "#fc44d7"),  # hot pink
+            ("#477777", "#7a9b9b"),  # shallow blue
         ]
 
         self._bindings = dict()
