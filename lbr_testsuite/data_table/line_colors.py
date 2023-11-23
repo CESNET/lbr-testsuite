@@ -10,10 +10,12 @@ arguments a key is created which can be reused for same pair using same
 arguments.
 """
 
+import itertools
+
 
 class LineColors:
     def __init__(self):
-        self._color_pairs = [
+        _color_pairs_list = [
             ("#b22222", "#fa8072"),  # red
             ("#2e7d32", "#bbfa73"),  # green
             ("#283593", "#42a5f5"),  # light-blue
@@ -36,6 +38,7 @@ class LineColors:
             ("#477777", "#7a9b9b"),  # shallow blue
         ]
 
+        self._color_pairs = itertools.cycle(_color_pairs_list)
         self._bindings = dict()
 
     def bind_color(self, **args):
@@ -63,10 +66,7 @@ class LineColors:
         key = key[1:]
 
         if key not in self._bindings:
-            try:
-                self._bindings[key] = self._color_pairs.pop(0)
-            except IndexError:
-                # Pool of color pairs exhausted
-                return None, None
+            # _color_pairs is circular, can never raise StopIteration.
+            self._bindings[key] = next(self._color_pairs)
 
         return self._bindings[key]
