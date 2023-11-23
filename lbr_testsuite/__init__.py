@@ -1,6 +1,7 @@
 # isort: off
 import sys
 from ._trex_imports import _deimport_scapy as ds
+from ._trex_imports import _deimport_yaml as dy
 
 if "scapy" in sys.modules:
     # If Scapy was imported before lbr_testsuite, deimport
@@ -25,3 +26,6 @@ from . import throughput_runner  # noqa
 from . import topology  # noqa
 from . import trex  # noqa
 from .common import *  # noqa
+
+
+dy._deimport_completely()
