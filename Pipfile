@@ -3,14 +3,9 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[[source]]
-url = "http://cisticka-devel.liberouter.org/piproxy/tmc/pypi-liberouter/simple"
-verify_ssl = false
-name = "liberouter-pypi"
-
 [packages]
 pyroute2 = "<1.,>=0.6.2"
-lbr-trex-client = {version=">=2.0.1", index="liberouter-pypi"}
+lbr-trex-client = "*"
 stcrestclient = "*"
 pytest = ">=7.0"
 pytest-cases = ">=3.6.11"

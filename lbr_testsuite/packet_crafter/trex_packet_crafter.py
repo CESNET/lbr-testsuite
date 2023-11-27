@@ -10,7 +10,7 @@ import ipaddress
 import logging
 import uuid
 
-import lbr_trex_client.paths  # noqa: F401
+import lbr_trex_client  # noqa: F401
 import scapy.all as scapy
 import trex.stl.trex_stl_packet_builder_scapy as trex_packet_builder
 

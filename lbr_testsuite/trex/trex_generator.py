@@ -23,7 +23,7 @@ If Topology allows multiple ``Generator`` objects in the future, then this class
 it's purpose and can be removed.
 """
 
-import lbr_trex_client.paths  # noqa: F401
+import lbr_trex_client  # noqa: F401
 from trex_client import CTRexClient
 
 from ..topology.generator import Generator
