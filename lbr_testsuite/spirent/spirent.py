@@ -261,7 +261,7 @@ class Spirent(Generator):
         """
 
         # deactivate all stream blocks
-        self.deactivate_stream_blocks()
+        self.deactivate_all_stream_blocks()
 
         # activate requested stream blocks
         stream_blocks = self._stream_blocks_handler(stream_block_names)
