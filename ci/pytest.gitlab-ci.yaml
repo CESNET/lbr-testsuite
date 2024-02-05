@@ -3,6 +3,7 @@ pytest:
     tags: [lbr-testsuite-ci]
     variables:
         ANSIBLE_PLAYBOOK: ansible/ci_machine.yaml
+        RESERVE_MACHINES: lbr-testsuite-ci
     script:
         - sudo pip install dist/lbr_testsuite*.whl
         - mkdir -p pytest_tests/output
