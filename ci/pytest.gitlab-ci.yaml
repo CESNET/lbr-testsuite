@@ -7,10 +7,23 @@ pytest:
     script:
         - mkdir -p pytest_tests/output
         - |
-            cd pytest_tests && sudo -E pytest \
+            cd pytest_tests && sudo -E coverage run -m pytest \
             --color=yes --basetemp=output --log-level=debug --junitxml=report.xml \
             --remote-host $CI_REMOTE_HOST -s --tb=short -k 'not topology' | tee report.log
+        - coverage html
+        - coverage xml
+        - sed -i -e 's|/home/local/gitlab-runner/builds/.*/testing/testsuite/||g' htmlcov/*
+        - sed -i -e 's|/home/local/gitlab-runner/builds/.*/testing/testsuite/||g' coverage.xml
+        - coverage report | grep 'TOTAL'
+    coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
     artifacts:
-        paths: [pytest_tests/output, pytest_tests/report.*]
-        reports: { junit: pytest_tests/report.xml }
+        paths: [pytest_tests/output, pytest_tests/report.*, pytest_tests/htmlcov, pytest_tests/coverage.xml]
+        reports:
+            junit: pytest_tests/report.xml
+            coverage_report:
+                coverage_format: cobertura
+                path: pytest_tests/coverage.xml
         when: always
+    environment:
+        name: $CI_COMMIT_REF_SLUG/$CI_JOB_NAME/coverage
+        url: $CI_JOB_URL/artifacts/file/pytest_tests/htmlcov/index.html
