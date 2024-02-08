@@ -205,13 +205,13 @@ class DataTableCharts:
         return (fig, axes)
 
     @staticmethod
-    def _format_ax(ax, spec, data):
+    def _format_ax(ax, spec, df):
         """Common formatting"""
 
         ax.set_title(spec.title)
         ax.legend(fontsize=6)
         ax.set_xscale(**spec.xscale)
-        ax.set_xticks(data[spec.x_column])
+        ax.set_xticks(df[spec.x_column])
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
         if spec.xlabel:
             ax.set_xlabel(spec.xlabel)
@@ -240,7 +240,7 @@ class DataTableCharts:
         return sub_frames
 
     @staticmethod
-    def _label_suffix(parametrized_by, data):
+    def _label_suffix(parametrized_by, df):
         """Create line label suffix.
 
         Suffix is composed from names of all parametrized_by and their current
@@ -255,17 +255,17 @@ class DataTableCharts:
         par_sep = ";"
         suffix = " "
         for par in parametrized_by:
-            val = data[par].iloc[0]
+            val = df[par].iloc[0]
             par_name = par[0]
             suffix = f"{suffix}{par_name}={val}{par_sep}"
         return suffix[: -len(par_sep)]  # remove trailing separator
 
     @staticmethod
-    def _plot_line(ax, data, line_spec, index_column, parametrized_by=None):
-        label_suffix = DataTableCharts._label_suffix(parametrized_by, data)
+    def _plot_line(ax, df, line_spec, index_column, parametrized_by=None):
+        label_suffix = DataTableCharts._label_suffix(parametrized_by, df)
 
-        col = data[line_spec.column]
-        col.index = data[index_column]
+        col = df[line_spec.column]
+        col.index = df[index_column]
 
         col.plot(
             kind="line",
@@ -294,10 +294,10 @@ class DataTableCharts:
             return [data]
 
     @staticmethod
-    def _cast_value_to_column_type(data, column, value):
-        return data.dtypes[column].type(value)
+    def _cast_value_to_column_type(df, column, value):
+        return df.dtypes[column].type(value)
 
-    def _get_colors_by_params(self, ch_spec, data):
+    def _get_colors_by_params(self, ch_spec, df):
         """Lines in current plot are defined by:
         1) filtering - selects data to plot
         2) parametrization - unique combination of parameters defines
@@ -320,10 +320,10 @@ class DataTableCharts:
                 With normalization, values are always converted to data
                 table data type.
                 """
-                color_key[k] = self._cast_value_to_column_type(data, k, v)
+                color_key[k] = self._cast_value_to_column_type(df, k, v)
         if ch_spec.parametrized_by:
             for p in ch_spec.parametrized_by:
-                color_key[p] = data[p].iloc[0]
+                color_key[p] = df[p].iloc[0]
         return self._colors.bind_color(**color_key)
 
     def _plot_data_lines(self, sub_frames, ch_spec, ax):
