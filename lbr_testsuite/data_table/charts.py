@@ -8,11 +8,13 @@ Common module for plotting of data stored within a DataTable.
 
 import itertools
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List, Optional, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
 
+from .data_table import DataTable
 from .line_colors import LineColors
 
 
@@ -139,7 +141,10 @@ class DataTableCharts:
         Source data for plotting.
     """
 
-    def __init__(self, charts=None):
+    def __init__(
+        self,
+        charts: Optional[List[List[PlotSpec]]] = None,
+    ):
         self._charts = charts if charts is not None else []
         self._data = None
 
@@ -148,12 +153,12 @@ class DataTableCharts:
 
         self._colors = LineColors()
 
-    def set_data(self, data):
+    def set_data(self, data: DataTable):
         """Set source data"""
 
         self._data = data
 
-    def append_charts_row(self, charts):
+    def append_charts_row(self, charts: List[PlotSpec]):
         """Append single charts row to the list of all charts to plot.
 
         Parameters
@@ -335,7 +340,11 @@ class DataTableCharts:
                     ch_spec.parametrized_by,
                 )
 
-    def store_charts(self, chart_file, title=None):
+    def store_charts(
+        self,
+        chart_file: Union[str, Path],
+        title: Optional[str] = None,
+    ):
         """Plot requested data into a file.
 
         Parameters:
