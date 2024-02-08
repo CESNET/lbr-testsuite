@@ -146,17 +146,17 @@ class DataTableCharts:
         charts: Optional[List[List[PlotSpec]]] = None,
     ):
         self._charts = charts if charts is not None else []
-        self._data = None
+        self._data_table = None
 
         self._n_rows = None
         self._n_cols = None
 
         self._colors = LineColors()
 
-    def set_data(self, data: DataTable):
+    def set_data(self, data_table: DataTable):
         """Set source data"""
 
-        self._data = data
+        self._data_table = data_table
 
     def append_charts_row(self, charts: List[PlotSpec]):
         """Append single charts row to the list of all charts to plot.
@@ -221,7 +221,7 @@ class DataTableCharts:
         _, top = ax.get_ylim()
         ax.set_ylim(bottom=0, top=top * 1.1)
 
-    def _subframes_by_params(self, data, params):
+    def _subframes_by_params(self, data_table, params):
         """Filter sub-frames per unique values of selected parameters.
         From these sub-frames requested columns will be plotted.
         """
@@ -229,13 +229,13 @@ class DataTableCharts:
         filters = []
         for par in params:
             flt = []
-            for val in data.get_column_unique_values(par):
+            for val in data_table.get_column_unique_values(par):
                 flt.append((par, val))
             filters.append(flt)
 
         sub_frames = []
         for composed_flt in itertools.product(*filters):
-            sub_frames.append(data.filter_data(dict(composed_flt)))
+            sub_frames.append(data_table.filter_data(dict(composed_flt)))
 
         return sub_frames
 
@@ -284,9 +284,9 @@ class DataTableCharts:
 
     def _lines_subframes(self, ch_spec):
         if ch_spec.filter_by:
-            data = self._data.filter_data(ch_spec.filter_by)
+            data = self._data_table.filter_data(ch_spec.filter_by)
         else:
-            data = self._data
+            data = self._data_table
 
         if ch_spec.parametrized_by:
             return self._subframes_by_params(data, ch_spec.parametrized_by)
