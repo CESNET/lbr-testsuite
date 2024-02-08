@@ -8,7 +8,7 @@ Common module for plotting of data stored within a DataTable.
 
 import itertools
 from dataclasses import dataclass, field
-from typing import List, Union
+from typing import List, Optional, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -24,26 +24,26 @@ class PlotLineSpec:
     ----------
     column : str
         Name of a pandas.DataFrame column.
-    label_base : str
+    label_base : str, optional
         Base name of line label. Label-base is used instead of "direct"
         label as this base is extended by line identification when
         combining same kind of lines with different parameters. (e.g.
         measured value for 8 and 16 workers would have same
         base - "measured").
-    color_shade : int
+    color_shade : int, optional
         Color shade for lines with same color of different shade.
         Currently only 2 values of shade are available: 0 - darker,
         1 - lighter. If it is not set, no automatic color derivation
         is done and color is set automatically or via line_kwargs.
-    line_kwargs : dict
+    line_kwargs : dict, optional
         Additional arguments for pandas.Series.plot method. "label"
         argument is not allowed as it is created automatically from
         label_base.
     """
 
     column: str
-    label_base: str = None
-    color_shade: int = None
+    label_base: Optional[str] = None
+    color_shade: Optional[int] = None
     line_kwargs: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -76,10 +76,10 @@ class PlotSpec:
         more than once in plotted data. However, this max column in most
         cases have same values for all used parametrizations. Using
         this argument "max" line is drawn only once.
-    parametrized_by : Union[str, List[str]]
+    parametrized_by : Union[str, List[str]], optional
         Name(s) of columns holding values of parameters of group of
         lines with same meaning.
-    filter_by : dict
+    filter_by : dict, optional
         Dictionary where keys are column names and values are column
         values to filter. Requested chart is plotted on these filtered
         data only.
@@ -93,13 +93,13 @@ class PlotSpec:
 
     lines: List[PlotLineSpec]
     title: str = ""
-    x_column: str = None
-    max_column: PlotLineSpec = None
-    parametrized_by: Union[str, List[str]] = None
-    filter_by: dict = None
+    x_column: Optional[str] = None
+    max_column: Optional[PlotLineSpec] = None
+    parametrized_by: Optional[Union[str, List[str]]] = None
+    filter_by: Optional[dict] = None
     xscale = dict(value="log", base=2)
-    xlabel: str = None
-    ylabel: str = None
+    xlabel: Optional[str] = None
+    ylabel: Optional[str] = None
 
     def __post_init__(self):
         if isinstance(self.parametrized_by, str):
