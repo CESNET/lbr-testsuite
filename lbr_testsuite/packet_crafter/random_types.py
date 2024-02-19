@@ -9,7 +9,26 @@ Random types for IP address and L4 ports.
 import faker
 
 
-class RandomIP:
+class RandomType:
+    """Base class for all random types.
+    This class initializes the faker random
+    generator and optionally seeds it.
+    """
+
+    def __init__(self, seed=None):
+        """
+        Parameters
+        ----------
+        seed : int
+            Seed to be used for faker random generator.
+        """
+
+        self._faker = faker.Faker()
+        if seed is not None:
+            self._faker.seed_instance(seed)
+
+
+class RandomIP(RandomType):
     """Class for generating random IP addresses.
 
     Parameters
@@ -21,10 +40,8 @@ class RandomIP:
     """
 
     def __init__(self, count=1, seed=None):
+        super().__init__(seed)
         self._count = count
-        self._faker = faker.Faker()
-        if seed is not None:
-            self._faker.seed_instance(seed)
 
     def get_count(self):
         """Return count of IP adresses to generate.
@@ -66,7 +83,7 @@ class RandomIP:
         return sorted(addrs)
 
 
-class RandomPort:
+class RandomPort(RandomType):
     """Class for generating random ports.
 
     Parameters
@@ -78,10 +95,8 @@ class RandomPort:
     """
 
     def __init__(self, count=1, seed=None):
+        super().__init__(seed)
         self._count = count
-        self._faker = faker.Faker()
-        if seed is not None:
-            self._faker.seed_instance(seed)
 
     def generate(self):
         """Generate random ports.
