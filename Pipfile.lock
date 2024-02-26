@@ -587,10 +587,11 @@
         },
         "lbr-trex-client": {
             "hashes": [
-                "sha256:7e8b70737cc6355859636cade837748e7c693a59329431efabff799861d7184d"
+                "sha256:a9c01c51a2f7b3ebe5eeb78e863285524d8f19e66c5361a6f8b720f8c8aac188"
             ],
             "index": "pypi",
-            "version": "==3.2.2"
+            "markers": "python_version >= '3.8'",
+            "version": "==3.4.0"
         },
         "lockfile": {
             "hashes": [
