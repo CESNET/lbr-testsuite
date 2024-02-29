@@ -8,11 +8,13 @@ Common module for plotting of data stored within a DataTable.
 
 import itertools
 from dataclasses import dataclass, field
-from typing import List, Union
+from pathlib import Path
+from typing import List, Optional, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
 
+from .data_table import DataTable
 from .line_colors import LineColors
 
 
@@ -24,26 +26,26 @@ class PlotLineSpec:
     ----------
     column : str
         Name of a pandas.DataFrame column.
-    label_base : str
+    label_base : str, optional
         Base name of line label. Label-base is used instead of "direct"
         label as this base is extended by line identification when
         combining same kind of lines with different parameters. (e.g.
         measured value for 8 and 16 workers would have same
         base - "measured").
-    color_shade : int
+    color_shade : int, optional
         Color shade for lines with same color of different shade.
         Currently only 2 values of shade are available: 0 - darker,
         1 - lighter. If it is not set, no automatic color derivation
         is done and color is set automatically or via line_kwargs.
-    line_kwargs : dict
+    line_kwargs : dict, optional
         Additional arguments for pandas.Series.plot method. "label"
         argument is not allowed as it is created automatically from
         label_base.
     """
 
     column: str
-    label_base: str = None
-    color_shade: int = None
+    label_base: Optional[str] = None
+    color_shade: Optional[int] = None
     line_kwargs: dict = field(default_factory=dict)
 
     def __post_init__(self):
@@ -76,10 +78,10 @@ class PlotSpec:
         more than once in plotted data. However, this max column in most
         cases have same values for all used parametrizations. Using
         this argument "max" line is drawn only once.
-    parametrized_by : Union[str, List[str]]
+    parametrized_by : Union[str, List[str]], optional
         Name(s) of columns holding values of parameters of group of
         lines with same meaning.
-    filter_by : dict
+    filter_by : dict, optional
         Dictionary where keys are column names and values are column
         values to filter. Requested chart is plotted on these filtered
         data only.
@@ -93,13 +95,13 @@ class PlotSpec:
 
     lines: List[PlotLineSpec]
     title: str = ""
-    x_column: str = None
-    max_column: PlotLineSpec = None
-    parametrized_by: Union[str, List[str]] = None
-    filter_by: dict = None
+    x_column: Optional[str] = None
+    max_column: Optional[PlotLineSpec] = None
+    parametrized_by: Optional[Union[str, List[str]]] = None
+    filter_by: Optional[dict] = None
     xscale = dict(value="log", base=2)
-    xlabel: str = None
-    ylabel: str = None
+    xlabel: Optional[str] = None
+    ylabel: Optional[str] = None
 
     def __post_init__(self):
         if isinstance(self.parametrized_by, str):
@@ -139,21 +141,24 @@ class DataTableCharts:
         Source data for plotting.
     """
 
-    def __init__(self, charts=None):
+    def __init__(
+        self,
+        charts: Optional[List[List[PlotSpec]]] = None,
+    ):
         self._charts = charts if charts is not None else []
-        self._data = None
+        self._data_table = None
 
         self._n_rows = None
         self._n_cols = None
 
         self._colors = LineColors()
 
-    def set_data(self, data):
+    def set_data(self, data_table: DataTable):
         """Set source data"""
 
-        self._data = data
+        self._data_table = data_table
 
-    def append_charts_row(self, charts):
+    def append_charts_row(self, charts: List[PlotSpec]):
         """Append single charts row to the list of all charts to plot.
 
         Parameters
@@ -200,13 +205,13 @@ class DataTableCharts:
         return (fig, axes)
 
     @staticmethod
-    def _format_ax(ax, spec, data):
+    def _format_ax(ax, spec, df):
         """Common formatting"""
 
         ax.set_title(spec.title)
         ax.legend(fontsize=6)
         ax.set_xscale(**spec.xscale)
-        ax.set_xticks(data[spec.x_column])
+        ax.set_xticks(df[spec.x_column])
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
         if spec.xlabel:
             ax.set_xlabel(spec.xlabel)
@@ -216,7 +221,7 @@ class DataTableCharts:
         _, top = ax.get_ylim()
         ax.set_ylim(bottom=0, top=top * 1.1)
 
-    def _subframes_by_params(self, data, params):
+    def _subframes_by_params(self, data_table, params):
         """Filter sub-frames per unique values of selected parameters.
         From these sub-frames requested columns will be plotted.
         """
@@ -224,18 +229,18 @@ class DataTableCharts:
         filters = []
         for par in params:
             flt = []
-            for val in data.get_column_unique_values(par):
+            for val in data_table.get_column_unique_values(par):
                 flt.append((par, val))
             filters.append(flt)
 
         sub_frames = []
         for composed_flt in itertools.product(*filters):
-            sub_frames.append(data.filter_data(dict(composed_flt)))
+            sub_frames.append(data_table.filter_data(dict(composed_flt)))
 
         return sub_frames
 
     @staticmethod
-    def _label_suffix(parametrized_by, data):
+    def _label_suffix(parametrized_by, df):
         """Create line label suffix.
 
         Suffix is composed from names of all parametrized_by and their current
@@ -250,17 +255,17 @@ class DataTableCharts:
         par_sep = ";"
         suffix = " "
         for par in parametrized_by:
-            val = data[par].iloc[0]
+            val = df[par].iloc[0]
             par_name = par[0]
             suffix = f"{suffix}{par_name}={val}{par_sep}"
         return suffix[: -len(par_sep)]  # remove trailing separator
 
     @staticmethod
-    def _plot_line(ax, data, line_spec, index_column, parametrized_by=None):
-        label_suffix = DataTableCharts._label_suffix(parametrized_by, data)
+    def _plot_line(ax, df, line_spec, index_column, parametrized_by=None):
+        label_suffix = DataTableCharts._label_suffix(parametrized_by, df)
 
-        col = data[line_spec.column]
-        col.index = data[index_column]
+        col = df[line_spec.column]
+        col.index = df[index_column]
 
         col.plot(
             kind="line",
@@ -279,9 +284,9 @@ class DataTableCharts:
 
     def _lines_subframes(self, ch_spec):
         if ch_spec.filter_by:
-            data = self._data.filter_data(ch_spec.filter_by)
+            data = self._data_table.filter_data(ch_spec.filter_by)
         else:
-            data = self._data
+            data = self._data_table
 
         if ch_spec.parametrized_by:
             return self._subframes_by_params(data, ch_spec.parametrized_by)
@@ -289,10 +294,10 @@ class DataTableCharts:
             return [data]
 
     @staticmethod
-    def _cast_value_to_column_type(data, column, value):
-        return data.dtypes[column].type(value)
+    def _cast_value_to_column_type(df, column, value):
+        return df.dtypes[column].type(value)
 
-    def _get_colors_by_params(self, ch_spec, data):
+    def _get_colors_by_params(self, ch_spec, df):
         """Lines in current plot are defined by:
         1) filtering - selects data to plot
         2) parametrization - unique combination of parameters defines
@@ -315,10 +320,10 @@ class DataTableCharts:
                 With normalization, values are always converted to data
                 table data type.
                 """
-                color_key[k] = self._cast_value_to_column_type(data, k, v)
+                color_key[k] = self._cast_value_to_column_type(df, k, v)
         if ch_spec.parametrized_by:
             for p in ch_spec.parametrized_by:
-                color_key[p] = data[p].iloc[0]
+                color_key[p] = df[p].iloc[0]
         return self._colors.bind_color(**color_key)
 
     def _plot_data_lines(self, sub_frames, ch_spec, ax):
@@ -335,7 +340,11 @@ class DataTableCharts:
                     ch_spec.parametrized_by,
                 )
 
-    def store_charts(self, chart_file, title=None):
+    def store_charts(
+        self,
+        chart_file: Union[str, Path],
+        title: Optional[str] = None,
+    ):
         """Plot requested data into a file.
 
         Parameters:
