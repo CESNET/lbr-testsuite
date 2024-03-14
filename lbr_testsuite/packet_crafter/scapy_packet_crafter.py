@@ -1,7 +1,10 @@
 """
-Author(s): Dominik Tran <tran@cesnet.cz>, Jan Viktorin <viktorin@cesnet.cz>
+Author(s):
+    Dominik Tran <tran@cesnet.cz>
+    Jan Viktorin <viktorin@cesnet.cz>
+    Kamil Vojanec <vojanec@cesnet.cz>
 
-Copyright: (C) 2022-2023 CESNET, z.s.p.o.
+Copyright: (C) 2022-2024 CESNET, z.s.p.o.
 
 High-level packet crafter.
 """
@@ -9,6 +12,13 @@ High-level packet crafter.
 import scapy.all as scapy
 
 from . import abstract_packet_crafter, ipaddresses, ports
+from .random_types import (
+    RandomIPv4Header,
+    RandomIPv6Header,
+    RandomSCTPHeader,
+    RandomTCPHeader,
+    RandomUDPHeader,
+)
 
 
 class ScapyPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
@@ -38,8 +48,14 @@ class ScapyPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
         if spec["l3"] == "ipv4":
             IP_hdr = scapy.IP
             IPAddresses = ipaddresses.IPv4Addresses
+        elif spec["l3"] == "ipv4_rand":
+            IP_hdr = RandomIPv4Header()
+            IPAddresses = ipaddresses.IPv4Addresses
         elif spec["l3"] == "ipv6":
             IP_hdr = scapy.IPv6
+            IPAddresses = ipaddresses.IPv6Addresses
+        elif spec["l3"] == "ipv6_rand":
+            IP_hdr = RandomIPv6Header()
             IPAddresses = ipaddresses.IPv6Addresses
         else:
             RuntimeError(f'unsupported l3: {spec["l3"]}')
@@ -98,6 +114,12 @@ class ScapyPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
             L4_hdr = scapy.TCP
         elif spec["l4"] == "sctp":
             L4_hdr = scapy.SCTP
+        elif spec["l4"] == "udp_rand":
+            L4_hdr = RandomUDPHeader()
+        elif spec["l4"] == "tcp_rand":
+            L4_hdr = RandomTCPHeader()
+        elif spec["l4"] == "sctp_rand":
+            L4_hdr = RandomSCTPHeader()
         else:
             RuntimeError(f'unsupported l4: {spec["l4"]}')
 
@@ -147,7 +169,8 @@ class ScapyPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
             vlan_id : int, optional
                 VLAN ID. If not set, packet won't contain VLAN header.
             l3 : str
-                Can be 'ipv4', 'ipv6' or 'arp' (for NDP see ``l4``).
+                Can be 'ipv4', 'ipv6', 'ipv4_rand', 'ipv6_rand' or 'arp' (for NDP see ``l4``).
+                For more info on '_rand' variants see ``packet_crafter.random_types``.
             l3_src : various
                 Source IP addresses. Following formats are supported:
                 ``10.0.0.0``, ``2001:db8::/32``, ``{first='10.0.0.0', count=150, step=1}``,
@@ -157,7 +180,9 @@ class ScapyPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
             l3_dst : various
                 Destination IP address(es). Same format as ``l3_src``.
             l4 : str
-                Can be 'tcp', 'udp', 'sctp', 'icmp', 'igmp' or 'ndp' (IPv6 only).
+                Can be 'tcp', 'tcp_rand', 'udp', 'udp_rand', 'sctp', 'sctp_rand',
+                'icmp', 'icmp_rand', 'igmp', 'igmp_rand' or 'ndp' (IPv6 only).
+                For more info on '_rand' variants see ``packet_crafter.random_types``.
             l4_src : various
                 Source port(s). Following formats are supported:
                 10, (10-20), [10,12,17,20]. For more info see ``packet_crafter.ports.L4Ports``.

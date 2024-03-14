@@ -1,7 +1,10 @@
 """
-Author(s): Dominik Tran <tran@cesnet.cz>, Jan Viktorin <viktorin@cesnet.cz>
+Author(s):
+    Dominik Tran <tran@cesnet.cz>
+    Jan Viktorin <viktorin@cesnet.cz>
+    Kamil Vojanec <vojanec@cesnet.cz>
 
-Copyright: (C) 2022-2023 CESNET, z.s.p.o.
+Copyright: (C) 2022-2024 CESNET, z.s.p.o.
 
 Abstract packet crafter.
 """
@@ -9,6 +12,13 @@ import abc
 
 import scapy.all as scapy
 import scapy.contrib.igmp as igmp
+
+from .random_types import (
+    RandomICMPHeader,
+    RandomICMPv6Header,
+    RandomIGMPHeader,
+    RandomMLDHeader,
+)
 
 
 class AbstractPacketCrafter(abc.ABC):
@@ -46,7 +56,7 @@ class AbstractPacketCrafter(abc.ABC):
         if "l3" not in spec:
             return []
 
-        if spec["l3"] in ("ipv4", "ipv6"):
+        if spec["l3"] in ("ipv4", "ipv6", "ipv4_rand", "ipv6_rand"):
             return self._prepare_l3_ip(spec, context)
         if spec["l3"] in ("arp"):
             return self._prepare_l3_arp(spec, context)
@@ -67,6 +77,17 @@ class AbstractPacketCrafter(abc.ABC):
         else:
             raise RuntimeError(f'incompatible l3 type {spec["l3"]} for icmp')
 
+    def _prepare_l4_icmp_random(self, spec, context=None):
+        """Prepare randomized L4 scapy headers: ICMP(), ICMPv6EchoRequest()"""
+        if spec["l3"] == "ipv4":
+            hdr = RandomICMPHeader()
+        elif spec["l3"] == "ipv6":
+            hdr = RandomICMPv6Header()
+        else:
+            raise RuntimeError(f'incompatible l3 type {spec["l3"]} for icmp')
+
+        return [hdr()]
+
     def _prepare_l4_igmp(self, spec, context=None):
         """Prepare L4 scapy headers: IGMP(), ICMPv6MLQuery()"""
         if spec["l3"] == "ipv4":
@@ -75,6 +96,17 @@ class AbstractPacketCrafter(abc.ABC):
             return [scapy.ICMPv6MLQuery()]
         else:
             raise RuntimeError(f'incompatible l3 type {spec["l3"]} for igmp')
+
+    def _prepare_l4_igmp_random(self, spec, context=None):
+        """Prepare randomized L4 scapy headers: IGMP(), ICMPv6MLQuery()"""
+        if spec["l3"] == "ipv4":
+            hdr = RandomIGMPHeader()
+        elif spec["l3"] == "ipv6":
+            hdr = RandomMLDHeader()
+        else:
+            raise RuntimeError(f'incompatible l3 type {spec["l3"]} for igmp')
+
+        return [hdr()]
 
     @abc.abstractmethod
     def _prepare_l4_ndp(self, spec, context=None):
@@ -86,12 +118,16 @@ class AbstractPacketCrafter(abc.ABC):
         if "l4" not in spec:
             return []
 
-        if spec["l4"] in ("udp", "tcp", "sctp"):
+        if spec["l4"] in ("udp", "tcp", "sctp", "udp_rand", "tcp_rand", "sctp_rand"):
             return self._prepare_l4_udp_tcp_sctp(spec, context)
         elif spec["l4"] == "icmp":
             return self._prepare_l4_icmp(spec, context)
+        elif spec["l4"] == "icmp_rand":
+            return self._prepare_l4_icmp_random(spec, context)
         elif spec["l4"] == "igmp":
             return self._prepare_l4_igmp(spec, context)
+        elif spec["l4"] == "igmp_rand":
+            return self._prepare_l4_igmp_random(spec, context)
         elif spec["l4"] == "ndp":
             return self._prepare_l4_ndp(spec, context)
         else:

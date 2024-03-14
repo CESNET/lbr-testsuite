@@ -940,3 +940,201 @@ def test_arp_advanced():
             / (100 * "\x00"),
         ],
     )
+
+
+def test_random_ipv4():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["IP"]
+    ip_1 = pc.packets(spec)[0]["IP"]
+
+    assert ip_0.src != ip_1.src, "source addresses should be randomized"
+    assert ip_0.dst != ip_1.dst, "destination addresses should be randomized"
+    assert ip_0.tos != ip_1.tos, "IP TOS field should be random"
+    assert ip_0.id != ip_1.id, "IP ID field should be random"
+    assert ip_0.ttl != ip_1.ttl, "IP TTL field should be random"
+
+
+def test_random_ipv4_fixed_addr():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4_rand",
+        "l3_dst": ipaddress.ip_address("192.168.10.1"),
+        "l3_src": ipaddress.ip_address("192.168.10.2"),
+    }
+    ip_0 = pc.packets(spec)[0]["IP"]
+    ip_1 = pc.packets(spec)[0]["IP"]
+
+    assert ip_0.src == ip_1.src, "source addresses should not be randomized"
+    assert ip_0.dst == ip_1.dst, "destination addresses should not be randomized"
+    assert ip_0.tos != ip_1.tos, "IP TOS field should be random"
+    assert ip_0.id != ip_1.id, "IP ID field should be random"
+    assert ip_0.ttl != ip_1.ttl, "IP TTL field should be random"
+
+
+def test_random_ipv6():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv6_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["IPv6"]
+    ip_1 = pc.packets(spec)[0]["IPv6"]
+
+    assert ip_0.src != ip_1.src, "source addresses should be randomized"
+    assert ip_0.dst != ip_1.dst, "destination addresses should be randomized"
+    assert ip_0.tc != ip_1.tc, "IPv6 TC field should be random"
+    assert ip_0.fl != ip_1.fl, "IPv6 FL field should be random"
+    assert ip_0.hlim != ip_1.hlim, "IPv6 HopLimit field should be random"
+
+
+def test_random_ipv6_fixed_addr():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv6_rand",
+        "l3_dst": ipaddress.ip_address("aaaa::10"),
+        "l3_src": ipaddress.ip_address("bbbb::20"),
+    }
+    ip_0 = pc.packets(spec)[0]["IPv6"]
+    ip_1 = pc.packets(spec)[0]["IPv6"]
+
+    assert ip_0.src == ip_1.src, "source addresses should not be randomized"
+    assert ip_0.dst == ip_1.dst, "destination addresses should not be randomized"
+    assert ip_0.tc != ip_1.tc, "IPv6 TC field should be random"
+    assert ip_0.fl != ip_1.fl, "IPv6 FL field should be random"
+    assert ip_0.hlim != ip_1.hlim, "IPv6 HopLimit field should be random"
+
+
+def test_random_tcp():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l4": "tcp_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["TCP"]
+    ip_1 = pc.packets(spec)[0]["TCP"]
+
+    assert ip_0.sport != ip_1.sport, "source port should be randomized"
+    assert ip_0.dport != ip_1.dport, "destination port should be randomized"
+    assert ip_0.seq != ip_1.seq, "TCP SEQ number should be random"
+    assert ip_0.ack != ip_1.ack, "TCP ACK number should be random"
+    assert ip_0.flags != ip_1.flags, "TCP flags should be random"
+    assert ip_0.window != ip_1.window, "TCP window size should be random"
+    assert ip_0.urgptr != ip_1.urgptr, "TCP urgptr field should be random"
+
+
+def test_random_udp():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l4": "udp_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["UDP"]
+    ip_1 = pc.packets(spec)[0]["UDP"]
+
+    assert ip_0.sport != ip_1.sport, "source port should be randomized"
+    assert ip_0.dport != ip_1.dport, "destination port should be randomized"
+
+
+def test_random_tcp_fixed_ports():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l4": "tcp_rand",
+        "l4_src": 42,
+        "l4_dst": 128,
+    }
+    ip_0 = pc.packets(spec)[0]["TCP"]
+    ip_1 = pc.packets(spec)[0]["TCP"]
+
+    assert ip_0.sport == ip_1.sport, "source port should not be randomized"
+    assert ip_0.dport == ip_1.dport, "destination port should not be randomized"
+    assert ip_0.seq != ip_1.seq, "TCP SEQ number should be random"
+    assert ip_0.ack != ip_1.ack, "TCP ACK number should be random"
+    assert ip_0.flags != ip_1.flags, "TCP flags should be random"
+    assert ip_0.window != ip_1.window, "TCP window size should be random"
+    assert ip_0.urgptr != ip_1.urgptr, "TCP urgptr field should be random"
+
+
+def test_random_sctp():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l4": "sctp_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["SCTP"]
+    ip_1 = pc.packets(spec)[0]["SCTP"]
+
+    assert ip_0.sport != ip_1.sport, "source port should be randomized"
+    assert ip_0.dport != ip_1.dport, "destination port should be randomized"
+    assert ip_0.tag != ip_1.tag, "SCTP TAG should be random"
+
+
+def test_random_sctp_fixed_ports():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l4": "sctp_rand",
+        "l4_src": 42,
+        "l4_dst": 128,
+    }
+    ip_0 = pc.packets(spec)[0]["SCTP"]
+    ip_1 = pc.packets(spec)[0]["SCTP"]
+
+    assert ip_0.sport == ip_1.sport, "source port should not be randomized"
+    assert ip_0.dport == ip_1.dport, "destination port should not be randomized"
+    assert ip_0.tag != ip_1.tag, "SCTP TAG should be random"
+
+
+def test_random_icmp():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l4": "icmp_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["ICMP"]
+    ip_1 = pc.packets(spec)[0]["ICMP"]
+
+    assert ip_0.code != ip_1.code, "ICMP code should be random"
+
+
+def test_random_icmpv6():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv6",
+        "l4": "icmp_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["ICMPv6EchoRequest"]
+    ip_1 = pc.packets(spec)[0]["ICMPv6EchoRequest"]
+
+    assert ip_0.code != ip_1.code, "ICMPv6 code should be random"
+    assert ip_0.id != ip_1.id, "ICMPv6 ID should be random"
+    assert ip_0.seq != ip_1.seq, "ICMPv6 sequence number should be random"
+
+
+def test_random_igmp():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l4": "igmp_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["IGMP"]
+    ip_1 = pc.packets(spec)[0]["IGMP"]
+
+    assert ip_0.mrcode != ip_1.mrcode, "IGMP mrcode should be random"
+    assert ip_0.gaddr != ip_1.gaddr, "ICMPv6 gaddr should be random"
+
+
+def test_random_mld():
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv6",
+        "l4": "igmp_rand",
+    }
+    ip_0 = pc.packets(spec)[0]["ICMPv6MLQuery"]
+    ip_1 = pc.packets(spec)[0]["ICMPv6MLQuery"]
+
+    assert ip_0.code != ip_1.code, "MLD code should be random"
+    assert ip_0.mrd != ip_1.mrd, "MLD MRD field should be random"
+    assert ip_0.mladdr != ip_1.mladdr, "MLD mladdr field should be random"
