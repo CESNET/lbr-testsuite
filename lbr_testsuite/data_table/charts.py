@@ -6,7 +6,6 @@ Copyright: (C) 2023 CESNET, z.s.p.o.
 Common module for plotting of data stored within a DataTable.
 """
 
-import itertools
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Union
@@ -226,18 +225,8 @@ class DataTableCharts:
         From these sub-frames requested columns will be plotted.
         """
 
-        filters = []
-        for par in params:
-            flt = []
-            for val in data_table.get_column_unique_values(par):
-                flt.append((par, val))
-            filters.append(flt)
-
-        sub_frames = []
-        for composed_flt in itertools.product(*filters):
-            sub_frames.append(data_table.filter_data(dict(composed_flt)))
-
-        return sub_frames
+        df = data_table.get_data()
+        return [DataTable(sub_df) for _, sub_df in df.groupby(params)]
 
     @staticmethod
     def _label_suffix(parametrized_by, df):
