@@ -330,8 +330,10 @@ class Executable:
 
             self._set_output("stderr", stderr)
 
-    def _close_output_files(self):
-        """Close output files opened withing setting of outputs."""
+    def _close_io_files(self):
+        """Close input/output files opened within setting
+        of input/outputs.
+        """
 
         for f in self._output_files.values():
             if f is not None:
@@ -390,7 +392,7 @@ class Executable:
             self._cmd.extend(args)
 
     def _finalize(self):
-        self._close_output_files()
+        self._close_io_files()
         if self._executor.get_process() is not None:
             self._executor.wait()
             if self._post_exec_fn is not None:
