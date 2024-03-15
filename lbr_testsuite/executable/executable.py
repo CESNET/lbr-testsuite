@@ -143,6 +143,7 @@ class Executable:
 
         self._options = self.DEFAULT_OPTIONS.copy()
         self._output_files = dict(stdout=None, stderr=None)
+        self._input_file = None
         self._sigterm_ok = sigterm_ok
         self._post_exec_fn = None
         self._netns = netns
@@ -330,6 +331,30 @@ class Executable:
 
             self._set_output("stderr", stderr)
 
+    def set_input(self, command_input):
+        """Set input for a command.
+
+        Parameters
+        ----------
+        command_input : str, pathlib.Path, int or subprocess special
+            value. If argument is a string, it is assumed that it is
+            a path to a local input file. Otherwise the argument value
+            follows the rules of the subprocess module.
+        """
+
+        if not isinstance(self._executor, LocalExecutor):
+            raise RuntimeError("Setting stdin is supported only in local execution")
+
+        if isinstance(command_input, pathlib.Path):
+            command_input = str(command_input)
+
+        if isinstance(command_input, str):
+            self._options["stdin"] = open(command_input, "r")
+            self._input_file = self._options["stdin"]
+            self._logger.info(f"stdin for command {self._cmd_str()} set to: {command_input}.")
+        else:
+            self._options["stdin"] = command_input
+
     def _close_io_files(self):
         """Close input/output files opened within setting
         of input/outputs.
@@ -338,6 +363,9 @@ class Executable:
         for f in self._output_files.values():
             if f is not None:
                 f.close()
+
+        if self._input_file is not None:
+            self._input_file.close()
 
     def _handle_failure(self, process_cmd, process_retcode, stdout, stderr):
         """Handle failure of a command.
