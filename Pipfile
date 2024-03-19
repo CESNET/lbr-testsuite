@@ -29,6 +29,7 @@ isort = "*"
 black = "*"
 sphinxcontrib-apidoc = "*"
 build = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.8"

@@ -1,0 +1,11 @@
+[run]
+dynamic_context = test_function
+source =
+    lbr_testsuite
+    pytest_tests
+
+[report]
+skip_empty = true
+
+[html]
+show_contexts = true

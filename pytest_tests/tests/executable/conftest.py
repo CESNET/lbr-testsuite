@@ -24,6 +24,16 @@ def _this_test_dir():
 
 
 @pytest_cases.fixture(scope="session")
+def require_root():
+    """Fixture checking whether a test is running under the root."""
+
+    euid = os.geteuid()
+
+    if euid != 0:
+        pytest.skip(f"insufficient permissions, euid: {euid}")
+
+
+@pytest_cases.fixture(scope="session")
 @pytest_cases.parametrize("executor", ["local", "remote"], idgen=pytest_cases.AUTO)
 def executor(request, executor):
     """Return executor.
