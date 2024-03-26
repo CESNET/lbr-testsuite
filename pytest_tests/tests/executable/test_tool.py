@@ -23,6 +23,12 @@ from lbr_testsuite.executable.remote_executor import RemoteExecutor
 from .conftest import match_syscalls
 
 
+TESTING_INPUT = (
+    "I am testing myself!\n"
+    "I am testing myself again!\n"
+    "...and again!\n"
+    "Finally, I have to add this lane, so this string will be long enough to make black happy.\n"
+)
 TESTING_OUTPUT = "I am testing myself!"
 
 
@@ -313,6 +319,34 @@ def test_tool_cwd(tmp_path, testing_namespace, executor):
 
     assert stdout == f"{tmp_path}\n"
     assert stderr == ""
+
+
+def test_tool_input_file(tmp_path, testing_namespace, executor):
+    """Test of input from input file.
+
+    Parameters
+    ----------
+    tmp_path : pathlib.Path (fixture)
+        Pytest fixture providing a path to a temporary location.
+    executor : executable.Executor
+        Executor to use.
+    """
+
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"Setting stdin for remote executor is not yet supported")
+
+    input_file = tmp_path / "test_input"
+
+    with open(str(input_file), "w") as f:
+        f.write(TESTING_INPUT)
+
+    cmd = executable.Tool(["cat"], netns=testing_namespace, executor=executor)
+    cmd.set_input(input_file)
+
+    stdout, stderr = cmd.run()
+
+    assert stderr == ""
+    assert stdout == TESTING_INPUT
 
 
 def test_tool_outputs_mixed(tmp_files, helper_app, testing_namespace, executor):

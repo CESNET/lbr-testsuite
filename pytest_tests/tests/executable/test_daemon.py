@@ -22,6 +22,12 @@ from lbr_testsuite.executable.remote_executor import RemoteExecutor
 from .conftest import match_syscalls
 
 
+TESTING_INPUT = (
+    "I am testing myself!\n"
+    "I am testing myself again!\n"
+    "...and again!\n"
+    "Finally, I have to add this lane, so this string will be long enough to make black happy.\n"
+)
 TESTING_OUTPUT = "I am testing myself!"
 
 TIME_MEASUREMENT_TOLERANCE = 0.2
@@ -425,6 +431,23 @@ def test_daemon_outputs_separated(tmp_files, helper_app, testing_namespace, exec
             assert of.read() == err_testing_output
         else:
             assert of.read() == ""
+
+
+def test_daemon_input_pipe(testing_namespace, executor):
+    """Test of setting input to "PIPE"""
+
+    if isinstance(executor, RemoteExecutor):
+        pytest.skip(f"unable to test input from PIPE with remote executor")
+
+    cmd = executable.Daemon(["cat"], netns=testing_namespace, executor=executor)
+    cmd.set_input(subprocess.PIPE)
+
+    cmd.start()
+    cmd._executor._process.communicate(TESTING_INPUT)
+    stdout, stderr = cmd.stop()
+
+    assert stderr == ""
+    assert stdout == TESTING_INPUT
 
 
 def test_daemon_coredump(require_root, tmp_files, helper_app, testing_namespace, executor):
