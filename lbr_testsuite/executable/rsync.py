@@ -332,7 +332,7 @@ class Rsync:
         # sshpass is used to provide password automatically
         if "password" in connect_kwargs:
             try:
-                Tool(["command", "-v", "sshpass"]).run()
+                Tool("command -v sshpass").run()
             except ExecutableProcessError as err:
                 raise RsyncException("sshpass binary is missing") from err
 
