@@ -329,19 +329,23 @@ class DataTableCharts:
                     ch_spec.parametrized_by,
                 )
 
-    def store_charts(
+    def create_charts(
         self,
-        chart_file: Union[str, Path],
         title: Optional[str] = None,
     ):
-        """Plot requested data into a file.
+        """Plot requested data into a Figure object.
 
         Parameters:
         -----------
-        chart_file : str or Path
-            Path to a resulting file.
         title : str, optional
             Title of the figure.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure which can be customised (extra information can be added
+            to the plot using Figure.text method) before saving into a file
+            by the Figure.savefig method.
         """
 
         fig, axes = self._prepare_layout()
@@ -370,4 +374,24 @@ class DataTableCharts:
 
         if title:
             fig.suptitle(title, fontsize=18)
+
+        return fig
+
+    def store_charts(
+        self,
+        chart_file: Union[str, Path],
+        title: Optional[str] = None,
+    ):
+        """Plot requested data into a file.
+
+        Parameters:
+        -----------
+        chart_file : str or Path
+            Path to a resulting file.
+        title : str, optional
+            Title of the figure.
+        """
+
+        fig = self.create_charts(title=title)
+
         fig.savefig(chart_file)
