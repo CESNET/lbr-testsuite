@@ -15,7 +15,7 @@ import time
 from pr2modules import netns
 from pr2modules.iproute import IPRoute
 from pr2modules.netlink.exceptions import NetlinkError
-from pr2modules.netlink.rtnl.ifinfmsg import IFF_ALLMULTI
+from pr2modules.netlink.rtnl.ifinfmsg import IFF_ALLMULTI, IFF_PROMISC
 from pr2modules.nslink.nslink import NetNS
 
 
@@ -465,6 +465,31 @@ def ifc_set_allmulticast(ifc_name, state, namespace=None):
             flags |= IFF_ALLMULTI
         else:
             flags &= ~IFF_ALLMULTI
+
+        ipr.link("set", ifname=ifc_name, flags=flags)
+
+
+def ifc_set_promisc(ifc_name, state, namespace=None):
+    """Set the promiscuous flag of an interface.
+
+    Parameters
+    ----------
+    ifc_name : str
+        Name of an interface.
+    state : bool
+        Enable or disable flag.
+    namespace : str, optional
+        Name of a namespace.
+    """
+
+    with _get_ipr_context(namespace) as ipr:
+        links = ipr.get_links(ifname=ifc_name)
+        flags = links[0]["flags"]
+
+        if state:
+            flags |= IFF_PROMISC
+        else:
+            flags &= ~IFF_PROMISC
 
         ipr.link("set", ifname=ifc_name, flags=flags)
 
