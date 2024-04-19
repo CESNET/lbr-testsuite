@@ -15,6 +15,7 @@ import time
 from pr2modules import netns
 from pr2modules.iproute import IPRoute
 from pr2modules.netlink.exceptions import NetlinkError
+from pr2modules.netlink.rtnl.ifinfmsg import IFF_ALLMULTI
 from pr2modules.nslink.nslink import NetNS
 
 
@@ -441,6 +442,31 @@ def wait_until_ifc_carrier(ifc_name, namespace=None, timeout=1):
 
         time.sleep(1)
         now = time.monotonic()
+
+
+def ifc_set_allmulticast(ifc_name, state, namespace=None):
+    """Set the allmulticast flag of an interface.
+
+    Parameters
+    ----------
+    ifc_name : str
+        Name of an interface.
+    state : bool
+        Enable or disable flag.
+    namespace : str, optional
+        Name of a namespace.
+    """
+
+    with _get_ipr_context(namespace) as ipr:
+        links = ipr.get_links(ifname=ifc_name)
+        flags = links[0]["flags"]
+
+        if state:
+            flags |= IFF_ALLMULTI
+        else:
+            flags &= ~IFF_ALLMULTI
+
+        ipr.link("set", ifname=ifc_name, flags=flags)
 
 
 ##
