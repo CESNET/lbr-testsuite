@@ -11,6 +11,7 @@ for all measurements and separately for routing modes.
 
 import logging
 
+import matplotlib.pyplot as plt
 import pytest
 from pytest_cases import fixture, parametrize
 
@@ -173,7 +174,12 @@ def store_charts(measurements, png_file):
     ch.set_data(measurements)
 
     global_logger.debug(f"Storing charts to: {png_file}")
-    ch.store_charts(png_file, title="Testing Measurement of Throughput")
+    fig = ch.create_charts(title="Testing Measurement of Throughput")
+    # create custom info below the charts
+    fig.text(0.02, 0.02, f"FW version: 1.3.0\nDPDK version: 23.10\n")
+    # create a bit space for the info at the bottom of figure
+    plt.subplots_adjust(bottom=0.1)
+    fig.savefig(png_file)
 
 
 @fixture(scope="module")
