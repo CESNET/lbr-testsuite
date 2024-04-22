@@ -64,7 +64,7 @@ def _init():
             ["--spirent-chassis-port"],
             dict(
                 type=str,
-                default="7/1",
+                default="",
                 help="Spirent port",
             ),
         )
