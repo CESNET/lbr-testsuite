@@ -265,7 +265,10 @@ class DataTableCharts:
 
     def _chart_spec_and_ax(self, axes, row, column):
         if axes.ndim == 1:
-            ax = axes[column]
+            if self._n_rows == 1:
+                ax = axes[column]
+            else:
+                ax = axes[row]
         else:
             ax = axes[row, column]
 
