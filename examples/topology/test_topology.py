@@ -15,7 +15,7 @@ from lbr_testsuite.topology.topology import select_topologies
 select_topologies(["wired_loopback", "vdev_loopback", "wired_spirent"])
 
 
-def test_topology(device, generator):
+def test_topology(device, generator, analyzer):
     print()
     print("Device:")
     print(f"    type: {type(device)}")
@@ -23,3 +23,5 @@ def test_topology(device, generator):
     print(f"    name: {device.get_dpdk_args()}")
     print("Generator:")
     print(f"    type: {type(generator)}")
+    print("Analyzer:")
+    print(f"    type: {type(analyzer)}")
