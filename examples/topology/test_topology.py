@@ -20,7 +20,7 @@ def test_topology(device, generator, analyzer):
     print("Device:")
     print(f"    type: {type(device)}")
     print(f"    name: {device.get_dpdk_name()}")
-    print(f"    name: {device.get_dpdk_args()}")
+    print(f"    args: {device.get_dpdk_args()}")
     print("Generator:")
     print(f"    type: {type(generator)}")
     print("Analyzer:")
