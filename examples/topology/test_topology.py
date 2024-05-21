@@ -12,7 +12,7 @@ these topology arguments see tests help.
 from lbr_testsuite.topology.topology import select_topologies
 
 
-select_topologies(["wired_loopback", "vdev_loopback", "wired_spirent"])
+select_topologies(["wired_loopback", "vdev_loopback", "wired_spirent", "example_topology"])
 
 
 def test_topology(device, generator, analyzer):
