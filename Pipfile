@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyroute2 = "<1.,>=0.6.2"
-lbr-trex-client = "*"
+pyroute2 = ">=0.6.2,<1.0.0"
+lbr-trex-client = "3.4.0.dev311"
 stcrestclient = "*"
 pytest = ">=7.0"
 pytest-cases = ">=3.6.11"
@@ -32,4 +32,4 @@ build = "*"
 coverage = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.11"

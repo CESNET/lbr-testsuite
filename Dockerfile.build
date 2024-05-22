@@ -1,12 +1,12 @@
-FROM python:3.8
+FROM python:3.11
 
 ARG VENV_PATH=/opt/testsuite_venv
 
 
 COPY Pipfile Pipfile.lock /tmp/
-RUN python3 -m venv $VENV_PATH
+RUN python3.11 -m venv $VENV_PATH
 
 ENV PATH="$VENV_PATH/bin:$PATH"
 ENV VIRTUAL_ENV="$VENV_PATH"
 
-RUN python3 -m pip install 'pipenv' && cd /tmp && pipenv install --dev --deploy
+RUN python3.11 -m pip install 'pipenv' && cd /tmp && pipenv install --dev --deploy
