@@ -8,7 +8,6 @@ Copyright: (C) 2023 CESNET, z.s.p.o.
 Stream block helper class.
 """
 
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from typing import Optional

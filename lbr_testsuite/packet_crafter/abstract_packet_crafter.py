@@ -8,6 +8,7 @@ Copyright: (C) 2022-2024 CESNET, z.s.p.o.
 
 Abstract packet crafter.
 """
+
 import abc
 
 import scapy.all as scapy

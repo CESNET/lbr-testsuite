@@ -9,7 +9,6 @@ Copyright: (C) 2023 CESNET, z.s.p.o.
 A module providing class for using systemd services.
 """
 
-
 import logging
 import time
 from datetime import datetime

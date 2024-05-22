@@ -6,7 +6,6 @@ Copyright: (C) 2023 CESNET, z.s.p.o.
 Module for managing a spirent Device component.
 """
 
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 

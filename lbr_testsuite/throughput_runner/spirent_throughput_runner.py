@@ -6,7 +6,6 @@ Copyright: (C) 2023 CESNET, z.s.p.o.
 Base class for running throughput tests
 """
 
-
 import logging
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
