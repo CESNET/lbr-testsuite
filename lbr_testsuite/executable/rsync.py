@@ -12,6 +12,7 @@ local machine or between local and remote machine.
 import logging
 import os
 from pathlib import Path
+from shlex import quote
 
 from .. import common
 from .executable import ExecutableProcessError, Tool
@@ -153,13 +154,16 @@ class Rsync:
         except ExecutableProcessError as err:
             raise RsyncException(f"Could not wipe data directory, err: {err}") from err
 
-    def create_file(self, name):
+    def create_file(self, name, content=""):
         """Create new file.
 
         Parameters
         ----------
         name : str
             Name of a file. File extension should be included.
+        content : str, optional
+            Content to be inserted into file. Content is escaped
+            with shlex.quote().
 
         Returns
         -------
@@ -169,18 +173,29 @@ class Rsync:
         Raises
         ------
         RsyncException
-            Could not create file.
+            Could not create file or could not write content to file.
         """
+
+        file = Path(self._data_dir) / name
 
         try:
             Tool(
-                f"touch {Path(self._data_dir) / name}",
+                f"touch {file}",
                 executor=self._executor,
             ).run()
         except ExecutableProcessError as err:
             raise RsyncException(f"Could not create file {name}, err: {err}") from err
 
-        return str(Path(self._data_dir) / name)
+        if content:
+            try:
+                Tool(
+                    f"echo {quote(content)} > {file}",
+                    executor=self._executor,
+                ).run()
+            except ExecutableProcessError as err:
+                raise RsyncException(f"Could not write to file {name}, err: {err}") from err
+
+        return str(file)
 
     def push_path(self, source, checksum_diff=True):
         """Push file or directory to data directory on host.
