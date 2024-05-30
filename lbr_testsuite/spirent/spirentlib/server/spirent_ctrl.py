@@ -11,9 +11,9 @@ import os
 import sys
 
 
-os.environ[
-    "STC_PRIVATE_INSTALL_DIR"
-] = "C:\\Program Files\\Spirent Communications\\Spirent TestCenter 5.32\\Spirent TestCenter Application"
+os.environ["STC_PRIVATE_INSTALL_DIR"] = (
+    "C:\\Program Files\\Spirent Communications\\Spirent TestCenter 5.32\\Spirent TestCenter Application"
+)
 sys.path.append(
     "C:\\Program Files\\Spirent Communications\\Spirent TestCenter 5.32\\Spirent TestCenter Application\\API\\Python"
 )

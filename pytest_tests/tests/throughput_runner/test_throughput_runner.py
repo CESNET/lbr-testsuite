@@ -22,7 +22,6 @@ To run this test, it is necessary to specify the following arguments:
     Spirent test marker
 """
 
-
 import itertools
 import logging
 from ipaddress import IPv4Interface, ip_address, ip_network

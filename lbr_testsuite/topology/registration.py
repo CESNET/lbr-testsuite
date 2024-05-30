@@ -6,7 +6,6 @@ Copyright: (C) 2022 CESNET
 Registration of implemented topologies.
 """
 
-
 _REGISTERED_OPTIONS = dict()
 
 

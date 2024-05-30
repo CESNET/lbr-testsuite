@@ -6,7 +6,6 @@ Copyright: (C) 2023 CESNET, z.s.p.o.
 File implements common TRex functions or utilities.
 """
 
-
 import lbr_trex_client  # noqa: F401
 from trex.utils.parsing_opts import decode_multiplier
 

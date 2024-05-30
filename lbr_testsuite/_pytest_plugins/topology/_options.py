@@ -6,7 +6,6 @@ Copyright: (C) 2022 CESNET
 Command line options registration for topologies.
 """
 
-
 """
 List of registered topology options. Options are defined as pairs where
 first item is a list of option names, second is a dictionary of

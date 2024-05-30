@@ -1,6 +1,8 @@
 ---
 - hosts: all
   gather_facts: no
+  vars:
+    python3_version: "3.11"
   roles:
     - liberouter.dev.sudo_local_paths
     - pytest_venv

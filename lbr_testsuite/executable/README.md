@@ -39,7 +39,7 @@ There are also additional classes built on top of main classes. They have specif
    Additional operations include file creation and file/directory deletion. On local machine
    this is transformed to copying files or directories between directories.
 
-Execution on local machine is implemented by standard [subprocess](https://docs.python.org/3.8/library/subprocess.html)
+Execution on local machine is implemented by standard [subprocess](https://docs.python.org/3.11/library/subprocess.html)
 module. Execution on remote machine is implemented with [fabric](https://www.fabfile.org/) library.
 Both local and remote execution has its quirks. Despite our effort to make local/remote
 work transparent to user, not all methods or parameters behave identically. Known differences
