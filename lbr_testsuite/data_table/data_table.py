@@ -4,6 +4,9 @@ Author(s): Pavel Krobot <Pavel.Krobot@cesnet.cz>
 Copyright: (C) 2023 CESNET, z.s.p.o.
 
 Common module for manipulating tabular data.
+
+This module is deprecated - use rather ThroughputTable for storage of
+throughput data or pandas.DataTable directly.
 """
 
 from __future__ import annotations  # postponed evaluation of annotations

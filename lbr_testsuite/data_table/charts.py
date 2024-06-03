@@ -8,10 +8,11 @@ Common module for plotting of data stored within a DataTable.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from .data_table import DataTable
 from .line_colors import LineColors
@@ -107,6 +108,35 @@ class PlotSpec:
             self.parametrized_by = [self.parametrized_by]
 
 
+def _index_is_numeric(df: pd.DataFrame, key: str, old_version: bool) -> bool:
+    if old_version:  # deprecated
+        return df[key].dtype.kind in "iufc"
+
+    return df.index.dtypes[key].kind in "iufc"
+
+
+def _quote_non_numeric(df: pd.DataFrame, key: str, val: Any, old_version: bool) -> Any:
+    if _index_is_numeric(df, key, old_version):
+        return val
+    else:
+        return f'"{val}"'
+
+
+def _filter_data_frame(df: pd.DataFrame, filter_by: dict, old_version: bool) -> pd.DataFrame:
+    for key, val in filter_by.items():
+        val = _quote_non_numeric(df, key, val, old_version)
+        df = df.query(f"{key} == {val}")
+
+    return df
+
+
+def _get_level_values(df: pd.DataFrame, column: str, old_version: bool) -> pd.Series:  # deprecated
+    if old_version:
+        return df[column]
+    else:
+        return df.index.get_level_values(column)
+
+
 class DataTableCharts:
     """Class responsible for plotting of tabular data stored within
     a DataTable
@@ -145,17 +175,23 @@ class DataTableCharts:
         charts: Optional[List[List[PlotSpec]]] = None,
     ):
         self._charts = charts if charts is not None else []
-        self._data_table = None
+        self._df = None
+        self._old_version = False  # deprecated
 
         self._n_rows = None
         self._n_cols = None
 
         self._colors = LineColors()
 
-    def set_data(self, data_table: DataTable):
+    def set_data(self, data_table: Union[pd.DataFrame, DataTable]):
         """Set source data"""
 
-        self._data_table = data_table
+        if isinstance(data_table, DataTable):
+            # DataTable is deprecated, used pd.DataFrame instead
+            self._df = data_table.get_data()
+            self._old_version = True
+        else:
+            self._df = data_table
 
     def append_charts_row(self, charts: List[PlotSpec]):
         """Append single charts row to the list of all charts to plot.
@@ -203,14 +239,17 @@ class DataTableCharts:
 
         return (fig, axes)
 
-    @staticmethod
-    def _format_ax(ax, spec, df):
+    # @staticmethod  deprecated - make static after "old_version" is removed
+    def _format_ax(self, ax, spec, df):
         """Common formatting"""
 
         ax.set_title(spec.title)
         ax.legend(fontsize=6)
         ax.set_xscale(**spec.xscale)
-        ax.set_xticks(df[spec.x_column])
+        if self._old_version:
+            df = df.set_index(spec.x_column)
+            df.index.name = spec.x_column
+        ax.set_xticks(df.index.get_level_values(spec.x_column))
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
         if spec.xlabel:
             ax.set_xlabel(spec.xlabel)
@@ -220,16 +259,8 @@ class DataTableCharts:
         _, top = ax.get_ylim()
         ax.set_ylim(bottom=0, top=top * 1.1)
 
-    def _subframes_by_params(self, data_table, params):
-        """Filter sub-frames per unique values of selected parameters.
-        From these sub-frames requested columns will be plotted.
-        """
-
-        df = data_table.get_data()
-        return [DataTable(sub_df) for _, sub_df in df.groupby(params)]
-
-    @staticmethod
-    def _label_suffix(parametrized_by, df):
+    # @staticmethod  deprecated - make static after "old_version" is removed
+    def _label_suffix(self, parametrized_by, df):
         """Create line label suffix.
 
         Suffix is composed from names of all parametrized_by and their current
@@ -244,17 +275,24 @@ class DataTableCharts:
         par_sep = ";"
         suffix = " "
         for par in parametrized_by:
-            val = df[par].iloc[0]
+            if self._old_version:  # deprecated
+                val = df[par].iloc[0]
+            else:
+                val = df.index.get_level_values(par)[0]
             par_name = par[0]
             suffix = f"{suffix}{par_name}={val}{par_sep}"
         return suffix[: -len(par_sep)]  # remove trailing separator
 
-    @staticmethod
-    def _plot_line(ax, df, line_spec, index_column, parametrized_by=None):
-        label_suffix = DataTableCharts._label_suffix(parametrized_by, df)
+    # @staticmethod  deprecated - make static after "old_version" is removed
+    def _plot_line(self, ax, df, line_spec, index_column, parametrized_by=None):
+        label_suffix = self._label_suffix(parametrized_by, df)
+
+        if self._old_version:  # deprecated
+            df = df.set_index(index_column)
+            df.index.name = index_column
 
         col = df[line_spec.column]
-        col.index = df[index_column]
+        col.index = col.index.get_level_values(index_column)
 
         col.plot(
             kind="line",
@@ -276,18 +314,21 @@ class DataTableCharts:
 
     def _lines_subframes(self, ch_spec):
         if ch_spec.filter_by:
-            data = self._data_table.filter_data(ch_spec.filter_by)
+            data = _filter_data_frame(self._df, ch_spec.filter_by, self._old_version)
         else:
-            data = self._data_table
+            data = self._df
 
         if ch_spec.parametrized_by:
-            return self._subframes_by_params(data, ch_spec.parametrized_by)
+            return [sub_df for _, sub_df in data.groupby(ch_spec.parametrized_by)]
         else:
             return [data]
 
-    @staticmethod
-    def _cast_value_to_column_type(df, column, value):
-        return df.dtypes[column].type(value)
+    # @staticmethod  deprecated - make static after "old_version" is removed
+    def _cast_value_to_column_type(self, df, column, value):
+        if self._old_version:  # deprecated
+            return df.dtypes[column].type(value)
+
+        return df.index.dtypes[column].type(value)
 
     def _get_colors_by_params(self, ch_spec, df):
         """Lines in current plot are defined by:
@@ -315,22 +356,20 @@ class DataTableCharts:
                 color_key[k] = self._cast_value_to_column_type(df, k, v)
         if ch_spec.parametrized_by:
             for p in ch_spec.parametrized_by:
-                color_key[p] = df[p].iloc[0]
+                if self._old_version:  # deprecated:
+                    color_key[p] = df[p].iloc[0]
+                else:
+                    color_key[p] = df.index.get_level_values(p)[0]
+
         return self._colors.bind_color(**color_key)
 
     def _plot_data_lines(self, sub_frames, ch_spec, ax):
         for data in sub_frames:
             for line_spec in ch_spec.lines:
                 if line_spec.color_shade is not None:
-                    colors = self._get_colors_by_params(ch_spec, data.get_data())
+                    colors = self._get_colors_by_params(ch_spec, data)
                     line_spec.line_kwargs["color"] = colors[line_spec.color_shade]
-                self._plot_line(
-                    ax,
-                    data.get_data(),
-                    line_spec,
-                    ch_spec.x_column,
-                    ch_spec.parametrized_by,
-                )
+                self._plot_line(ax, data, line_spec, ch_spec.x_column, ch_spec.parametrized_by)
 
     def create_charts(
         self,
@@ -364,16 +403,11 @@ class DataTableCharts:
 
                 if ch_spec.max_column:
                     # Draw "max" line only once
-                    self._plot_line(
-                        ax,
-                        any_subframe.get_data(),
-                        ch_spec.max_column,
-                        ch_spec.x_column,
-                    )
+                    self._plot_line(ax, any_subframe, ch_spec.max_column, ch_spec.x_column)
 
                 self._plot_data_lines(sub_frames, ch_spec, ax)
 
-                self._format_ax(ax, ch_spec, any_subframe.get_data())
+                self._format_ax(ax, ch_spec, any_subframe)
 
         if title:
             fig.suptitle(title, fontsize=18)

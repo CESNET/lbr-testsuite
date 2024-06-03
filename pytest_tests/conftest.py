@@ -32,6 +32,14 @@ def pytest_addoption(parser):
         ),
     )
 
+    parser.addoption(
+        "--nic-driver",
+        type=str,
+        action="store",
+        default="mlx5_pci",
+        help="Name of 'fake' NIC driver (no NIC driver is actually used in these tests)'",
+    )
+
 
 def pytest_configure(config):
     """pytest_configure hook is used here to restrict selected loggers
