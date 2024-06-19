@@ -7,6 +7,10 @@ Module for archiving appliacation statistics.
 """
 
 import logging
+from pathlib import Path
+from typing import Optional
+
+from lbr_testsuite.dpdk_application.stats_interface import StatsInterface
 
 
 global_logger = logging.getLogger(__name__)
@@ -19,24 +23,25 @@ def _save_dict_to_file(data, path):
 
 
 def archive_port_stats(
-    application,
-    out_dir,
-):
+    application: StatsInterface,
+    out_dir: Path,
+) -> Optional[Path]:
     """Archive port statistics across all ports of given
-    application. This function is designed to work with Protector
-    and L3fwd classes.
+    application. This function is designed to work with any
+    object implementing StatsInterface.
 
     Parameters
     ----------
-    application : Union[ProtectorRuntime, L3fwd, L3fwdMulti]
-        Protector or L3fwd instance.
+    application : StatsInterface
+        Object implementing StatsInterface.
     out_dir : Path
         Output directory.
 
     Returns
     -------
     Path
-        Filepath to the stored port statistics.
+        Filepath to the stored port statistics or None if statistics
+        could not be read.
     """
 
     try:
@@ -51,24 +56,25 @@ def archive_port_stats(
 
 
 def archive_port_xstats(
-    application,
-    out_dir,
-):
+    application: StatsInterface,
+    out_dir: Path,
+) -> Optional[Path]:
     """Archive extended port statistics across all ports of
     given application. This function is designed to work with
-    Protector and L3fwd classes.
+    any object implementing StatsInterface.
 
     Parameters
     ----------
-    application : Union[ProtectorRuntime, L3fwd, L3fwdMulti]
-        Protector or L3fwd instance.
+    application : StatsInterface
+        Object implementing StatsInterface
     out_dir : Path
         Output directory.
 
     Returns
     -------
     Path
-        Filepath to the stored extended port statistics.
+        Filepath to the stored extended port statistics or
+        None if statistics could not be read.
     """
 
     try:
@@ -80,4 +86,3 @@ def archive_port_xstats(
     xstats_path = out_dir / "dev_xstats"
     _save_dict_to_file(xstats, xstats_path)
     return xstats_path
-
