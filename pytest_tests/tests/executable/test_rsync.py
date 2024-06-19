@@ -171,6 +171,80 @@ def test_rsync_create_file(executor):
     assert content.strip() == ""
 
 
+def test_rsync_create_file_content_simple(executor):
+    """Test of create_file method with simple content."""
+
+    rsync = Rsync(executor)
+
+    newfile = rsync.create_file("testing_newfile1.txt", TESTING_STRING_1)
+    content, _ = Tool(["cat", newfile], executor=executor).run()
+    assert newfile == str(Path(rsync.get_data_directory()) / "testing_newfile1.txt")
+    # cat adds \n
+    assert content == TESTING_STRING_1 + "\n"
+
+
+def test_rsync_create_file_content_complex(executor):
+    """Test of create_file method with complex content."""
+
+    rsync = Rsync(executor)
+
+    # Note: \ is parsed by Python, it doesn't appear in string when it's printed
+    complex_string = """
+while true;
+do
+    sleep 0.1;
+    timeout --verbose 12 ssh \
+    -vvvvv -o ControlMaster=auto -o ControlPersist=10s -o PreferredAuthentications=publickey \
+    -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey \
+    -o PasswordAuthentication=no -o ConnectTimeout=10 -o 'ControlPath="/tmp/tmp.YVRQEpjejt"' \
+    -tt example.org \
+    '/bin/sh -c '"'"'sudo -H -S -n  -u root /bin/sh -c '"'"'"'"'"'"'"'"'echo BECOME-SUCCESS-ekychsypxblquhtjlpgvyrlbiltnuszn'"'"'"'"'"'"'"'"' && sleep 0'"'"''; \
+    if (( $? != 0 )); then
+        echo "Failed or killed by timeout";
+        break;
+    fi;
+done;
+
+<widget>
+    <debug>on</debug>
+    <window title="Sample Konfabulator Widget">
+        <name>main_window</name>
+        <width>500</width>
+        <height>500</height>
+    </window>
+    <image src="Images/Sun.png" name="sun1">
+        <hOffset>250</hOffset>
+        <vOffset>250</vOffset>
+        <alignment>center</alignment>
+    </image>
+    <text data="Click Here" size="36" style="bold">
+        <name>text1</name>
+        <hOffset>250</hOffset>
+        <vOffset>100</vOffset>
+        <alignment>center</alignment>
+        <onMouseUp>
+            sun1.opacity = (sun1.opacity / 100) * 90;
+        </onMouseUp>
+    </text>
+</widget>
+
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "age": 50
+}
+
+✨★♛
+"""
+
+    newfile = rsync.create_file("testing_newfile1.txt", complex_string)
+    content, _ = Tool(["cat", newfile], executor=executor).run()
+    assert newfile == str(Path(rsync.get_data_directory()) / "testing_newfile1.txt")
+    # cat adds \n
+    assert content == complex_string + "\n"
+
+
 def test_rsync_remove(executor, path_type):
     """Test of remove_path method. Absolute and relative paths are
     tested separately.
