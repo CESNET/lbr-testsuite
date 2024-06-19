@@ -113,7 +113,7 @@ def read_machines_file(url):
     """
 
     try:
-        with urllib.request.urlopen(url) as request:
+        with urllib.request.urlopen(url, timeout=60) as request:
             machines_json = request.read().decode()
         machines = json.loads(machines_json)
     except (urllib.error.URLError, json.decoder.JSONDecodeError) as e:
