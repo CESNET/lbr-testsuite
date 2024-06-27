@@ -8,9 +8,6 @@ Copyright: (C) 2024 CESNET, z.s.p.o.
 Spirent class fixtures.
 """
 
-import os
-from pathlib import Path
-
 from pytest_cases import fixture
 
 from lbr_testsuite import spirent as lbrt_spirent
@@ -73,7 +70,7 @@ def spirent_config_suffix(request, generator):
 
 
 @fixture(scope="module")
-def spirent(generator, spirent_config_suffix):
+def spirent(request, generator, spirent_config_suffix):
     """Fixture representing spirent.
 
     Parameters
@@ -93,9 +90,8 @@ def spirent(generator, spirent_config_suffix):
     assert isinstance(generator, lbrt_spirent.Spirent)
 
     cfg_file_name = f"{DEFAULT_CONFIG_FILENAME_BASE}{spirent_config_suffix}.xml"
-    default_configuration_file = str(
-        Path(os.path.dirname(os.path.abspath(__file__))) / cfg_file_name
-    )
+    cfg_dir = request.node.path.parent.resolve()
+    default_configuration_file = str(cfg_dir / cfg_file_name)
     generator.set_config_file(default_configuration_file)
 
     return generator
