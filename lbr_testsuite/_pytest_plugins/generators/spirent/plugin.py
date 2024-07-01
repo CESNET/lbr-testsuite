@@ -70,7 +70,30 @@ def spirent_config_suffix(request, generator):
 
 
 @fixture(scope="module")
-def spirent(request, generator, spirent_config_suffix):
+def spirent_config_default_dir(request):
+    """Default spirent config file directory.
+
+    If not overriden, returns the directory from which
+    the fixture was invoked (i.e. the test module directory).
+
+    Parameters
+    ----------
+    request : pytest.FixtureRequest
+        Special pytest fixture, here used to obtain caller
+        test module.
+
+    Returns
+    -------
+    Path
+        Path to the default directory where spirent configuration
+        files are stored.
+    """
+
+    return request.node.path.parent.resolve()
+
+
+@fixture(scope="module")
+def spirent(generator, spirent_config_suffix, spirent_config_default_dir):
     """Fixture representing spirent.
 
     Parameters
@@ -79,6 +102,8 @@ def spirent(request, generator, spirent_config_suffix):
         An initialized instance of Spirent generator.
     spirent_config_suffix : str (fixture)
         Spirent configuration file suffix for used spirent port.
+    spirent_config_default_dir : Path (fixture)
+        Directory where spirent configuration files are stored.
 
     Returns
     -------
@@ -90,8 +115,7 @@ def spirent(request, generator, spirent_config_suffix):
     assert isinstance(generator, lbrt_spirent.Spirent)
 
     cfg_file_name = f"{DEFAULT_CONFIG_FILENAME_BASE}{spirent_config_suffix}.xml"
-    cfg_dir = request.node.path.parent.resolve()
-    default_configuration_file = str(cfg_dir / cfg_file_name)
+    default_configuration_file = str(spirent_config_default_dir / cfg_file_name)
     generator.set_config_file(default_configuration_file)
 
     return generator
