@@ -12,9 +12,9 @@ from enum import StrEnum
 
 """
 Extra bytes added to L2 packet size when converting:
-7B preamble + 1B SoF + 4B CRC + 12B minimal IFG.
+7B preamble + 1B SoF + 12B minimal IFG.
 """
-PACKET_EXTRA_BYTES = 24
+PACKET_EXTRA_BYTES = 20
 
 
 def mbps_to_mpps(thrpt_mbps: float, pkt_len: int):
