@@ -14,8 +14,6 @@ faker = "*"
 scapy = "*"
 matplotlib = "*"
 pandas = "*"
-ansible = "*"
-ansible-runner = "*"
 
 [dev-packages]
 twine = "*"
