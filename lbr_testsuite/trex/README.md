@@ -180,13 +180,6 @@ One of them is TRex topology. When using TRex topology, fixture `trex_manager` i
 and provides initialized TRex Manager. However, topologies are complex topic and
 won't be described here.
 
-#### Ansible playbook
-
-TRex Manager also provides `run_ansible_playbook` method. It can configure machine
-via supplied Ansible playbook. For example, it could be used to download and install
-TRex on machine, set up hugepages and start TRex daemons. Playbook is not provided by
-`lbr-testsuite`.
-
 #### TRex Manager Diagram
 
 ![image](README_TRex_manager.svg "TRex Manager Diagram")
