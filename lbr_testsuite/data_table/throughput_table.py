@@ -215,7 +215,7 @@ class ThroughputTable:
         row = self.df.loc[index, value_cols]
 
         if len(value_cols) == 1 and not force_series:
-            return row[0]
+            return row.iloc[0]
         else:
             return row
 
