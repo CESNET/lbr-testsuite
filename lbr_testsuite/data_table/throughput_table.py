@@ -242,6 +242,11 @@ class ThroughputTable:
         for c in self._index_cols:
             index = index + (index_values[c],)
 
+        # cast to the column(s) data type(s) explicitly
+        curr_val = self.df.loc[index]
+        for k, v in values.items():
+            values[k] = curr_val[k].dtype.type(v)
+
         self.df.loc[index] = values
 
     def to_csv(self, csv_file: Union[str, pathlib.Path]):
