@@ -137,7 +137,7 @@ def add_ip_addr(
         Name of an interface to which the IP address should be added.
     address : str
         IP address to add.
-    mas : str
+    mask : str
         IP address mask.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
