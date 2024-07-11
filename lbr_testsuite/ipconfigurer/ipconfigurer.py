@@ -109,7 +109,7 @@ def _manipulate_ip_addr(
         params = dict(
             index=ifc_index,
             address=address,
-            mask=mask,
+            prefixlen=mask,
             family=family,
         )
         if ifa_flags:
