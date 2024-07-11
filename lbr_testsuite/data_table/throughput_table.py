@@ -224,7 +224,7 @@ class ThroughputTable:
         index_values: dict,
         values: dict,
     ):
-        """Get a value from the throughput table using composed index.
+        """Set a value in the throughput table using composed index.
 
         All index columns has to be set as keys of index_values.
 
