@@ -114,6 +114,11 @@ class TRexStream:
             | List: [80, 443, 8080]
     l4_dst : various, optional
         Destination ports. It has same format as ``l4_src``.
+    l4_op : str, optional
+        Modifier of L4 values (both src and dst). Possible options:
+        - "inc" for incrementing distribution (default).
+        - "dec" for decrementing distribution.
+        - "random" for random distribution.
     l4_flags : various, optional
         Any combination of TCP flags. Default value/flag is SYN.
 
@@ -159,6 +164,7 @@ class TRexStream:
     l4: Optional[str] = None
     l4_src: Optional[Union[int, tuple, list]] = None
     l4_dst: Optional[Union[int, tuple, list]] = None
+    l4_op: Optional[str] = "inc"
     l4_flags: Optional[Union[list, TRexL4Flag]] = TRexL4Flag.SYN
     pkt_len: int = 100
     rate: str = "1kpps"
