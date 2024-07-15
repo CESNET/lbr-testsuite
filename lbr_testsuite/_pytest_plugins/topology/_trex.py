@@ -156,7 +156,6 @@ def trex_manager(generator):
     """Fixture providing TRex manager.
 
     Tests can request TRex generator(s) from TRex manager.
-    Manager can also configure machines via Ansible playbook.
 
     Parameters
     ----------
