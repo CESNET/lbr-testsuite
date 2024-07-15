@@ -25,7 +25,16 @@ class TRexInstructionCrafter:
     instructions for TRex traffic generator.
     """
 
-    def build_instructions(self, fe_instructions, name, values, size, pkt_offset, offset_fixup=0):
+    def build_instructions(
+        self,
+        fe_instructions,
+        name,
+        values,
+        size,
+        pkt_offset,
+        offset_fixup=0,
+        op="inc",
+    ):
         """Create instructions and add them to instruction list.
 
         Parameters
@@ -46,8 +55,13 @@ class TRexInstructionCrafter:
         offset_fixup : int
             Add ``offset_fixup`` bytes to ``pkt_offset``. Can be useful for example when rewritting
             second half of 16B IPv6 address - then ``offset_fixup`` should be 8.
+        op : str, optional
+            Modifier of values. Possible options:
+            - "inc" for incrementing distribution.
+            - "dec" for decrementing distribution.
+            - "random" for random distribution.
         """
-        instr1 = trex_packet_builder.STLVmFlowVar(name, **values, size=size, op="inc")
+        instr1 = trex_packet_builder.STLVmFlowVar(name, **values, size=size, op=op)
         instr2 = trex_packet_builder.STLVmWrFlowVar(
             name, pkt_offset=pkt_offset, offset_fixup=offset_fixup
         )
