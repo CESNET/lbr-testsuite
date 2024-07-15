@@ -49,6 +49,7 @@ lbr_topology = "lbr_testsuite._pytest_plugins.topology.plugin"
 lbr_vlan_config = "lbr_testsuite._pytest_plugins.vlan_config.plugin"
 lbr_machine_defaults = "lbr_testsuite._pytest_plugins.machine_defaults.plugin"
 lbr_generators_spirent = "lbr_testsuite._pytest_plugins.generators.spirent.plugin"
+lbr_hugepages = "lbr_testsuite._pytest_plugins.hugepages.plugin"
 
 [tool.setuptools-git-versioning]
 enabled = true

@@ -18,6 +18,7 @@ ds._deimport_completely()
 # isort: on
 
 from . import data_table  # noqa
+from . import dpdk_application  # noqa
 from . import executable  # noqa
 from . import ipconfigurer  # noqa
 from . import packet_crafter  # noqa
