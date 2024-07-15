@@ -231,7 +231,7 @@ class TRexInstructionCrafter:
 
         return l3_offset
 
-    def prepare_l4_instructions(self, spec, l4_ports, direction):
+    def prepare_l4_instructions(self, spec, l4_ports, direction, op="inc"):
         """Create Field Engine instructions for L4 layer."""
         fe_instructions = []
         values = {}
@@ -244,7 +244,7 @@ class TRexInstructionCrafter:
         else:
             values["value_list"] = l4_ports.ports_as_list()
         self.build_instructions(
-            fe_instructions, l4_offset + "_" + direction, values, 2, l4_offset + dir_offset
+            fe_instructions, l4_offset + "_" + direction, values, 2, l4_offset + dir_offset, op=op
         )
 
         if spec["l4"] != "sctp":
@@ -375,7 +375,9 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
             if l4_ports.is_single_port():
                 src_port = l4_ports.ports()
 
-            l4_src_instr = self._fe_builder.prepare_l4_instructions(spec, l4_ports, "src")
+            l4_src_instr = self._fe_builder.prepare_l4_instructions(
+                spec, l4_ports, "src", op=spec.get("l4_op", "inc")
+            )
             context.extend(l4_src_instr)
 
         if "l4_dst" in spec:
@@ -384,7 +386,9 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
             if l4_ports.is_single_port():
                 dst_port = l4_ports.ports()
 
-            l4_dst_instr = self._fe_builder.prepare_l4_instructions(spec, l4_ports, "dst")
+            l4_dst_instr = self._fe_builder.prepare_l4_instructions(
+                spec, l4_ports, "dst", op=spec.get("l4_op", "inc")
+            )
             context.extend(l4_dst_instr)
 
         if spec["l4"] == "tcp":
@@ -450,6 +454,11 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
                 10, (10-20), [10,12,17,20]. For more info see ``packet_crafter.ports.L4Ports``.
             l4_dst : int or list or tuple
                 Destination port(s). Same format as ``l4_src``.
+            l4_op : str, optional
+                Modifier of L4 values (both src and dst). Possible options:
+                - "inc" for incrementing distribution (default).
+                - "dec" for decrementing distribution.
+                - "random" for random distribution.
             l4_flag : TRexL4Flag or list(TRexL4Flag), optional
                 Any combination of TCP flags.
             pkt_len : int
