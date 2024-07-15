@@ -97,7 +97,7 @@ def _manipulate_ip_addr(
     cmd,
     ifc_name,
     address,
-    mask,
+    prefixlen,
     family=socket.AF_INET,
     ifa_flags=None,
     namespace=None,
@@ -109,7 +109,7 @@ def _manipulate_ip_addr(
         params = dict(
             index=ifc_index,
             address=address,
-            prefixlen=mask,
+            prefixlen=prefixlen,
             family=family,
         )
         if ifa_flags:
@@ -120,7 +120,7 @@ def _manipulate_ip_addr(
 def add_ip_addr(
     ifc_name,
     address,
-    mask,
+    prefixlen,
     family=socket.AF_INET,
     ifa_flags=None,
     namespace=None,
@@ -137,8 +137,8 @@ def add_ip_addr(
         Name of an interface to which the IP address should be added.
     address : str
         IP address to add.
-    mask : str
-        IP address mask.
+    prefixlen : int
+        IP address network prefix length.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -156,7 +156,7 @@ def add_ip_addr(
     """
 
     try:
-        _manipulate_ip_addr("add", ifc_name, address, mask, family, ifa_flags, namespace)
+        _manipulate_ip_addr("add", ifc_name, address, prefixlen, family, ifa_flags, namespace)
     except NetlinkError as err:
         if not safe or err.code != errno.EEXIST:
             raise err
@@ -167,7 +167,7 @@ def add_ip_addr(
 def delete_ip_addr(
     ifc_name,
     address,
-    mask,
+    prefixlen,
     family=socket.AF_INET,
     namespace=None,
     safe=False,
@@ -183,8 +183,8 @@ def delete_ip_addr(
         Name of an interface to which the IP address should be added.
     address : str
         IP address to add.
-    mas : str
-        IP address mask.
+    prefixlen : int
+        IP address network prefix length.
     family : socket.AF_INET | socket.AF_INET6, optional
         IP address family - socket.AF_INET for IPv4, socket.AF_INET6
         for IPv6.
@@ -200,7 +200,7 @@ def delete_ip_addr(
     """
 
     try:
-        _manipulate_ip_addr("del", ifc_name, address, mask, family, None, namespace)
+        _manipulate_ip_addr("del", ifc_name, address, prefixlen, family, None, namespace)
     except NetlinkError as err:
         if not safe or (err.code != errno.EADDRNOTAVAIL and err.code != errno.ENODEV):
             raise err
