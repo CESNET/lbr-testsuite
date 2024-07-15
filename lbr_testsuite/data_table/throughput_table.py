@@ -215,7 +215,7 @@ class ThroughputTable:
         row = self.df.loc[index, value_cols]
 
         if len(value_cols) == 1 and not force_series:
-            return row[0]
+            return row.iloc[0]
         else:
             return row
 
@@ -224,7 +224,7 @@ class ThroughputTable:
         index_values: dict,
         values: dict,
     ):
-        """Get a value from the throughput table using composed index.
+        """Set a value in the throughput table using composed index.
 
         All index columns has to be set as keys of index_values.
 
@@ -241,6 +241,11 @@ class ThroughputTable:
         index = ()
         for c in self._index_cols:
             index = index + (index_values[c],)
+
+        # cast to the column(s) data type(s) explicitly
+        curr_val = self.df.loc[index]
+        for k, v in values.items():
+            values[k] = curr_val[k].dtype.type(v)
 
         self.df.loc[index] = values
 
