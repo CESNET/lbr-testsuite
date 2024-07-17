@@ -29,6 +29,7 @@ class StcHandler:
         self._rx_port_pair_results = None
         self._tx_port_pair_results = None
         self._arpnd_results = None
+        self._latency_results = None
 
     def stc_api_connect(self, host: str, port: int):
         if self._stc_api_version == STC_API_OFFICIAL:
@@ -101,6 +102,8 @@ class StcHandler:
         self._tx_port_pair_results = self.sub_tx_port_pair_results(project)
         # # Port Protocols -> ARPND Results
         self._arpnd_results = self.sub_arpnd_results(project)
+        # Port -> Latency Results
+        self._latency_results = self.sub_latency_results(project)
 
     def sub_generator_port_results(self, parent: str):
         generator_port_results = self._stc.subscribe(
@@ -223,6 +226,20 @@ class StcHandler:
             interval=1,
         )
         return arpnd_results
+
+    def sub_latency_results(self, parent: str):
+        latency_results = self._stc.subscribe(
+            parent=parent,
+            resultParent=parent,
+            configType="analyzer",
+            resultType="portavglatencyresults",
+            filterList="",
+            disablePaging="true",
+            recordsPerPage=256,
+            viewAttributeList="avglatency maxlatency minlatency",
+            interval=1,
+        )
+        return latency_results
 
     def stc_object_xpath(self, xpaths):
         # TODO: split this function to pieces so it's actually readable...
@@ -501,6 +518,7 @@ class StcHandler:
     def stc_refresh_results(self):
         self._stc.perform("RefreshResultView", resultDataSet=self._rx_stream_block_results)
         self._stc.perform("RefreshResultView", resultDataSet=self._tx_stream_block_results)
+        self._stc.perform("RefreshResultView", resultDataSet=self._latency_results)
 
     def stc_clear_results(self):
         ports = self._stc.get("project1", "children-Port")
@@ -791,6 +809,18 @@ class StcHandler:
         arpnd_results = arpnd_objects["ObjectList"].split(" ")
 
         for result in arpnd_results:
+            results.append(self._stc.get(result, name))
+
+        return results
+
+    def stc_port_latency_results(self, name: str):
+        results = []
+
+        # Get specific analyzer object
+        latency_objects = self._stc.perform("getObjects", className="PortAvgLatencyResults")
+        latency_results = latency_objects["ObjectList"].split(" ")
+
+        for result in latency_results:
             results.append(self._stc.get(result, name))
 
         return results
