@@ -55,6 +55,14 @@ class AbstractStreamBlock(ABC):
 
         return (sb_tx, sb_rx)
 
+    def _read_float_rxstats(self, key: str) -> float:
+        """Retrieve RX streamblock floating point stats with given key"""
+
+        sb_handler = self._stc_handler.stc_stream_block(self._name)
+        sb_stats = float(self._stc_handler.stc_rx_stream_block_results(sb_handler, key)[0][0])
+
+        return sb_stats
+
     def _is_active(self) -> bool:
         """Check if stream block is active
 
@@ -110,6 +118,23 @@ class AbstractStreamBlock(ABC):
         sb_tx, sb_rx = self._read_stats(key)
         stats["tx"][key] = sb_tx
         stats["rx"][key] = sb_rx
+
+        return stats
+
+    def get_latency_stats(self):
+        """Retrieve block latency statistics from STC.
+
+        Returns
+        -------
+        dict
+            Dictionary with extracted stats.
+        """
+
+        stats = {}
+
+        for key in ["MinLatency", "AvgLatency", "MaxLatency"]:
+            sb_lat = self._read_float_rxstats(key)
+            stats[key] = sb_lat
 
         return stats
 
