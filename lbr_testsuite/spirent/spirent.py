@@ -181,6 +181,20 @@ class Spirent(Generator):
 
         self._port_reserved = False
 
+    def set_result_view_mode(self, mode):
+        """Set view mode of results.
+
+        This affects which counters will be available in results.
+
+        Parameters
+        ----------
+        mode : str
+            Results view mode. For more information in modes see Spirent
+            TestCenter Automation Programmer's Reference.
+        """
+
+        self._stc_handler.stc_set_result_view_mode(mode)
+
     def determine_src_mac_address(self):
         """Determine packets' source MAC address
         according to the used spirent port.

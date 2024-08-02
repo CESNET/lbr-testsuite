@@ -454,6 +454,30 @@ class StcHandler:
         self._stc.perform("chassisDisconnectAll")
         self._stc.perform("resetConfig")
 
+    @staticmethod
+    def _assert_supported_result_view_mode(mode):
+        assert mode in [
+            "BASIC",
+            "HISTOGRAM",
+            "JITTER",
+            "INTERARRIVALTIME",
+            "FORWARDING",
+            "LATENCY_JITTER",
+        ], f"Unsupported mode '{mode}'"
+
+    def _result_options_handler(self):
+        xpath = ["StcSystem/Project/ResultOptions"]
+        return self.stc_object_xpath(xpath)
+
+    def stc_set_result_view_mode(self, mode):
+        self._assert_supported_result_view_mode(mode)
+        self.stc_attribute(self._result_options_handler(), "ResultViewMode", mode)
+
+    def stc_check_result_view_mode(self, mode):
+        self._assert_supported_result_view_mode(mode)
+        current_mode = self.stc_attribute(self._result_options_handler(), "ResultViewMode")[0][0]
+        return current_mode == mode
+
     def stc_start_arpnd(self):
         project_ports = self._stc.get("project1", "children-Port")
         self._stc.perform("ArpNdStartCommand", handleList=project_ports)
