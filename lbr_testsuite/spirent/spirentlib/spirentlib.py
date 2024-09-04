@@ -759,18 +759,32 @@ class StcHandler:
         result_handles = self.stc_attribute(stream_blocks, "children-RxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
 
-    def stc_filtered_stream_results(self, names="*"):
+    def stc_filtered_stream_results(self, names="*", sb_name=None):
         if type(names) == str:
             names = [x for x in names.split()]
         results = []
         total_page_count = self.stc_attribute([[self._filtered_stream_results]], "TotalPageCount")
+
+        stream_id = None
+        if sb_name:
+            """
+            Matching stream blocks with stream IDs in this way will only work
+            when stream blocks containing only single streams are used.
+            """
+            sb = self.stc_stream_block(sb_name)
+            stream_id = int(self.stc_get_attributes(sb, "StreamBlockIndex")[0][0])
+
         for page in range(1, int(total_page_count[0][0]) + 1):
             # Set page
             self.stc_attribute([[self._filtered_stream_results]], "PageNumber", str(page))
             # Find specific object
             objects = self._stc.perform("getObjects", className="FilteredStreamResults")
             filtered_stream_results = objects["ObjectList"].split(" ")
-            results.append(self.stc_attribute([filtered_stream_results], names))
+            if stream_id is None:
+                handles = filtered_stream_results
+            else:
+                handles = [filtered_stream_results[stream_id]]
+            results.append(self.stc_attribute([handles], names))
 
         return results
 
