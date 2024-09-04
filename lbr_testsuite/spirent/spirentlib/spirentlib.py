@@ -3,10 +3,14 @@ Author(s): Jan Kucera <jan.kucera@cesnet.cz>, Pavel Krobot <Pavel.Krobot@cesnet.
 Copyright: (C) 2019 CESNET, z.s.p.o.
 """
 
+import logging
 import re
 
 from .stcapi.StcPythonREST import StcPythonREST
 from .stcapi.StcPythonTCP import StcPythonTCP
+
+
+global_logger = logging.getLogger(__name__)
 
 
 STC_API_PROPRIETARY = 0
@@ -457,6 +461,10 @@ class StcHandler:
     def stc_start_generators(self, timeout=10):
         # Set logging
         self.logging_config()
+
+        all_stream_blocks = self.stc_stream_block()
+        if "true" not in self.stc_attribute(all_stream_blocks, "Active")[0]:
+            global_logger.warning("There are no active stream-block. No traffic will be generated.")
 
         # Get all generator handles
         generator_objects = self._stc.perform("getObjects", classname="Generator")
