@@ -454,7 +454,7 @@ class StcHandler:
         project_ports = self._stc.get("project1", "children-Port")
         self._stc.perform("ArpNdStartCommand", handleList=project_ports)
 
-    def stc_start_generators(self):
+    def stc_start_generators(self, timeout=10):
         # Set logging
         self.logging_config()
 
@@ -474,7 +474,18 @@ class StcHandler:
         # Start generators and wait 1 second
         self._stc.perform("generatorStart", generatorList=generators)
         if len(continuous_generators) != 0:
-            self._stc.perform("generatorWaitForStart", generatorList=continuous_generators)
+            res = self._stc.perform(
+                "generatorWaitForStart",
+                generatorList=continuous_generators,
+                waittimeout=timeout,
+            )
+            if res["Status"]:
+                # If there is an error, the status will show what failed. Otherwise it is empty.
+                raise RuntimeError(
+                    f"Generator(s) did not start after {timeout} seconds. "
+                    f"Error message from STC: {res['Status']}"
+                )
+
         self._stc.perform("wait", waitTime=1)
 
     def stc_stop_generators(self):
