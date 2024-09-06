@@ -181,6 +181,20 @@ class Spirent(Generator):
 
         self._port_reserved = False
 
+    def set_result_view_mode(self, mode):
+        """Set view mode of results.
+
+        This affects which counters will be available in results.
+
+        Parameters
+        ----------
+        mode : str
+            Results view mode. For more information in modes see Spirent
+            TestCenter Automation Programmer's Reference.
+        """
+
+        self._stc_handler.stc_set_result_view_mode(mode)
+
     def determine_src_mac_address(self):
         """Determine packets' source MAC address
         according to the used spirent port.
@@ -576,6 +590,30 @@ class Spirent(Generator):
                     flat_results.append(result_l3)
 
         return flat_results
+
+    def get_port_latency_stats(self, port=0):
+        """Retrieve port latency statistics from STC.
+
+        Returns
+        -------
+        dict
+            Dictionary with extracted stats.
+        """
+
+        latency_counters = [
+            ("AvgLatency", float),
+            ("MaxLatency", float),
+            ("MinLatency", float),
+            ("TotalLatency", float),
+        ]
+
+        stats = {}
+
+        for key, val_type in latency_counters:
+            val = self._stc_handler.stc_port_latency_results(key)[port]
+            stats[key] = val_type(val)
+
+        return stats
 
     def filter_ipv4_destination_address(self):
         """Configure STC analyzer to filter destination IPv4 addresses."""

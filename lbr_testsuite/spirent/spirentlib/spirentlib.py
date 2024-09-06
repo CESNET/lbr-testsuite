@@ -454,6 +454,30 @@ class StcHandler:
         self._stc.perform("chassisDisconnectAll")
         self._stc.perform("resetConfig")
 
+    @staticmethod
+    def _assert_supported_result_view_mode(mode):
+        assert mode in [
+            "BASIC",
+            "HISTOGRAM",
+            "JITTER",
+            "INTERARRIVALTIME",
+            "FORWARDING",
+            "LATENCY_JITTER",
+        ], f"Unsupported mode '{mode}'"
+
+    def _result_options_handler(self):
+        xpath = ["StcSystem/Project/ResultOptions"]
+        return self.stc_object_xpath(xpath)
+
+    def stc_set_result_view_mode(self, mode):
+        self._assert_supported_result_view_mode(mode)
+        self.stc_attribute(self._result_options_handler(), "ResultViewMode", mode)
+
+    def stc_check_result_view_mode(self, mode):
+        self._assert_supported_result_view_mode(mode)
+        current_mode = self.stc_attribute(self._result_options_handler(), "ResultViewMode")[0][0]
+        return current_mode == mode
+
     def stc_start_arpnd(self):
         project_ports = self._stc.get("project1", "children-Port")
         self._stc.perform("ArpNdStartCommand", handleList=project_ports)
@@ -735,18 +759,32 @@ class StcHandler:
         result_handles = self.stc_attribute(stream_blocks, "children-RxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
 
-    def stc_filtered_stream_results(self, names="*"):
+    def stc_filtered_stream_results(self, names="*", sb_name=None):
         if type(names) == str:
             names = [x for x in names.split()]
         results = []
         total_page_count = self.stc_attribute([[self._filtered_stream_results]], "TotalPageCount")
+
+        stream_id = None
+        if sb_name:
+            """
+            Matching stream blocks with stream IDs in this way will only work
+            when stream blocks containing only single streams are used.
+            """
+            sb = self.stc_stream_block(sb_name)
+            stream_id = int(self.stc_get_attributes(sb, "StreamBlockIndex")[0][0])
+
         for page in range(1, int(total_page_count[0][0]) + 1):
             # Set page
             self.stc_attribute([[self._filtered_stream_results]], "PageNumber", str(page))
             # Find specific object
             objects = self._stc.perform("getObjects", className="FilteredStreamResults")
             filtered_stream_results = objects["ObjectList"].split(" ")
-            results.append(self.stc_attribute([filtered_stream_results], names))
+            if stream_id is None:
+                handles = filtered_stream_results
+            else:
+                handles = [filtered_stream_results[stream_id]]
+            results.append(self.stc_attribute([handles], names))
 
         return results
 
