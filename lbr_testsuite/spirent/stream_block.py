@@ -138,6 +138,37 @@ class AbstractStreamBlock(ABC):
 
         return stats
 
+    def get_jitter_stats(self):
+        """Retrieve jitter statistics from STC.
+
+        Returns
+        -------
+        dict
+            Dictionary with extracted stats.
+        """
+
+        if not self._stc_handler.stc_check_result_view_mode("LATENCY_JITTER"):
+            raise RuntimeError("Jitter statistics are only available in latency-jitter mode.")
+
+        jitter_counters = [
+            ("AvgJitter", float),
+            ("MaxJitter", float),
+            ("MinJitter", float),
+            ("Rfc4689AbsoluteAvgJitter", float),
+            ("TotalJitter", float),
+        ]
+
+        stats = {}
+
+        for key, val_type in jitter_counters:
+            val = self._stc_handler.stc_filtered_stream_results(key, self._name)[0][0][0]
+            if val == "N/A":
+                stats[key] = None
+            else:
+                stats[key] = val_type(val)
+
+        return stats
+
     def _apply_load_megabits(self, megabits: int):
         """Set stream blocks load in STC.
 
