@@ -494,6 +494,23 @@ def ifc_set_promisc(ifc_name, state, namespace=None):
         ipr.link("set", ifname=ifc_name, flags=flags)
 
 
+def ifc_set_mtu(ifc_name, mtu, namespace=None):
+    """Set the mtu of an interface.
+
+    Parameters
+    ----------
+    ifc_name : str
+        Name of an interface.
+    mtu : int
+        Size of MTU.
+    namespace : str, optional
+        Name of a namespace.
+    """
+
+    with _get_ipr_context(namespace) as ipr:
+        ipr.link("set", ifname=ifc_name, mtu=mtu)
+
+
 ##
 # Routes
 ##
