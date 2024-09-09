@@ -24,7 +24,15 @@ class PipelineRuntime:
     def get_workers_count(self):
         pass
 
-    def get_pipeline_stage_names(self) -> list[str]:
+    def get_pipeline_stage_names(self, name: str = None) -> list[str]:
+        """Obtain list of stage names of the selected pipeline.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the pipeline (default is the first pipeline).
+        """
+
         pass
 
     def wait_until_active(self, timeout=5):
