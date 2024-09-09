@@ -56,5 +56,15 @@ class PipelineRuntime:
     def wait_until_active(self, timeout=5):
         pass
 
-    def get_worker_chain_status(self, worker_id) -> dict:
+    def get_worker_chain_status(self, worker_id: int, name: str = None) -> dict:
+        """Obtain worker's chain status in the selected pipeline.
+
+        Parameters
+        ----------
+        worker_id: int
+            Numerical ID (starting from 0) of a worker in the selected pipeline.
+        name : str, optional
+            Name of the pipeline (default is the first pipeline).
+        """
+
         pass
