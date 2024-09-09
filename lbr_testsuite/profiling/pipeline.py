@@ -188,7 +188,7 @@ class PipelineMonProfiler(ThreadedProfiler):
                 data[f"stage_max_latency_{name}_{i}"] = []
                 data[f"stage_cur_latency_{name}_{i}"] = []
 
-        pipeline.wait_until_pipeline_active()
+        pipeline.wait_until_active()
 
         while not self.wait_stoppable(self._time_step):
             now = time.monotonic()

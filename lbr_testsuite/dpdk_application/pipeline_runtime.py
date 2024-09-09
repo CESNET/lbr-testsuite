@@ -24,7 +24,7 @@ class PipelineRuntime:
     def get_pipeline_stage_names(self) -> list[str]:
         pass
 
-    def wait_until_pipeline_active(self, timeout=5):
+    def wait_until_active(self, timeout=5):
         pass
 
     def get_worker_chain_status(self, worker_id) -> dict:
