@@ -21,7 +21,15 @@ class PipelineRuntime:
     def get_worker_status(self, worker_id):
         pass
 
-    def get_workers_count(self):
+    def get_workers_count(self, name: str = None):
+        """Obtain count of workers of the selected pipeline.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the pipeline (default is the first pipeline).
+        """
+
         pass
 
     def get_pipeline_stage_names(self, name: str = None) -> list[str]:
