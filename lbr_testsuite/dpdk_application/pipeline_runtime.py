@@ -15,6 +15,9 @@ class PipelineRuntime:
     def get_pid(self):
         pass
 
+    def get_pipeline_names(self) -> list[str]:
+        pass
+
     def get_worker_status(self, worker_id):
         pass
 
