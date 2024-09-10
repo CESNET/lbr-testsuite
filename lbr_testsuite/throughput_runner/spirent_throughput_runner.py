@@ -10,6 +10,7 @@ import logging
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from lbr_testsuite.profiling.profiler import PackedProfiler
 from lbr_testsuite.spirent.spirent import Spirent
 from lbr_testsuite.spirent.stream_block import StreamBlock
 
@@ -34,7 +35,12 @@ class ThroughputRunnerMeasurementData:
 class SpirentThroughputRunner:
     """Runner class responsible for executing Spirent throughput tests."""
 
-    def __init__(self, spirent: Spirent, stream_blocks: List[StreamBlock]):
+    def __init__(
+        self,
+        spirent: Spirent,
+        stream_blocks: List[StreamBlock],
+        profiler: Optional[PackedProfiler] = None,
+    ):
         """
         Parameters
         ----------
@@ -42,11 +48,18 @@ class SpirentThroughputRunner:
             Instance of configured spirent generator object.
         stream_blocks : list
             List of stream blocks used to generate traffic.
+        profiler : PackedProfiler, default None
+            Instance of profiler. Can be None.
         """
 
         self._spirent = spirent
         self._stream_blocks = stream_blocks
         self._logger = logging.getLogger(self.__class__.__name__)
+
+        if profiler is None:
+            self._profiler = PackedProfiler()
+        else:
+            self._profiler = profiler
 
         self._spirent.deactivate_all_stream_blocks()
         for block in stream_blocks:
@@ -139,11 +152,15 @@ class SpirentThroughputRunner:
 
         self._warm_up()
 
+        self._profiler.start()
         self._pre_test_traffic_gen()
 
         # Main test traffic
         self._spirent._stc_handler.stc_clear_results()
+
+        self._profiler.mark()
         self._spirent.generate_traffic(duration)
+        self._profiler.stop()
 
         self._logger.debug(f"Measured load {load_mbps} Mbps:")
 
