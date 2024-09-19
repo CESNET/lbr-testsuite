@@ -3,7 +3,7 @@
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
 `common`, `data_table`, `executable`, `ipconfigurer`, `packet_crafter`,
-`spirent`, `trex` and `vlan_config`.
+`profiling`, `spirent`, `trex` and `vlan_config`.
 
 The package also includes the `Topology` plugin for pytest. The plugin provides
 a set of fixtures and pre-defined pytest arguments that can be used to prepare
@@ -84,6 +84,13 @@ For `packet_crafter`:
 from lbr_testsuite import packet_crafter
 ```
 Classes providing high-level packet crafting. Used for `trex` module.
+
+
+For `profiling`:
+```
+from lbr_testsuite import profiling
+```
+Provides measures for profiling, such as perf tool or cache misses.
 
 
 For `spirent`:
