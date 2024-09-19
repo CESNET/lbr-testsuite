@@ -3,20 +3,20 @@ Author(s): Jan Viktorin <viktorin@cesnet.cz>
 
 Copyright: (C) 2021-2024 CESNET, z.s.p.o.
 
-Profilers fixtures.
+Pytest plugin with profiler fixtures.
 """
 
 from pypapi import events
 from pytest_cases import fixture
 
-from .cache import PAPIProfiler
-from .cpumon import CPUMonProfiler
-from .perf import Perf, PerfC2C, PerfMem, PerfStat
-from .pipeline import PipelineMonProfiler
-from .power_consumption import pyJoulesProfiler
-from .profiler import MultiProfiler
-from .system import IrqMonProfiler
-from src.common.common import compose_output_path
+from ...common.common import compose_output_path
+from ...profiling.cache import PAPIProfiler
+from ...profiling.cpumon import CPUMonProfiler
+from ...profiling.perf import Perf, PerfC2C, PerfMem, PerfStat
+from ...profiling.pipeline import PipelineMonProfiler
+from ...profiling.power_consumption import pyJoulesProfiler
+from ...profiling.profiler import MultiProfiler
+from ...profiling.system import IrqMonProfiler
 
 
 def pytest_addoption(parser):
