@@ -9,7 +9,7 @@ Supporting code for implementing application profilers.
 import logging
 import threading
 
-from lbr_testsuite import executable
+from ..executable import executable
 
 
 class ProfiledSubject:

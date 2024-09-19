@@ -6,8 +6,7 @@ Copyright: (C) 2021-2024 CESNET, z.s.p.o.
 Implementation of perf profiler.
 """
 
-from lbr_testsuite import executable
-
+from ..executable import executable
 from .profiler import PidProfiler
 
 
