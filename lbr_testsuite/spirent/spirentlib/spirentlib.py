@@ -751,6 +751,14 @@ class StcHandler:
 
         self._stc.apply()
 
+    def stc_start_stream_block(self, stream_block):
+        sb_list = self.stc_stream_block(stream_block)[0]
+        self._stc.perform("StreamBlockStart", streamblocklist=sb_list)
+
+    def stc_stop_stream_block(self, stream_block):
+        sb_list = self.stc_stream_block(stream_block)[0]
+        self._stc.perform("StreamBlockStop", streamblocklist=sb_list)
+
     def stc_tx_stream_block_results(self, stream_blocks, names="*"):
         result_handles = self.stc_attribute(stream_blocks, "children-TxStreamBlockResults")
         return self.stc_attribute(result_handles, names)
