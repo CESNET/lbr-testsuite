@@ -3,6 +3,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[[source]]
+name = "liberouter_pypi"
+url = "http://cisticka-dev.liberouter.org/piproxy/tmc/pypi-liberouter/simple"
+verify_ssl = false
+
 [packages]
 pyroute2 = ">=0.6.2,<1.0.0"
 lbr-trex-client = "3.4.0.dev311"
@@ -14,6 +19,9 @@ faker = "*"
 scapy = "*"
 matplotlib = "*"
 pandas = "*"
+python-papi = {version = "7.1.0.0", index="liberouter_pypi"}
+psutil = "*"
+pyJoules = "*"
 
 [dev-packages]
 twine = "*"
