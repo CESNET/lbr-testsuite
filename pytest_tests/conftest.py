@@ -54,6 +54,7 @@ def pytest_configure(config):
         "invoke",
         "fabric",
         "paramiko.transport",
+        "matplotlib.font_manager",
     ]
     for rl in restricted_loggers:
         logging.getLogger(rl).setLevel(logging.WARNING)

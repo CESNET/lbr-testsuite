@@ -46,6 +46,16 @@ class AbstractStreamBlock(ABC):
 
         pass
 
+    def start(self):
+        """Start generating traffic from the stream block."""
+
+        self._stc_handler.stc_start_stream_block(self._name)
+
+    def stop(self):
+        """Stop generating traffic from the stream block."""
+
+        self._stc_handler.stc_stop_stream_block(self._name)
+
     def _read_stats(self, key: str) -> int:
         """Retrieve streamblock stats with given key."""
 
