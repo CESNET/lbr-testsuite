@@ -324,7 +324,7 @@ class PAPIProfiler(ThreadedProfiler):
                 kind="line",
                 style=".-",
                 x="timestamp",
-                figsize=(len(df["timestamp"]) * 0.2, 15),
+                figsize=(len(df["timestamp"]) * 0.2, 30),
                 legend=True,
                 ax=ax,
             )
