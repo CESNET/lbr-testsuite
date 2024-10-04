@@ -27,6 +27,119 @@ class ProfiledPipelineSubject(ProfiledSubject):
         return f"subject-{self.get_pid()}-{sys_if}"
 
 
+class PipelineMonContext:
+    """Context for monitoring a single pipeline from data provided by PipelineRuntime."""
+
+    def __init__(self, runtime, name=None):
+        self._name = name
+        self._workers = runtime.get_workers_count(name=self._name)
+        self._stages = runtime.get_pipeline_stage_names(name=self._name)
+        self._data = {"timestamp": []}
+        self._runtime = runtime
+
+        for i in range(self._workers):
+            self._data[f"max_latency_{i}"] = []
+            self._data[f"latency_{i}"] = []
+            self._data[f"chain_calls_{i}"] = []
+            self._data[f"seen_pkts_{i}"] = []
+            self._data[f"drop_pkts_{i}"] = []
+            for name in self._stages:
+                self._data[f"stage_max_latency_{name}_{i}"] = []
+                self._data[f"stage_cur_latency_{name}_{i}"] = []
+
+    def get_stages(self):
+        """Get stage names of the contextual pipeline.
+
+        Returns
+        -------
+        list[str]
+            List of stage names.
+        """
+
+        return self._stages
+
+    def sample(self, now=None):
+        """Sample data from the contextual pipeline.
+
+        The stored samples are organized into columns, every single sample is
+        a single line:
+
+        - timestamp - monotonic timestamp of each row
+        - cur_latency_{W} - immediate latency of whole pipeline (per worker)
+        - max_latency_{W} - maximal latency of whole pipeline in the last period
+        - chain_calls_{W} - number of pipeline chain calls so far
+        - seen_pkts_{W} - number of packets seen by the pipeline so for
+        - drop_pkts_{W} - number of dropped packets by the pipeline so far
+        - stage_cur_latency_{stage}_{W} - immediate latency of a particular pipeline stage
+        - stage_max_latency_{stage}_{W} - max latency of a particular pipeline stage
+
+        Parameters
+        ----------
+        now : time, optional
+            Time point of the sample (would be time.monotonic() if not given).
+        """
+
+        if now is None:
+            now = time.monotonic()
+
+        status = []
+        chain_status = []
+
+        for i in range(self._workers):
+            status.append(self._runtime.get_worker_status(i, name=self._name))
+            chain_status.append(self._runtime.get_worker_chain_status(i, name=self._name))
+
+        self._data["timestamp"].append(now)
+
+        for i, s in enumerate(status):
+            max_latency, unit = s["max_latency"].split(" ", 2)
+            assert unit == "us"
+
+            latency, unit = s["cur_latency"].split(" ", 2)
+            assert unit == "us"
+
+            chain_calls = int(s["chain_calls"])
+            seen_pkts = int(s["seen_pkts"])
+            drop_pkts = int(s["drop_pkts"])
+
+            self._data[f"max_latency_{i}"].append(float(max_latency))
+            self._data[f"latency_{i}"].append(float(latency))
+            self._data[f"chain_calls_{i}"].append(chain_calls)
+            self._data[f"seen_pkts_{i}"].append(seen_pkts)
+            self._data[f"drop_pkts_{i}"].append(drop_pkts)
+
+            for j, name in enumerate(self._stages):
+                stage_max, unit = chain_status[i][f"max_latency[{j}]"].split(" ", 2)
+                assert unit == "us"
+                stage_cur, unit = chain_status[i][f"cur_latency[{j}]"].split(" ", 2)
+                assert unit == "us"
+
+                self._data[f"stage_max_latency_{name}_{i}"].append(float(stage_max))
+                self._data[f"stage_cur_latency_{name}_{i}"].append(float(stage_cur))
+
+    def get_samples(self):
+        """Obtain all stored samples.
+
+        Returns
+        -------
+        dict
+            Dictionary of data samples for each worker of the contextual pipeline.
+        """
+
+        return self._data
+
+    def get_data_frame(self):
+        """Obtain pandas data frame representing the samples.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Stored samples converted into DataFrame.
+        """
+
+        return pandas.DataFrame(self._data)
+
+
 class PipelineMonProfiler(ThreadedProfiler):
     def __init__(self, csv_file, mark_file, png_file_pattern, time_step=0.1):
         super().__init__()
@@ -174,66 +287,21 @@ class PipelineMonProfiler(ThreadedProfiler):
 
     def run(self):
         pipeline = self._subject.get_pipeline()
-        workers = pipeline.get_workers_count()
-        proc_names = pipeline.get_pipeline_stage_names()
-        data = {"timestamp": []}
+        context = PipelineMonContext(pipeline)
 
-        for i in range(workers):
-            data[f"max_latency_{i}"] = []
-            data[f"latency_{i}"] = []
-            data[f"chain_calls_{i}"] = []
-            data[f"seen_pkts_{i}"] = []
-            data[f"drop_pkts_{i}"] = []
-            for name in proc_names:
-                data[f"stage_max_latency_{name}_{i}"] = []
-                data[f"stage_cur_latency_{name}_{i}"] = []
-
-        pipeline.wait_until_pipeline_active()
+        pipeline.wait_until_active()
 
         while not self.wait_stoppable(self._time_step):
             now = time.monotonic()
-            status = []
-            chain_status = []
+            context.sample(now)
 
-            for i in range(workers):
-                status.append(pipeline.get_worker_status(i))
-                chain_status.append(pipeline.get_worker_chain_status(i))
+        self._logger.info(f"sampled {len(context.get_samples())}x pipeline status")
 
-            data["timestamp"].append(now)
-
-            for i, s in enumerate(status):
-                max_latency, unit = s["max_latency"].split(" ", 2)
-                assert unit == "us"
-
-                latency, unit = s["cur_latency"].split(" ", 2)
-                assert unit == "us"
-
-                chain_calls = int(s["chain_calls"])
-                seen_pkts = int(s["seen_pkts"])
-                drop_pkts = int(s["drop_pkts"])
-
-                data[f"max_latency_{i}"].append(float(max_latency))
-                data[f"latency_{i}"].append(float(latency))
-                data[f"chain_calls_{i}"].append(chain_calls)
-                data[f"seen_pkts_{i}"].append(seen_pkts)
-                data[f"drop_pkts_{i}"].append(drop_pkts)
-
-                for j, name in enumerate(proc_names):
-                    stage_max, unit = chain_status[i][f"max_latency[{j}]"].split(" ", 2)
-                    assert unit == "us"
-                    stage_cur, unit = chain_status[i][f"cur_latency[{j}]"].split(" ", 2)
-                    assert unit == "us"
-
-                    data[f"stage_max_latency_{name}_{i}"].append(float(stage_max))
-                    data[f"stage_cur_latency_{name}_{i}"].append(float(stage_cur))
-
-        self._logger.info(f"sampled {len(data)}x pipeline status")
-
-        df = pandas.DataFrame(data)
+        df = context.get_data_frame()
         df.to_csv(self._csv_file)
 
         with open(self._mark_file, "w") as f:
             self._marker.save(f)
 
         self._plot_general(df)
-        self._plot_stage_latencies(df, proc_names)
+        self._plot_stage_latencies(df, context.get_stages())
