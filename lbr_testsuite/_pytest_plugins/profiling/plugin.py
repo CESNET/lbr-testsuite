@@ -235,7 +235,7 @@ def collect_profilers(pyt_request, output_dir):
 
         csv_file = compose_output_path(pyt_request, "cache_prof", ".csv", output_dir)
         mark_file = compose_output_path(pyt_request, "cache_prof", ".mark", output_dir)
-        charts_file = compose_output_path(pyt_request, "cache_prof", ".png", output_dir)
+        charts_file = compose_output_path(pyt_request, "cache_prof", ".html", output_dir)
         time_step = use_cache_prof
         papi_evs = {
             "L1 Misses": [
