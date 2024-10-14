@@ -200,7 +200,7 @@ def collect_profilers(pyt_request, output_dir):
         charts_file_pattern = compose_output_path(
             pyt_request,
             "pipelinemon_{0}",
-            ".png",
+            ".html",
             output_dir,
         )
         time_step = use_pipelinemon

@@ -8,9 +8,9 @@ Implementation of profiler reading various Pipeline-specific stats.
 
 import time
 
-import matplotlib.pyplot as plt
 import pandas
 
+from . import _charts as charts
 from .profiler import ProfiledSubject, ProfilerMarker, ThreadedProfiler
 
 
@@ -156,68 +156,44 @@ class PipelineMonProfiler(ThreadedProfiler):
         self._marker = ProfilerMarker()
         super().start(subject)
 
-    def _plot_to_file(self, plot, charts_file, legend=True):
-        if legend:
-            plot.legend(fontsize=8, bbox_to_anchor=(1, 1), ncol=2)
-        f = plot.get_figure()
-        f.set_layout_engine("tight")
-        self._logger.info(f"save charts file: {charts_file}")
-        plot.get_figure().savefig(charts_file)
-
-    def _plot_latencies(self, df, ax, label="latencies", column="latency"):
-        return df.plot(
-            title=f"Pipeline {label}",
-            xlabel="time [s]",
-            ylabel="latency [us]",
-            kind="line",
-            style=".-",
-            x="timestamp",
-            y=filter(lambda k: k.startswith(f"{column}_"), df.columns),
-            figsize=(len(df["timestamp"]) * 0.2, 30),
-            legend=False,
-            ax=ax,
+    @staticmethod
+    def _compose_ch_spec(df, kind, y_label, col_prefix):
+        return charts.SubPlotSpec(
+            title=f"Pipeline {kind}",
+            y_label=y_label,
+            columns=[c for c in df.columns if c.startswith(f"{col_prefix}_")],
         )
 
-    def _draw_marks(self, axes, time_lowest):
-        for mark_time in self._marker:
-            time = float(round(mark_time - time_lowest + 1, 2))
-
-            self._logger.debug(f"mark at {time}s")
-
-            for ax in axes:
-                ax.axvline(
-                    x=time,
-                    color="b",
-                    gapcolor="r",
-                    linestyle="--",
-                    alpha=0.3,
-                    label=f"mark: {time}s",
-                )
-
-    def _plot_general(self, df):
+    def _plot_general(self, df, markers):
         df = df.copy()
-        lowest = df["timestamp"].min()
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
 
-        fig, axes = plt.subplots(nrows=5, ncols=1)
-
-        self._plot_latencies(df, axes[0])
-        self._plot_latencies(df, axes[1], label="maximal latencies", column="max_latency")
-
-        self._plot_chain_calls(df, axes[2])
-        self._plot_seen_pkts(df, axes[3])
-        self._plot_drop_pkts(df, axes[4])
-
-        self._draw_marks(axes, lowest)
+        ch_spec = []
+        ch_spec.append(self._compose_ch_spec(df, "latencies", "latency [us]", "latency"))
+        ch_spec.append(
+            self._compose_ch_spec(df, "maximal latencies", "latency [us]", "max_latency")
+        )
+        for label, col_prefix in (
+            ("chain calls", "chain_calls"),
+            ("seen packets (volume)", "seen_pkts"),
+            ("dropped packets (last stage)", "drop_pkts"),
+        ):
+            for c in df.columns:
+                if c.startswith(f"{col_prefix}_"):
+                    df[c] = df[c].diff()
+            ch_spec.append(self._compose_ch_spec(df, label, label, col_prefix))
 
         charts_file = str(self._charts_file_pattern).format("general")
-        self._plot_to_file(fig, charts_file)
+        charts.create_charts_html(
+            df,
+            ch_spec,
+            charts_file,
+            title="Pipeline Statistics",
+            markers=list(markers),
+        )
 
-    def _plot_stage_latencies(self, df, proc_names):
-        charts_file = str(self._charts_file_pattern).format("stage_latencies")
+    def _plot_stage_latencies(self, df, proc_names, markers):
+        df = df.copy()
 
-        lowest = df["timestamp"].min()
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         df = df.filter(
             items=filter(
                 lambda k: k.startswith("stage_cur_latency") or k == "timestamp",
@@ -225,61 +201,24 @@ class PipelineMonProfiler(ThreadedProfiler):
             )
         )
         df = df.rename(columns=lambda name: name.replace("stage_cur_latency_", ""))
-        fig, axes = plt.subplots(nrows=len(proc_names), ncols=1, sharey=True)
 
-        # When matplotlib.subplots() generates only a single plot, the output object
-        # is just Axes (instead of a list of Axes), which is not iterable. We need to
-        # convert it to a list in order to allow iteration.
-        if len(proc_names) == 1:
-            axes = [axes]
-
-        for name, ax in zip(proc_names, axes):
-            df.plot(
-                title=f"Stage {name} latency",
-                xlabel="time [s]",
-                ylabel=f"{name} latency [us]",
-                kind="line",
-                style=".-",
-                x="timestamp",
-                y=filter(lambda k: k.startswith(name), df.columns),
-                figsize=(len(df["timestamp"]) * 0.2, 30),
-                legend=False,
-                ax=ax,
+        ch_spec = []
+        for name in proc_names:
+            ch_spec.append(
+                charts.SubPlotSpec(
+                    title=f"Stage {name} latency",
+                    y_label=f"{name} latency [us]",
+                    columns=[c for c in df.columns if c.startswith(f"{name}_")],
+                )
             )
 
-        self._draw_marks(axes, lowest)
-
-        self._plot_to_file(fig, charts_file)
-
-    def _plot_cumulative_data(self, df, ax, label, column):
-        df = df.copy()
-
-        for name in df.columns:
-            if name.startswith(f"{column}_"):
-                df[name] = df[name].diff()
-
-        return df.plot(
-            title=f"Pipeline {label}",
-            xlabel="time [s]",
-            ylabel=f"{label}",
-            kind="line",
-            style=".-",
-            x="timestamp",
-            y=filter(lambda k: k.startswith(f"{column}_"), df.columns),
-            figsize=(len(df["timestamp"]) * 0.2, 30),
-            legend=False,
-            ax=ax,
-        )
-
-    def _plot_chain_calls(self, df, ax):
-        return self._plot_cumulative_data(df, ax, label="chain calls", column="chain_calls")
-
-    def _plot_seen_pkts(self, df, ax):
-        return self._plot_cumulative_data(df, ax, label="seen packets (volume)", column="seen_pkts")
-
-    def _plot_drop_pkts(self, df, ax):
-        return self._plot_cumulative_data(
-            df, ax, label="dropped packets (last stage)", column="drop_pkts"
+        charts_file = str(self._charts_file_pattern).format("stage_latencies")
+        charts.create_charts_html(
+            df,
+            ch_spec,
+            charts_file,
+            title="Pipeline Statistics",
+            markers=list(markers),
         )
 
     def mark(self):
@@ -303,5 +242,7 @@ class PipelineMonProfiler(ThreadedProfiler):
         with open(self._mark_file, "w") as f:
             self._marker.save(f)
 
-        self._plot_general(df)
-        self._plot_stage_latencies(df, context.get_stages())
+        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
+        markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
+        self._plot_general(df, markers)
+        self._plot_stage_latencies(df, context.get_stages(), markers)
