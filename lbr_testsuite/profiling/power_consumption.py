@@ -13,6 +13,7 @@ from pyJoules.device.rapl_device import RaplDevice
 from pyJoules.energy_meter import EnergyMeter
 from pyJoules.handler.pandas_handler import PandasHandler
 
+from . import _charts as charts
 from .profiler import ThreadedProfiler
 
 
@@ -90,14 +91,18 @@ class pyJoulesProfiler(ThreadedProfiler):
             global_logger.debug("plotting power consumption...")
 
             df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-            p = df.plot(
+            ch_spec = charts.SubPlotSpec(
                 title="Power Consumption",
-                xlabel="time [s]",
-                ylabel="consumption [uJ]",
-                kind="bar",
-                x="timestamp",
-                y=domains_repr,
-                legend=True,
+                y_label="consumption [uJ]",
+                columns=domains_repr,
+                chart_type=charts.ChartType.BAR,
             )
-            p.get_figure().savefig(self._charts_file)
+
+            charts.create_charts_html(
+                df,
+                ch_spec,
+                self._charts_file,
+                title="Power Consumption",
+            )
+
             global_logger.debug("power consumption chart has been saved")

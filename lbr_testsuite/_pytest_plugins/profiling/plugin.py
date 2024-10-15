@@ -177,7 +177,7 @@ def collect_profilers(pyt_request, output_dir):
             numa_sockets = [int(s) for s in use_pyJoules.split(",")]
 
         csv_file = compose_output_path(pyt_request, "pyJoules", ".csv", output_dir)
-        charts_file = compose_output_path(pyt_request, "pyJoules", ".png", output_dir)
+        charts_file = compose_output_path(pyt_request, "pyJoules", ".html", output_dir)
         profilers.append(pyJoulesProfiler(csv_file, charts_file, numa_sockets=numa_sockets))
 
     use_cpumon = pyt_request.config.getoption("use_cpumon")
