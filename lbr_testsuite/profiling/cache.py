@@ -230,8 +230,8 @@ class PAPIProfiler(ThreadedProfiler):
         ----------
         csv_file : Path
             Path to the output csv file.
-        charts_file_pattern : str
-            Base of the charts file name.
+        charts_file : str
+            Path to the charts output file.
         event_groups : Dict[str, List]
             Event groups dictionary in the format:
                 {"name": list of events in group}
