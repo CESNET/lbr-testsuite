@@ -46,9 +46,6 @@ class CPUMonProfiler(ThreadedProfiler):
 
         return names
 
-    def _make_timestamps_relative(self, timestamps):
-        return timestamps.sub(timestamps.min()).add(1).round(2).astype("float")
-
     def _round_freq(self, freq):
         return round(freq / 100) * 100
 

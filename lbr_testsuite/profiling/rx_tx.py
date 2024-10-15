@@ -529,10 +529,6 @@ class RxTxMonProfiler(ThreadedProfiler):
         self._time_step = time_step
         self._marker = ProfilerMarker()
 
-    def _make_timestamps_relative(self, timestamps: pandas.Series) -> pandas.Series:
-        lowest = timestamps.min()
-        return timestamps.sub(lowest).add(1).round(2).astype("float")
-
     def start(self, subject: ProfiledPipelineWithStatsSubject):
         if not isinstance(subject, ProfiledPipelineWithStatsSubject):
             raise RuntimeError("subject must be of type ProfiledPipelineWithStatsSubject")

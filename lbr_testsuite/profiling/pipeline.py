@@ -156,12 +156,6 @@ class PipelineMonProfiler(ThreadedProfiler):
         self._marker = ProfilerMarker()
         super().start(subject)
 
-    def _make_timestamps_relative(self, timestamps, lowest=None):
-        if lowest is None:
-            lowest = timestamps.min()
-
-        return timestamps.sub(lowest).add(1).round(2).astype("float")
-
     def _plot_to_file(self, plot, charts_file, legend=True):
         if legend:
             plot.legend(fontsize=8, bbox_to_anchor=(1, 1), ncol=2)
@@ -203,7 +197,7 @@ class PipelineMonProfiler(ThreadedProfiler):
     def _plot_general(self, df):
         df = df.copy()
         lowest = df["timestamp"].min()
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"], lowest=lowest)
+        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
 
         fig, axes = plt.subplots(nrows=5, ncols=1)
 
@@ -223,7 +217,7 @@ class PipelineMonProfiler(ThreadedProfiler):
         charts_file = str(self._charts_file_pattern).format("stage_latencies")
 
         lowest = df["timestamp"].min()
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"], lowest=lowest)
+        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         df = df.filter(
             items=filter(
                 lambda k: k.startswith("stage_cur_latency") or k == "timestamp",

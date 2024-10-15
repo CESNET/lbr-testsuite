@@ -9,6 +9,8 @@ Supporting code for implementing application profilers.
 import logging
 import threading
 
+import pandas
+
 from ..executable import executable
 
 
@@ -102,6 +104,11 @@ class Profiler:
         does not work with any timeline, this call would be a no-op.
         """
         pass
+
+    @staticmethod
+    def _make_timestamps_relative(timestamps: pandas.Series):
+        lowest = timestamps.min()
+        return timestamps.sub(lowest).add(1).round(2).astype("float")
 
 
 class PackedProfiler:

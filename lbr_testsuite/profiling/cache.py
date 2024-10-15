@@ -268,13 +268,6 @@ class PAPIProfiler(ThreadedProfiler):
 
         return ret
 
-    @staticmethod
-    def _make_timestamps_relative(timestamps, lowest=None):
-        if lowest is None:
-            lowest = timestamps.min()
-
-        return timestamps.sub(lowest).add(1).round(2).astype("float")
-
     def _filter_subframe(self, df: pandas.DataFrame, events: List[int]) -> pandas.DataFrame:
         def is_event(val: str, events: List[int]) -> bool:
             for ev in events:
@@ -311,7 +304,7 @@ class PAPIProfiler(ThreadedProfiler):
         df: pandas.DataFrame,
     ):
         lowest = df["timestamp"].min()
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"], lowest=lowest)
+        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
 
         fig, axes = plt.subplots(nrows=len(self._event_groups), ncols=1, sharex=True)
 

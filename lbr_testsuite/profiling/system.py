@@ -100,9 +100,6 @@ class IrqMonProfiler(ThreadedProfiler):
 
         return stats
 
-    def _make_timestamps_relative(self, timestamps):
-        return timestamps.sub(timestamps.min()).add(1).round(2).astype("float")
-
     def _plot_summary(self, df, ax):
         df.plot(
             title="System interrupts (summary)",
