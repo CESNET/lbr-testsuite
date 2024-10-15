@@ -24,14 +24,14 @@ class pyJoulesProfiler(ThreadedProfiler):
     about power consumption of the system by using pyJoules framework.
     """
 
-    def __init__(self, csv_file, png_file, numa_sockets=None, time_step=1):
+    def __init__(self, csv_file, charts_file, numa_sockets=None, time_step=1):
         """
         Parameters
         ----------
         csv_file : str | Path
             Where to store generated CSV file.
-        png_file : str | Path
-            Where to store generated PNG file (plot).
+        charts_file : str | Path
+            Where to store generated charts file.
         numa_sockets : list[int], optional
             List of NUMA sockets to measure. When omitted, NUMA autodetection is used.
         time_step : double
@@ -41,7 +41,7 @@ class pyJoulesProfiler(ThreadedProfiler):
         super().__init__()
 
         self._csv_file = csv_file
-        self._png_file = png_file
+        self._charts_file = charts_file
         self._time_step = time_step
         self._domains = []
 
@@ -64,7 +64,7 @@ class pyJoulesProfiler(ThreadedProfiler):
 
     def run(self):
         """This method should be started from a thread. It snapshots power consumption
-        metrics periodically according to time_step. Finally, CSV and PNG files are generated.
+        metrics periodically according to time_step. Finally, CSV and charts files are generated.
         """
 
         domains_repr = [repr(domain) for domain in self._domains]
@@ -78,7 +78,7 @@ class pyJoulesProfiler(ThreadedProfiler):
         finally:
             self._meter.stop()
 
-        global_logger.info(f"saving to {self._csv_file} and {self._png_file}")
+        global_logger.info(f"saving to {self._csv_file} and {self._charts_file}")
 
         handler = PandasHandler()
         try:
@@ -99,5 +99,5 @@ class pyJoulesProfiler(ThreadedProfiler):
                 y=domains_repr,
                 legend=True,
             )
-            p.get_figure().savefig(self._png_file)
+            p.get_figure().savefig(self._charts_file)
             global_logger.debug("power consumption chart has been saved")

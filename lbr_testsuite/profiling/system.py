@@ -18,7 +18,7 @@ from .profiler import ThreadedProfiler
 class IrqMonProfiler(ThreadedProfiler):
     """Monitor of system interrupts. It samples counters of all interrupts in the system.
     All such statistics are stored into CSV file and interesting parts are plotted into
-    PNG file. It plots summary timeline of all interrupts in the system, summary of each
+    charts file. It plots summary timeline of all interrupts in the system, summary of each
     CPU group and timeline of interrupts per group of CPUs.
 
     Attributes
@@ -29,14 +29,14 @@ class IrqMonProfiler(ThreadedProfiler):
 
     GROUP_SIZE = 8
 
-    def __init__(self, csv_file, png_file, time_step=0.1):
+    def __init__(self, csv_file, charts_file, time_step=0.1):
         """
         Parameters
         ----------
         csv_file : str
             Path to CSV file where to store all sampled data.
-        png_file : str
-            Path to PNG file where to plot the data.
+        charts_file : str
+            Path to charts file where to plot the data.
         time_step : float, optional
             Sampling period (seconds).
         """
@@ -44,7 +44,7 @@ class IrqMonProfiler(ThreadedProfiler):
         super().__init__()
 
         self._csv_file = csv_file
-        self._png_file = png_file
+        self._charts_file = charts_file
         self._time_step = time_step
 
     def _read_proc_interrupts(self):
@@ -207,5 +207,5 @@ class IrqMonProfiler(ThreadedProfiler):
 
         f = plot.get_figure()
         f.set_layout_engine("tight")
-        self._logger.info(f"save PNG file: {self._png_file}")
-        plot.get_figure().savefig(self._png_file)
+        self._logger.info(f"save charts file: {self._charts_file}")
+        plot.get_figure().savefig(self._charts_file)

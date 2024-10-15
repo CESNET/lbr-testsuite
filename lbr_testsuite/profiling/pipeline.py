@@ -141,12 +141,12 @@ class PipelineMonContext:
 
 
 class PipelineMonProfiler(ThreadedProfiler):
-    def __init__(self, csv_file, mark_file, png_file_pattern, time_step=0.1):
+    def __init__(self, csv_file, mark_file, charts_file_pattern, time_step=0.1):
         super().__init__()
 
         self._csv_file = csv_file
         self._mark_file = mark_file
-        self._png_file_pattern = png_file_pattern
+        self._charts_file_pattern = charts_file_pattern
         self._time_step = time_step
 
     def start(self, subject: ProfiledSubject):
@@ -162,13 +162,13 @@ class PipelineMonProfiler(ThreadedProfiler):
 
         return timestamps.sub(lowest).add(1).round(2).astype("float")
 
-    def _plot_to_file(self, plot, png_file, legend=True):
+    def _plot_to_file(self, plot, charts_file, legend=True):
         if legend:
             plot.legend(fontsize=8, bbox_to_anchor=(1, 1), ncol=2)
         f = plot.get_figure()
         f.set_layout_engine("tight")
-        self._logger.info(f"save PNG file: {png_file}")
-        plot.get_figure().savefig(png_file)
+        self._logger.info(f"save charts file: {charts_file}")
+        plot.get_figure().savefig(charts_file)
 
     def _plot_latencies(self, df, ax, label="latencies", column="latency"):
         return df.plot(
@@ -216,11 +216,11 @@ class PipelineMonProfiler(ThreadedProfiler):
 
         self._draw_marks(axes, lowest)
 
-        png_file = str(self._png_file_pattern).format("general")
-        self._plot_to_file(fig, png_file)
+        charts_file = str(self._charts_file_pattern).format("general")
+        self._plot_to_file(fig, charts_file)
 
     def _plot_stage_latencies(self, df, proc_names):
-        png_file = str(self._png_file_pattern).format("stage_latencies")
+        charts_file = str(self._charts_file_pattern).format("stage_latencies")
 
         lowest = df["timestamp"].min()
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"], lowest=lowest)
@@ -255,7 +255,7 @@ class PipelineMonProfiler(ThreadedProfiler):
 
         self._draw_marks(axes, lowest)
 
-        self._plot_to_file(fig, png_file)
+        self._plot_to_file(fig, charts_file)
 
     def _plot_cumulative_data(self, df, ax, label, column):
         df = df.copy()

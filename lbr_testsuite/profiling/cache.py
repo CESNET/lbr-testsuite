@@ -221,7 +221,7 @@ class PAPIProfiler(ThreadedProfiler):
         self,
         csv_file: Path,
         mark_file: str,
-        png_file: str,
+        charts_file: str,
         event_groups: Dict[str, List],
         time_step: float = 0.1,
     ):
@@ -230,8 +230,8 @@ class PAPIProfiler(ThreadedProfiler):
         ----------
         csv_file : Path
             Path to the output csv file.
-        png_file_pattern : str
-            Base of the png file name.
+        charts_file_pattern : str
+            Base of the charts file name.
         event_groups : Dict[str, List]
             Event groups dictionary in the format:
                 {"name": list of events in group}
@@ -243,7 +243,7 @@ class PAPIProfiler(ThreadedProfiler):
 
         self._csv_file = csv_file
         self._mark_file = mark_file
-        self._png_file = png_file
+        self._charts_file = charts_file
         self._time_step = time_step
 
         papi_ver = int(os.environ.get("PYPAPI_VER", 0x7010000))
@@ -332,8 +332,8 @@ class PAPIProfiler(ThreadedProfiler):
         self._draw_marks(axes, lowest)
 
         fig.set_layout_engine("tight")
-        self._logger.info(f"saving PNG file: {self._png_file}")
-        fig.savefig(self._png_file)
+        self._logger.info(f"saving charts file: {self._charts_file}")
+        fig.savefig(self._charts_file)
 
     def start(self, subject):
         self._marker = ProfilerMarker()
