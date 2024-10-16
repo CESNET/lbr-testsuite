@@ -224,7 +224,7 @@ def collect_profilers(pyt_request, output_dir):
             raise Exception(f"invalid scaling-period for irqmon: {use_irqmon}")
 
         csv_file = compose_output_path(pyt_request, "irqmon", ".csv", output_dir)
-        charts_file = compose_output_path(pyt_request, "irqmon", ".png", output_dir)
+        charts_file = compose_output_path(pyt_request, "irqmon", ".html", output_dir)
         time_step = use_irqmon
         profilers.append(IrqMonProfiler(csv_file, charts_file, time_step=time_step))
 
