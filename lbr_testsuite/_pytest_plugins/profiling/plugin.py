@@ -186,7 +186,7 @@ def collect_profilers(pyt_request, output_dir):
             raise Exception(f"invalid scaling-period for cpumon: {use_cpumon}")
 
         csv_file_pattern = compose_output_path(pyt_request, "cpumon_{0}", ".csv", output_dir)
-        charts_file_pattern = compose_output_path(pyt_request, "cpumon_{0}", ".png", output_dir)
+        charts_file_pattern = compose_output_path(pyt_request, "cpumon_{0}", ".html", output_dir)
         time_step = use_cpumon
         profilers.append(CPUMonProfiler(csv_file_pattern, charts_file_pattern, time_step=time_step))
 
