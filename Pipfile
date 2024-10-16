@@ -22,6 +22,7 @@ pandas = "*"
 python-papi = {version = "7.1.0.0", index="liberouter_pypi"}
 psutil = "*"
 pyJoules = "*"
+plotly = ">=5.24.1"
 
 [dev-packages]
 twine = "*"
