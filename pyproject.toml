@@ -70,3 +70,19 @@ lines_after_imports = 2
 
 [tool.black]
 line-length = 100
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "twine",
+    "Sphinx>=4.4.0",
+    "sphinx-rtd-theme",
+    "pytest-flake8",
+    "flake8~=3.7.0",
+    "pytest-instafail",
+    "wheel",
+    "isort",
+    "black",
+    "sphinxcontrib-apidoc",
+    "build",
+    "coverage",
+]
