@@ -118,7 +118,7 @@ def ethtool_set_flow_control(ifname: str, rx: str, tx: str):
 
     cmd_args = ["ethtool", "-A", ifname] + fc_args
 
-    executable.Tool(cmd_args).run()
+    executable.Tool(cmd_args, sudo=True).run()
 
 
 def get_device_addresses(device: Device) -> list:
@@ -159,12 +159,12 @@ def optimize_mlx5_pci_request(device: Device):
     """
 
     def read_reg(pci_addr):
-        stdout, stderr = executable.Tool(["setpci", "-s", pci_addr, "68.w"]).run()
+        stdout, stderr = executable.Tool(["setpci", "-s", pci_addr, "68.w"], sudo=True).run()
 
         return stdout.strip(), stderr
 
     def write_reg(pci_addr, val):
-        executable.Tool(["setpci", "-s", pci_addr, f"68.w={val}"]).run()
+        executable.Tool(["setpci", "-s", pci_addr, f"68.w={val}"], sudo=True).run()
 
     for addr in get_device_addresses(device):
         # Read the MaxReadReq register.
