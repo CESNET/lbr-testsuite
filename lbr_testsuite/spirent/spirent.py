@@ -30,6 +30,7 @@ used until it is unbound manually.
 import logging
 import time
 
+from ..common import wait_until_condition
 from ..topology.generator import Generator
 from .spirentlib.spirentlib import STC_API_OFFICIAL, STC_API_PROPRIETARY, StcHandler
 
@@ -76,6 +77,7 @@ class Spirent(Generator):
         api_session_start_timeout=120,
         server_port=None,
         force_port_reservation=False,
+        link_wait_timeout=60.0,
     ):
         """
         Parameters
@@ -95,6 +97,8 @@ class Spirent(Generator):
         force_port_reservation : bool
             Flag whether reservation of spirent chassis port should be
             forced or not (i.e. terminating any current reservation).
+        link_wait_timeout : float, optional
+            Timeout of waiting for link up before generating traffic.
         """
 
         self._server = server
@@ -109,6 +113,7 @@ class Spirent(Generator):
         self._stc_handler = StcHandler(api_version, api_session_start_timeout)
         self._port_reserved = False
         self._force_port_reservation = force_port_reservation
+        self._link_wait_timeout = link_wait_timeout
 
     def set_config_file(self, config_path):
         """Configure STC configuration file.
@@ -537,6 +542,16 @@ class Spirent(Generator):
 
         return True
 
+    def _link_is_up(self) -> bool:
+        status = self._stc_handler.stc_get_link_status()
+        self._logger.debug(f"Link status: {status}")
+        return status == "UP"
+
+    def _wait_for_link_up(self):
+        assert wait_until_condition(
+            lambda: self._link_is_up(), timeout=self._link_wait_timeout, sleep_step=1.0
+        ), f"Spirent link is {self._stc_handler.stc_get_link_status()}"
+
     def generate_traffic(self, duration, use_analyzer=False):
         """Perform packets sending based on current stream blocks setup
         using STC generators. Usage of analyzers is optional.
@@ -554,6 +569,8 @@ class Spirent(Generator):
 
         if use_analyzer:
             self._stc_handler.stc_start_analyzers()
+
+        self._wait_for_link_up()
 
         self._stc_handler.stc_start_generators()
         self._stc_handler.stc_stop_generators()
