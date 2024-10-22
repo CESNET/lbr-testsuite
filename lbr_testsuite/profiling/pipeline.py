@@ -233,6 +233,12 @@ class PipelineMonProfiler(ThreadedProfiler):
         df = df.rename(columns=lambda name: name.replace("stage_cur_latency_", ""))
         fig, axes = plt.subplots(nrows=len(proc_names), ncols=1, sharey=True)
 
+        # When matplotlib.subplots() generates only a single plot, the output object
+        # is just Axes (instead of a list of Axes), which is not iterable. We need to
+        # convert it to a list in order to allow iteration.
+        if len(proc_names) == 1:
+            axes = [axes]
+
         for name, ax in zip(proc_names, axes):
             df.plot(
                 title=f"Stage {name} latency",
