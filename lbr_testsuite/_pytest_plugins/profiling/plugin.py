@@ -16,6 +16,7 @@ from ...profiling.perf import Perf, PerfC2C, PerfMem, PerfStat
 from ...profiling.pipeline import PipelineMonProfiler
 from ...profiling.power_consumption import pyJoulesProfiler
 from ...profiling.profiler import MultiProfiler
+from ...profiling.rx_tx import RxTxMonProfiler
 from ...profiling.system import IrqMonProfiler
 
 
@@ -117,6 +118,17 @@ def pytest_addoption(parser):
         ),
     )
     parser.addoption(
+        "--use-rxtxmon",
+        metavar="sampling-period",
+        nargs="?",
+        type=float,
+        default=None,
+        const=0.05,
+        help=(
+            "Enable Rx/Tx monitoring profiler. It samples Rx/Tx statistics (global and per-worker)."
+        ),
+    )
+    parser.addoption(
         "--use-cache-prof",
         metavar="sampling-period",
         nargs="?",
@@ -190,6 +202,16 @@ def collect_profilers(pyt_request, output_dir):
         profilers.append(
             PipelineMonProfiler(csv_file, mark_file, png_file_pattern, time_step=time_step)
         )
+
+    use_rxtxmon = pyt_request.config.getoption("use_rxtxmon")
+    if use_rxtxmon:
+        if use_rxtxmon <= 0:
+            raise Exception(f"invalid scaling-period for rxtxmon: {use_rxtxmon}")
+
+        csv_file = compose_output_path(pyt_request, "rxtxmon", ".csv", output_dir)
+        mark_file = compose_output_path(pyt_request, "rxtxmon", ".mark", output_dir)
+        charts_file = compose_output_path(pyt_request, "rxtxmon", ".html", output_dir)
+        profilers.append(RxTxMonProfiler(csv_file, mark_file, charts_file, time_step=use_rxtxmon))
 
     use_irqmon = pyt_request.config.getoption("use_irqmon")
     if use_irqmon:
