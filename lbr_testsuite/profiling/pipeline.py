@@ -38,14 +38,17 @@ class PipelineMonContext:
         self._runtime = runtime
 
         for i in range(self._workers):
-            self._data[f"max_latency_{i}"] = []
-            self._data[f"latency_{i}"] = []
-            self._data[f"chain_calls_{i}"] = []
-            self._data[f"seen_pkts_{i}"] = []
-            self._data[f"drop_pkts_{i}"] = []
+            s = runtime.get_worker_status(i, name=self._name)
+            ids = f"{s['lcore_id']}(phy{s['cpu_id']})"
+
+            self._data[f"max_latency_{ids}"] = []
+            self._data[f"latency_{ids}"] = []
+            self._data[f"chain_calls_{ids}"] = []
+            self._data[f"seen_pkts_{ids}"] = []
+            self._data[f"drop_pkts_{ids}"] = []
             for name in self._stages:
-                self._data[f"stage_max_latency_{name}_{i}"] = []
-                self._data[f"stage_cur_latency_{name}_{i}"] = []
+                self._data[f"stage_max_latency_{name}_{ids}"] = []
+                self._data[f"stage_cur_latency_{name}_{ids}"] = []
 
     def get_stages(self):
         """Get stage names of the contextual pipeline.
@@ -102,11 +105,12 @@ class PipelineMonContext:
             seen_pkts = int(s["seen_pkts"])
             drop_pkts = int(s["drop_pkts"])
 
-            self._data[f"max_latency_{i}"].append(float(max_latency))
-            self._data[f"latency_{i}"].append(float(latency))
-            self._data[f"chain_calls_{i}"].append(chain_calls)
-            self._data[f"seen_pkts_{i}"].append(seen_pkts)
-            self._data[f"drop_pkts_{i}"].append(drop_pkts)
+            ids = f"{s['lcore_id']}(phy{s['cpu_id']})"
+            self._data[f"max_latency_{ids}"].append(float(max_latency))
+            self._data[f"latency_{ids}"].append(float(latency))
+            self._data[f"chain_calls_{ids}"].append(chain_calls)
+            self._data[f"seen_pkts_{ids}"].append(seen_pkts)
+            self._data[f"drop_pkts_{ids}"].append(drop_pkts)
 
             for j, name in enumerate(self._stages):
                 stage_max, unit = chain_status[i][f"max_latency[{j}]"].split(" ", 2)
@@ -114,8 +118,8 @@ class PipelineMonContext:
                 stage_cur, unit = chain_status[i][f"cur_latency[{j}]"].split(" ", 2)
                 assert unit == "us"
 
-                self._data[f"stage_max_latency_{name}_{i}"].append(float(stage_max))
-                self._data[f"stage_cur_latency_{name}_{i}"].append(float(stage_cur))
+                self._data[f"stage_max_latency_{name}_{ids}"].append(float(stage_max))
+                self._data[f"stage_cur_latency_{name}_{ids}"].append(float(stage_cur))
 
     def get_samples(self):
         """Obtain all stored samples.
