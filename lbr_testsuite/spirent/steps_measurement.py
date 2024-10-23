@@ -10,7 +10,7 @@ traffic load using predefined steps.
 
 import logging
 
-from lbr_testsuite.profiling.pipeline import ProfiledPipelineSubject
+from lbr_testsuite.profiling.rx_tx import ProfiledPipelineWithStatsSubject
 
 
 global_logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ def profile_tx_rx_steps(
 
     global_logger.debug(f"Starting measurements with maximal port load is {pps:_} pps.")
     try:
-        profiler.start(ProfiledPipelineSubject(app))
+        profiler.start(ProfiledPipelineWithStatsSubject(app))
 
         for s in steps:
             pps_step = int(pps * (s / 100))
