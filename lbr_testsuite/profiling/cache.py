@@ -13,11 +13,11 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Dict, List, NamedTuple
 
-import matplotlib.pyplot as plt
 import pandas
 from pypapi import papi_low as papi
 from pypapi.exceptions import PapiNoEventError
 
+from . import _charts as charts
 from .profiler import ProfilerMarker, ThreadedProfiler
 
 
@@ -221,7 +221,7 @@ class PAPIProfiler(ThreadedProfiler):
         self,
         csv_file: Path,
         mark_file: str,
-        png_file: str,
+        charts_file: str,
         event_groups: Dict[str, List],
         time_step: float = 0.1,
     ):
@@ -230,8 +230,8 @@ class PAPIProfiler(ThreadedProfiler):
         ----------
         csv_file : Path
             Path to the output csv file.
-        png_file_pattern : str
-            Base of the png file name.
+        charts_file : str
+            Path to the charts output file.
         event_groups : Dict[str, List]
             Event groups dictionary in the format:
                 {"name": list of events in group}
@@ -243,7 +243,7 @@ class PAPIProfiler(ThreadedProfiler):
 
         self._csv_file = csv_file
         self._mark_file = mark_file
-        self._png_file = png_file
+        self._charts_file = charts_file
         self._time_step = time_step
 
         papi_ver = int(os.environ.get("PYPAPI_VER", 0x7010000))
@@ -268,72 +268,43 @@ class PAPIProfiler(ThreadedProfiler):
 
         return ret
 
-    @staticmethod
-    def _make_timestamps_relative(timestamps, lowest=None):
-        if lowest is None:
-            lowest = timestamps.min()
+    def _event_group_columns(self, df: pandas.DataFrame, events: List[int]) -> list[str]:
+        columns = []
+        event_names = [papi.event_code_to_name(ev) for ev in events]
+        for c in df.columns:
+            for ev in event_names:
+                if ev in c:
+                    columns.append(c)
 
-        return timestamps.sub(lowest).add(1).round(2).astype("float")
-
-    def _filter_subframe(self, df: pandas.DataFrame, events: List[int]) -> pandas.DataFrame:
-        def is_event(val: str, events: List[int]) -> bool:
-            for ev in events:
-                if papi.event_code_to_name(ev) in val:
-                    return True
-            else:
-                return False
-
-        return df.filter(
-            items=filter(
-                lambda k: is_event(k, events) or k == "timestamp",
-                df.columns,
-            )
-        )
-
-    def _draw_marks(self, axes, time_lowest):
-        for mark_time in self._marker:
-            time = float(round(mark_time - time_lowest + 1, 2))
-
-            self._logger.debug(f"mark at {time}s")
-
-            for ax in axes:
-                ax.axvline(
-                    x=time,
-                    color="b",
-                    gapcolor="r",
-                    linestyle="--",
-                    alpha=0.3,
-                    label=f"mark: {time}s",
-                )
+        return columns
 
     def _plot_events_cumulative(
         self,
         df: pandas.DataFrame,
     ):
-        lowest = df["timestamp"].min()
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"], lowest=lowest)
+        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
 
-        fig, axes = plt.subplots(nrows=len(self._event_groups), ncols=1, sharex=True)
-
-        for group, ax in zip(self._event_groups.keys(), axes):
-            df_local = self._filter_subframe(df, self._event_groups[group])
-            df_local.plot(
-                title=f"PAPI events: {group}",
-                xlabel="time [s]",
-                ylabel="event count",
-                kind="line",
-                style=".-",
-                x="timestamp",
-                figsize=(len(df["timestamp"]) * 0.2, 30),
-                legend=True,
-                ax=ax,
+        ch_spec = []
+        for group in self._event_groups.keys():
+            ch_spec.append(
+                charts.SubPlotSpec(
+                    title=f"PAPI events: {group}",
+                    y_label="event count",
+                    columns=self._event_group_columns(df, self._event_groups[group]),
+                )
             )
 
-        self._draw_marks(axes, lowest)
+        markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
 
-        fig.set_layout_engine("tight")
-        self._logger.info(f"saving PNG file: {self._png_file}")
-        fig.savefig(self._png_file)
+        self._logger.info(f"saving charts file: {self._charts_file}")
+        charts.create_charts_html(
+            df,
+            ch_spec,
+            self._charts_file,
+            title="Pipeline Statistics",
+            height=800,
+            markers=list(markers),
+        )
 
     def start(self, subject):
         self._marker = ProfilerMarker()

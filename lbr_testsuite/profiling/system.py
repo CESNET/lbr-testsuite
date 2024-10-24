@@ -9,16 +9,16 @@ Implementation of profiler reading system-wide information.
 import re
 import time
 
-import matplotlib.pyplot as plt
 import pandas
 
+from . import _charts as charts
 from .profiler import ThreadedProfiler
 
 
 class IrqMonProfiler(ThreadedProfiler):
     """Monitor of system interrupts. It samples counters of all interrupts in the system.
     All such statistics are stored into CSV file and interesting parts are plotted into
-    PNG file. It plots summary timeline of all interrupts in the system, summary of each
+    charts file. It plots summary timeline of all interrupts in the system, summary of each
     CPU group and timeline of interrupts per group of CPUs.
 
     Attributes
@@ -29,14 +29,14 @@ class IrqMonProfiler(ThreadedProfiler):
 
     GROUP_SIZE = 8
 
-    def __init__(self, csv_file, png_file, time_step=0.1):
+    def __init__(self, csv_file, charts_file, time_step=0.1):
         """
         Parameters
         ----------
         csv_file : str
             Path to CSV file where to store all sampled data.
-        png_file : str
-            Path to PNG file where to plot the data.
+        charts_file : str
+            Path to charts file where to plot the data.
         time_step : float, optional
             Sampling period (seconds).
         """
@@ -44,7 +44,7 @@ class IrqMonProfiler(ThreadedProfiler):
         super().__init__()
 
         self._csv_file = csv_file
-        self._png_file = png_file
+        self._charts_file = charts_file
         self._time_step = time_step
 
     def _read_proc_interrupts(self):
@@ -100,59 +100,6 @@ class IrqMonProfiler(ThreadedProfiler):
 
         return stats
 
-    def _make_timestamps_relative(self, timestamps):
-        return timestamps.sub(timestamps.min()).add(1).round(2).astype("float")
-
-    def _plot_summary(self, df, ax):
-        df.plot(
-            title="System interrupts (summary)",
-            xlabel="time [s]",
-            ylabel="interrupts",
-            kind="line",
-            style=".-",
-            x="timestamp",
-            y=["sum", "avg", "median", "max"],
-            figsize=(len(df["timestamp"]) * 0.2, 28),
-            legend=True,
-            ax=ax,
-        )
-
-    def _plot_groups(self, df, groups, ax):
-        df.plot(
-            title="System interrupts (CPU groups)",
-            xlabel="time [s]",
-            ylabel="interrupts",
-            kind="line",
-            style=".-",
-            x="timestamp",
-            y=[f"group{i}" for i in range(groups)],
-            figsize=(len(df["timestamp"]) * 0.2, 28),
-            legend=True,
-            ax=ax,
-        )
-
-    def _plot_cpus_in_groups(self, df, cpus, groups, size, axes):
-        for i in range(groups):
-            ax = axes[i]
-            first = i * size
-            last = (i + 1) * size
-            highest = max(df[cpus[first:last]].max(axis=1))
-
-            df.plot(
-                title=f"System interrupts (group{i}: {first}..{last-1})",
-                xlabel="time [s]",
-                ylabel="interrupts",
-                kind="line",
-                style=".-",
-                x="timestamp",
-                y=cpus[first:last],
-                figsize=(len(df["timestamp"]) * 0.2, 28),
-                legend=True,
-                ax=ax,
-            )
-
-            ax.set_ylim(-(0.2 * highest), int(highest * 1.2))
-
     def _compute_stats(self, df, cpus):
         df["sum"] = df[cpus].sum(axis=1)
         df["avg"] = df[cpus].mean(axis=1)
@@ -199,13 +146,38 @@ class IrqMonProfiler(ThreadedProfiler):
         self._compute_groups_stats(df, groups, self.GROUP_SIZE, cpus)
 
         # plot summary, groups summary and each particular group
-        plot, axes = plt.subplots(nrows=2 + groups, ncols=1)
+        ch_spec = []
+        ch_spec.append(
+            charts.SubPlotSpec(
+                title="System interrupts (summary)",
+                y_label="interrupts",
+                columns=["sum", "avg", "median", "max"],
+            )
+        )
+        ch_spec.append(
+            charts.SubPlotSpec(
+                title="System interrupts (CPU groups)",
+                y_label="interrupts",
+                columns=[f"group{i}" for i in range(groups)],
+            )
+        )
+        for i in range(groups):
+            first = i * self.GROUP_SIZE
+            last = (i + 1) * self.GROUP_SIZE
 
-        self._plot_summary(df, axes[0])
-        self._plot_groups(df, groups, axes[1])
-        self._plot_cpus_in_groups(df, cpus, groups, self.GROUP_SIZE, axes[2:])
+            ch_spec.append(
+                charts.SubPlotSpec(
+                    title=f"System interrupts (group{i}: {first}..{last-1})",
+                    y_label="interrupts",
+                    columns=cpus[first:last],
+                )
+            )
 
-        f = plot.get_figure()
-        f.set_layout_engine("tight")
-        self._logger.info(f"save PNG file: {self._png_file}")
-        plot.get_figure().savefig(self._png_file)
+        self._logger.info(f"save charts file: {self._charts_file}")
+        charts.create_charts_html(
+            df,
+            ch_spec,
+            self._charts_file,
+            title="System Interrupts",
+            vertical_spacing=0.03,
+        )

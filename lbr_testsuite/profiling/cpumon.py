@@ -13,6 +13,7 @@ from collections import defaultdict
 import pandas
 import psutil
 
+from . import _charts as charts
 from .profiler import ThreadedProfiler
 
 
@@ -27,15 +28,15 @@ class CPUMonProfiler(ThreadedProfiler):
     * relative time spent at certain frequency level for each CPU during measurement
 
     Frequency measurements are stored in CSV file named _raw_ in their original form.
-    The particular outputs then consist of a CSV file and PNG file (with chart), here
+    The particular outputs then consist of a CSV file and charts file, here
     the frequencies are rounded to hundred MHz (the original precision is not useful).
     """
 
-    def __init__(self, csv_file_pattern, png_file_pattern, time_step=0.1):
+    def __init__(self, csv_file_pattern, charts_file_pattern, time_step=0.1):
         super().__init__()
 
         self._csv_file_pattern = csv_file_pattern
-        self._png_file_pattern = png_file_pattern
+        self._charts_file_pattern = charts_file_pattern
         self._time_step = time_step
 
     def _cpu_names(self):
@@ -45,9 +46,6 @@ class CPUMonProfiler(ThreadedProfiler):
             names.append(f"cpu_{i}")
 
         return names
-
-    def _make_timestamps_relative(self, timestamps):
-        return timestamps.sub(timestamps.min()).add(1).round(2).astype("float")
 
     def _round_freq(self, freq):
         return round(freq / 100) * 100
@@ -71,14 +69,7 @@ class CPUMonProfiler(ThreadedProfiler):
 
         return df
 
-    def _plot_to_png(self, p, png_file, legend_cols=2):
-        p.legend(fontsize=8, bbox_to_anchor=(1, 1), ncol=legend_cols)
-        f = p.get_figure()
-        f.set_layout_engine("tight")
-        global_logger.info(f"save PNG file: {png_file}")
-        p.get_figure().savefig(png_file)
-
-    def _plot_freqs_per_cpu(self, df, csv_file, png_file):
+    def _plot_freqs_per_cpu(self, df, csv_file, charts_file):
         cpus = self._collect_cpu_freq_columns(df)
         all_freqs = self._collect_freqs(df, cpus)
         data = defaultdict(list)
@@ -100,18 +91,24 @@ class CPUMonProfiler(ThreadedProfiler):
 
         df = self._data_to_df(data, csv_file)
 
-        p = df.plot(
+        all_cols = list(df.keys())
+        all_cols.remove("cpu")
+        chart_spec = charts.SubPlotSpec(
             title="CPU frequencies",
-            xlabel="CPU",
-            ylabel="Time at frequency level (%)",
-            kind="bar",
-            x="cpu",
-            stacked=True,
-            legend=True,
-            figsize=(int(len(cpus) * 0.3), 8),
+            x_col="cpu",
+            x_label="CPU",
+            y_label="Time at frequency level (%)",
+            columns=all_cols,
+            chart_type=charts.ChartType.BAR,
         )
 
-        self._plot_to_png(p, png_file)
+        charts.create_charts_html(
+            df,
+            chart_spec,
+            charts_file,
+            title="CPU Frequencies",
+            barmode="stack",
+        )
 
     def _make_freqs_hist(self, df, cpus, row):
         hist = {}
@@ -124,7 +121,7 @@ class CPUMonProfiler(ThreadedProfiler):
 
         return hist
 
-    def _plot_freqs(self, df, csv_file, png_file):
+    def _plot_freqs(self, df, csv_file, charts_file):
         cpus = self._collect_cpu_freq_columns(df)
         data = defaultdict(list)
 
@@ -136,17 +133,16 @@ class CPUMonProfiler(ThreadedProfiler):
 
         df = self._data_to_df(data, csv_file)
 
-        p = df.plot(
+        all_cols = list(df.keys())
+        all_cols.remove("timestamp")
+        chart_spec = charts.SubPlotSpec(
             title="CPU frequencies in time (MHz)",
-            xlabel="time [s]",
-            ylabel=f"CPU count (out of {len(cpus)} CPUs)",
-            kind="line",
-            x="timestamp",
-            yticks=list(range(0, len(cpus) + 1, 3)),
-            legend=True,
+            y_label=f"CPU count (out of {len(cpus)} CPUs)",
+            columns=all_cols,
+            y_ticks=list(range(0, len(cpus) + 1, 3)),
         )
 
-        self._plot_to_png(p, png_file)
+        charts.create_charts_html(df, chart_spec, charts_file, title="CPU Frequencies")
 
     def run(self):
         cpu_names = self._cpu_names()
@@ -166,14 +162,13 @@ class CPUMonProfiler(ThreadedProfiler):
         df.to_csv(str(self._csv_file_pattern).format("raw"))
 
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-
         self._plot_freqs_per_cpu(
             df,
             str(self._csv_file_pattern).format("freqs_per_cpu"),
-            str(self._png_file_pattern).format("freqs_per_cpu"),
+            str(self._charts_file_pattern).format("freqs_per_cpu"),
         )
         self._plot_freqs(
             df,
             str(self._csv_file_pattern).format("freqs"),
-            str(self._png_file_pattern).format("freqs"),
+            str(self._charts_file_pattern).format("freqs"),
         )
