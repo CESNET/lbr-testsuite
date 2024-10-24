@@ -1,7 +1,0 @@
----
-dependencies:
-  - role: liberouter.dev.python3_venv
-    venv_name: pytest
-    venv_pipfiles_dir: ../
-    venv_autoactivate: true
-    venv_install_devel: true

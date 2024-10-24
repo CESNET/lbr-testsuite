@@ -8,7 +8,7 @@ pycodestyle:
     stage: check
     needs: [docker-build]
     script:
-        - pytest --color=yes --flake8 -m flake8 --junitxml=pycodestyle.xml lbr_testsuite | tee pycodestyle.log
+        - PYTHONPATH=. pytest --color=yes --flake8 -m flake8 --junitxml=pycodestyle.xml lbr_testsuite | tee pycodestyle.log
     artifacts:
         paths: [pycodestyle.*]
         reports: { junit: pycodestyle.xml }

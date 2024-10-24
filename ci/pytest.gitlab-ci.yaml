@@ -4,17 +4,19 @@ pytest:
     variables:
         ANSIBLE_PLAYBOOK: ansible/ci_machine.yaml
         RESERVE_MACHINES: lbr-testsuite-ci
+        PDM_IGNORE_ACTIVE_VENV: 1
     script:
+        - pdm venv create python3.11 && pdm use --venv in-project && pdm sync
         - mkdir -p pytest_tests/output
         - |
-            cd pytest_tests && sudo -E coverage run -m pytest \
+            cd pytest_tests && sudo -E pdm run coverage run -m pytest \
             --color=yes --basetemp=output --log-level=debug --junitxml=report.xml \
             --remote-host $CI_REMOTE_HOST -s --tb=short -k 'not topology' | tee report.log
-        - coverage html
-        - coverage xml
+        - pdm run coverage html
+        - pdm run coverage xml
         - sed -i -e 's|/home/local/gitlab-runner/builds/.*/testing/testsuite/||g' htmlcov/*
         - sed -i -e 's|/home/local/gitlab-runner/builds/.*/testing/testsuite/||g' coverage.xml
-        - coverage report | grep 'TOTAL'
+        - pdm run coverage report | grep 'TOTAL'
     coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
     artifacts:
         paths: [pytest_tests/output, pytest_tests/report.*, pytest_tests/htmlcov, pytest_tests/coverage.xml]
