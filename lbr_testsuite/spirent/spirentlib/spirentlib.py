@@ -898,3 +898,23 @@ class StcHandler:
         fec_handler = self.stc_object_xpath(xpath)
 
         self.stc_attribute(fec_handler, "ForwardErrorCorrection", str(fec))
+
+    def stc_get_link_status(self) -> str:
+        """Get link status from the spirent point of view.
+
+        Returns
+        -------
+        str
+            Link status, one of the folowing:
+            "DOWN" Link is down.
+            "UP" Link is up.
+            "ERROR" Link has error.
+            "ADMIN_DOWN" Link is administratively down.
+            "UP_SW_DISABLED" The link is up, but is disabled by software.
+            "SONET" Link is SONET.
+            "NONE" No link present.
+        """
+
+        project_ports = self._stc.get("project1", "children-Port")
+        phy_command = self._stc.perform("PortSetupGetActivePhyCommand", port=project_ports)
+        return self._stc.get(phy_command["ActivePhy"], "LinkStatus")
