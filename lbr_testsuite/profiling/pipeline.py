@@ -241,23 +241,27 @@ class PipelineMonProfiler(ThreadedProfiler):
 
     def run(self):
         pipeline = self._subject.get_pipeline()
-        context = PipelineMonContext(pipeline)
+        names = pipeline.get_pipeline_names()
+        contexts = [PipelineMonContext(pipeline, name) for name in names]
 
         pipeline.wait_until_active()
 
         while not self.wait_stoppable(self._time_step):
             now = time.monotonic()
-            context.sample(now)
 
-        self._logger.info(f"sampled {len(context.get_samples())}x pipeline status")
+            for ctx in contexts:
+                ctx.sample(now)
+
+        self._logger.info(f"sampled {len(contexts[0].get_samples())}x pipeline status")
 
         with open(self._mark_file, "w") as f:
             self._marker.save(f)
 
-        df = context.get_data_frame()
-        df.to_csv(str(self._csv_file_pattern).format(context.get_name()))
+        for ctx in contexts:
+            df = ctx.get_data_frame()
+            df.to_csv(str(self._csv_file_pattern).format(ctx.get_name()))
 
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-        markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
-        self._plot_general(context.get_name(), df, markers)
-        self._plot_stage_latencies(context.get_name(), df, context.get_stages(), markers)
+            df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
+            markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
+            self._plot_general(ctx.get_name(), df, markers)
+            self._plot_stage_latencies(ctx.get_name(), df, ctx.get_stages(), markers)
