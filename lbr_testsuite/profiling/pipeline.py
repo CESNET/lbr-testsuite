@@ -50,6 +50,17 @@ class PipelineMonContext:
                 self._data[f"stage_max_latency_{name}_{ids}"] = []
                 self._data[f"stage_cur_latency_{name}_{ids}"] = []
 
+    def get_name(self):
+        """Get name of this pipeline.
+
+        Returns
+        -------
+        str
+            Name of pipeline.
+        """
+
+        return self._name
+
     def get_stages(self):
         """Get stage names of the contextual pipeline.
 
