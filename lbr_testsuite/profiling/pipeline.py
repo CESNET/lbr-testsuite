@@ -251,11 +251,11 @@ class PipelineMonProfiler(ThreadedProfiler):
 
         self._logger.info(f"sampled {len(context.get_samples())}x pipeline status")
 
-        df = context.get_data_frame()
-        df.to_csv(self._csv_file)
-
         with open(self._mark_file, "w") as f:
             self._marker.save(f)
+
+        df = context.get_data_frame()
+        df.to_csv(self._csv_file)
 
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
