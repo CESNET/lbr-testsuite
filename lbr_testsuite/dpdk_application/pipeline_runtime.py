@@ -92,3 +92,15 @@ class PipelineRuntime:
         """
 
         pass
+
+    def get_mempool_stats(self) -> list[dict]:
+        """Obtain statistics of mempools in the underlying application if any.
+        Each mempool is identified by a unique name.
+
+        Returns
+        -------
+        list
+            List of mempool statistics (each is a directory).
+        """
+
+        pass
