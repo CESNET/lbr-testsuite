@@ -68,3 +68,27 @@ class PipelineRuntime:
         """
 
         pass
+
+    def get_stats(self) -> dict:
+        """Obtain pipeline's statistics across all ports.
+
+        Returns
+        -------
+        dict
+            Dictionary with aggregated port statistics.
+
+        """
+
+        pass
+
+    def get_xstats(self) -> dict:
+        """Obtain pipeline's extended statistics across all ports.
+
+        Returns
+        -------
+        dict
+            Dictionary with aggregated port statistics.
+
+        """
+
+        pass
