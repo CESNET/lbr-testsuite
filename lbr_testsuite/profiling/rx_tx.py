@@ -453,6 +453,7 @@ class RxTxStats:
         stats : dict
             Common statistics.
         xstats : dict
+            Extended statistics.
         """
 
         for k in self._last.keys():
@@ -514,7 +515,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         csv_file : str
             Path to a CSV file with measured values.
         mark_file : str
-            Path to a mark file - TODO k cemu toto je? Pouziva to vubec nekdo?
+            Path to a mark file.
         charts_file : str
             Path to a file with charts.
         time_step : float, optional
