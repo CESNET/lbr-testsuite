@@ -50,6 +50,17 @@ class PipelineMonContext:
                 self._data[f"stage_max_latency_{name}_{ids}"] = []
                 self._data[f"stage_cur_latency_{name}_{ids}"] = []
 
+    def get_name(self):
+        """Get name of this pipeline.
+
+        Returns
+        -------
+        str
+            Name of pipeline.
+        """
+
+        return self._name
+
     def get_stages(self):
         """Get stage names of the contextual pipeline.
 
@@ -145,10 +156,10 @@ class PipelineMonContext:
 
 
 class PipelineMonProfiler(ThreadedProfiler):
-    def __init__(self, csv_file, mark_file, charts_file_pattern, time_step=0.1):
+    def __init__(self, csv_file_pattern, mark_file, charts_file_pattern, time_step=0.1):
         super().__init__()
 
-        self._csv_file = csv_file
+        self._csv_file_pattern = csv_file_pattern
         self._mark_file = mark_file
         self._charts_file_pattern = charts_file_pattern
         self._time_step = time_step
@@ -168,7 +179,7 @@ class PipelineMonProfiler(ThreadedProfiler):
             columns=[c for c in df.columns if c.startswith(f"{col_prefix}_")],
         )
 
-    def _plot_general(self, df, markers):
+    def _plot_general(self, pipeline_name, df, markers):
         df = df.copy()
 
         ch_spec = []
@@ -186,7 +197,7 @@ class PipelineMonProfiler(ThreadedProfiler):
                     df[c] = df[c].diff()
             ch_spec.append(self._compose_ch_spec(df, label, label, col_prefix))
 
-        charts_file = str(self._charts_file_pattern).format("general")
+        charts_file = str(self._charts_file_pattern).format("general", pipeline_name)
         charts.create_charts_html(
             df,
             ch_spec,
@@ -195,7 +206,7 @@ class PipelineMonProfiler(ThreadedProfiler):
             markers=list(markers),
         )
 
-    def _plot_stage_latencies(self, df, proc_names, markers):
+    def _plot_stage_latencies(self, pipeline_name, df, proc_names, markers):
         df = df.copy()
 
         df = df.filter(
@@ -216,7 +227,7 @@ class PipelineMonProfiler(ThreadedProfiler):
                 )
             )
 
-        charts_file = str(self._charts_file_pattern).format("stage_latencies")
+        charts_file = str(self._charts_file_pattern).format("stage_latencies", pipeline_name)
         charts.create_charts_html(
             df,
             ch_spec,
@@ -230,23 +241,27 @@ class PipelineMonProfiler(ThreadedProfiler):
 
     def run(self):
         pipeline = self._subject.get_pipeline()
-        context = PipelineMonContext(pipeline)
+        names = pipeline.get_pipeline_names()
+        contexts = [PipelineMonContext(pipeline, name) for name in names]
 
         pipeline.wait_until_active()
 
         while not self.wait_stoppable(self._time_step):
             now = time.monotonic()
-            context.sample(now)
 
-        self._logger.info(f"sampled {len(context.get_samples())}x pipeline status")
+            for ctx in contexts:
+                ctx.sample(now)
 
-        df = context.get_data_frame()
-        df.to_csv(self._csv_file)
+        self._logger.info(f"sampled {len(contexts[0].get_samples())}x pipeline status")
 
         with open(self._mark_file, "w") as f:
             self._marker.save(f)
 
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-        markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
-        self._plot_general(df, markers)
-        self._plot_stage_latencies(df, context.get_stages(), markers)
+        for ctx in contexts:
+            df = ctx.get_data_frame()
+            df.to_csv(str(self._csv_file_pattern).format(ctx.get_name()))
+
+            df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
+            markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
+            self._plot_general(ctx.get_name(), df, markers)
+            self._plot_stage_latencies(ctx.get_name(), df, ctx.get_stages(), markers)

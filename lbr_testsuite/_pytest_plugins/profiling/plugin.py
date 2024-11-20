@@ -195,17 +195,19 @@ def collect_profilers(pyt_request, output_dir):
         if use_pipelinemon <= 0:
             raise Exception(f"invalid scaling-period for pipelinemon: {use_pipelinemon}")
 
-        csv_file = compose_output_path(pyt_request, "pipelinemon", ".csv", output_dir)
+        csv_file_pattern = compose_output_path(pyt_request, "pipelinemon_{0}", ".csv", output_dir)
         mark_file = compose_output_path(pyt_request, "pipelinemon", ".mark", output_dir)
         charts_file_pattern = compose_output_path(
             pyt_request,
-            "pipelinemon_{0}",
+            "pipelinemon_{0}_{1}",
             ".html",
             output_dir,
         )
         time_step = use_pipelinemon
         profilers.append(
-            PipelineMonProfiler(csv_file, mark_file, charts_file_pattern, time_step=time_step)
+            PipelineMonProfiler(
+                csv_file_pattern, mark_file, charts_file_pattern, time_step=time_step
+            )
         )
 
     use_rxtxmon = pyt_request.config.getoption("use_rxtxmon")
