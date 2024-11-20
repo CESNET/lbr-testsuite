@@ -44,6 +44,7 @@ class PipelineMonContext:
             self._data[f"max_latency_{ids}"] = []
             self._data[f"latency_{ids}"] = []
             self._data[f"chain_calls_{ids}"] = []
+            self._data[f"nombuf_calls_{ids}"] = []
             self._data[f"seen_pkts_{ids}"] = []
             self._data[f"drop_pkts_{ids}"] = []
             for name in self._stages:
@@ -113,6 +114,7 @@ class PipelineMonContext:
             assert unit == "us"
 
             chain_calls = int(s["chain_calls"])
+            nombuf_calls = int(s["nombuf_calls"])
             seen_pkts = int(s["seen_pkts"])
             drop_pkts = int(s["drop_pkts"])
 
@@ -120,6 +122,7 @@ class PipelineMonContext:
             self._data[f"max_latency_{ids}"].append(float(max_latency))
             self._data[f"latency_{ids}"].append(float(latency))
             self._data[f"chain_calls_{ids}"].append(chain_calls)
+            self._data[f"nombuf_calls_{ids}"].append(nombuf_calls)
             self._data[f"seen_pkts_{ids}"].append(seen_pkts)
             self._data[f"drop_pkts_{ids}"].append(drop_pkts)
 
@@ -189,6 +192,7 @@ class PipelineMonProfiler(ThreadedProfiler):
         )
         for label, col_prefix in (
             ("chain calls", "chain_calls"),
+            ("empty-burst calls", "nombuf_calls"),
             ("seen packets (volume)", "seen_pkts"),
             ("dropped packets (last stage)", "drop_pkts"),
         ):
