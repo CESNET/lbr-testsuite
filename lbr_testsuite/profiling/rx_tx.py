@@ -46,41 +46,30 @@ class CounterUnit(StrEnum):
 class StatsRequest:
     """Statistics request
 
-    Contains name of counters for statistics and extended statistics
-    groups. *_per_q counters are per-queue counters. Number of counters
-    depends on count of queue used. In a request, name of per-queue
-    counters are used without and queue ID (e.g. select rx1_packets,
-    rx2_packets, ... rx<N>_packets use just rx_packets name).
+    Contains name of counters for extended statistics groups. *_per_q
+    counters are per-queue counters. Number of counters depends on count
+    of queues used. In a request, name of per-queue counters are used
+    without a queue ID (e.g. to select rx_q1_packets, rx_q2_packets, ...
+    rx_q<N>_packets use just rx_q_packets name).
     """
 
-    stats: tuple = ()
-    stats_per_q: tuple = ()
     xstats: tuple = ()
     xstats_per_q: tuple = ()
-
-    def __post_init__(self):
-        for s in (self.stats, self.stats_per_q, self.xstats, self.xstats_per_q):
-            assert len(s) == len(set(s)), "Duplicate statistics names are not allowed."
 
 
 class RxTxStats:
     """Class for Rx/Tx statistics definition and recording.
 
+    Note: Only extended statistics are used as all counters from basic
+    statistics are contained in extended statistics already.
+
     Attributes
     ----------
     _timestamp : str
         Name of timestamp counter.
-    _stats : dict
-        Dictionary with selected counters from common statistics. Keys
-        are counter names, values are units.
     _xstats : dict
         Dictionary with selected counters from extended statistics. Keys
         are counter names, values are units.
-    _stats_per_q : dict
-        Dictionary with selected counters from common statistics for
-        for every queue. Keys are general counter names (templates)
-        and values are dictionaries. Keys of these dictionaries are
-        counter names (with queue ID filled), values are units.
     _xstats_per_q : dict
         Dictionary with selected counters from extended statistics for
         for every queue. Keys are general counter names (templates)
@@ -96,27 +85,6 @@ class RxTxStats:
     _last : dict
         Is a storage with last values of monitored statistics.
     """
-
-    """Listing of supported common global statistics."""
-    _SUPPORTED_STATS = {
-        "rx_packets": CounterUnit.PACKETS,
-        "rx_bytes": CounterUnit.BYTES,
-        "rx_missed": CounterUnit.PACKETS,
-        "rx_errors": CounterUnit.PACKETS,
-        "rx_nombuf": CounterUnit.PACKETS,
-        "tx_packets": CounterUnit.PACKETS,
-        "tx_bytes": CounterUnit.BYTES,
-        "tx_errors": CounterUnit.PACKETS,
-    }
-
-    """Listing of supported common per-queue statistics."""
-    _SUPPORTED_STATS_PER_Q = {
-        "rx{q_id}_packets": CounterUnit.PACKETS,
-        "rx{q_id}_errors": CounterUnit.PACKETS,
-        "tx{q_id}_packets": CounterUnit.PACKETS,
-        "rx{q_id}_bytes": CounterUnit.BYTES,
-        "tx{q_id}_bytes": CounterUnit.BYTES,
-    }
 
     """Listing of supported extended global statistics."""
     _SUPPORTED_XSTATS = {
@@ -198,20 +166,13 @@ class RxTxStats:
 
     """Default counters to monitor."""
     DEFAULT_STATS = StatsRequest(
-        stats=(
-            "rx_packets",
-            "rx_missed",
-            "rx_errors",
-            "rx_nombuf",
-            "tx_packets",
-            "tx_errors",
-        ),
-        stats_per_q=(
-            "rx_packets",
-            "rx_errors",
-            "tx_packets",
-        ),
         xstats=(
+            "rx_good_packets",  # rx_packets
+            "rx_missed_errors",  # rx_missed
+            "rx_errors",  # rx_errors
+            "rx_mbuf_allocation_errors",  # rx_nombuf
+            "tx_good_packets",  # tx_packets
+            "tx_errors",  # tx_errors
             "rx_phy_packets",
             "rx_phy_discard_packets",
             "rx_phy_crc_errors",
@@ -221,6 +182,11 @@ class RxTxStats:
             "tx_phy_discard_packets",
             "tx_phy_packets",
             "tx_phy_errors",
+        ),
+        xstats_per_q=(
+            "rx_q_packets",
+            "rx_q_errors",
+            "tx_q_packets",
         ),
     )
 
@@ -233,14 +199,6 @@ class RxTxStats:
         return None
 
     def _verify_supported(self, stats_req):
-        for s in stats_req.stats:
-            if s not in RxTxStats._SUPPORTED_STATS.keys():
-                raise ValueError(f"{s} is not a supported name in statistics")
-
-        for s in stats_req.stats_per_q:
-            if not self._per_q_stat_lookup(s, RxTxStats._SUPPORTED_STATS_PER_Q):
-                raise ValueError(f"{s} is not a supported name in per-queue statistics")
-
         for s in stats_req.xstats:
             if s not in RxTxStats._SUPPORTED_XSTATS.keys():
                 raise ValueError(f"{s} is not a supported name in extended statistics")
@@ -270,30 +228,25 @@ class RxTxStats:
     def _create_charts_spec(self, q_cnt):
         ch_spec = []
 
-        for title, stats in (
-            ("Basic Statistics", self._stats),
-            ("Extended Statistics", self._xstats),
-        ):
-            for unit, columns in self._specs_per_unit(stats).items():
-                ch_spec.append(
-                    charts.SubPlotSpec(
-                        title=f"{title} ({unit})",
-                        y_label=self._y_label_from_unit(unit),
-                        columns=columns,
-                    )
+        for unit, columns in self._specs_per_unit(self._xstats).items():
+            ch_spec.append(
+                charts.SubPlotSpec(
+                    title=f"Extended Statistics ({unit})",
+                    y_label=self._y_label_from_unit(unit),
+                    columns=columns,
                 )
+            )
 
-        for per_q in (self._stats_per_q, self._xstats_per_q):
-            for title, sq_group in per_q.items():
-                unit = next(iter(sq_group.values()))  # all items in a group have same value
-                ch_spec.append(
-                    charts.SubPlotSpec(
-                        title=f"{title} (per queue)",
-                        y_label=self._y_label_from_unit(unit),
-                        columns=list(sq_group.keys()),
-                        col_names=list(range(q_cnt)),
-                    )
+        for title, sq_group in self._xstats_per_q.items():
+            unit = next(iter(sq_group.values()))  # all items in a group have same value
+            ch_spec.append(
+                charts.SubPlotSpec(
+                    title=f"{title} (per queue)",
+                    y_label=self._y_label_from_unit(unit),
+                    columns=list(sq_group.keys()),
+                    col_names=list(range(q_cnt)),
                 )
+            )
 
         return ch_spec
 
@@ -312,56 +265,20 @@ class RxTxStats:
 
         self._timestamp = "timestamp"
 
-        self._stats = {k: RxTxStats._SUPPORTED_STATS[k] for k in stats_req.stats}
         self._xstats = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
-        self._stats_per_q = self._init_stats_per_q(
-            stats_req.stats_per_q,
-            q_cnt,
-            RxTxStats._SUPPORTED_STATS_PER_Q,
-        )
         self._xstats_per_q = self._init_stats_per_q(
             stats_req.xstats_per_q,
             q_cnt,
             RxTxStats._SUPPORTED_XSTATS_PER_Q,
         )
 
-        per_q_keys = []
-        for sq_group in self._stats_per_q.values():
-            per_q_keys += list(sq_group.keys())
-        for sq_group in self._xstats_per_q.values():
-            per_q_keys += list(sq_group.keys())
-        keys = tuple(self._stats.keys()) + tuple(self._xstats.keys()) + tuple(per_q_keys)
+        per_q_keys = [k for sq_group in self._xstats_per_q.values() for k in sq_group.keys()]
+        keys = tuple(self._xstats.keys()) + tuple(per_q_keys)
         assert len(keys) == len(set(keys)), "Duplicate counter names are not supported."
         self._data = {k: [] for k in (self._timestamp,) + keys}
         self._last = {k: 0 for k in keys}
 
         self._charts_spec = self._create_charts_spec(q_cnt)
-
-    def stats(self) -> dict:
-        """Get specification of monitored common global statistics.
-
-        Returns
-        -------
-        dict
-            Dictionary with selected counters from common statistics.
-            Keys are counter names, values are units.
-        """
-
-        return self._stats
-
-    def stats_per_q(self) -> dict:
-        """Get specification of monitored common per-queue statistics.
-
-        Returns
-        -------
-        dict
-            Dictionary with selected counters from common statistics for
-            for every queue. Keys are general counter names (templates)
-            and values are dictionaries. Keys of these dictionaries are
-            counter names (with queue ID filled), values are units.
-        """
-
-        return self._stats_per_q
 
     def xstats(self) -> dict:
         """Get specification of monitored extended global statistics.
@@ -410,7 +327,7 @@ class RxTxStats:
             else:
                 self._data[k].append(val)
 
-    def store_stats(self, timestamp: int, stats: dict, xstats: dict, time_step: float):
+    def store_stats(self, timestamp: int, xstats: dict, time_step: float):
         """Store statistics from single monitoring step.
 
         As all monitored statistics are incremental, difference between
@@ -422,8 +339,6 @@ class RxTxStats:
         ----------
         timestamp : int
             Timestamp of a monitoring step.
-        stats : dict
-            Common statistics.
         xstats : dict
             Extended statistics.
         time_step : float
@@ -432,14 +347,11 @@ class RxTxStats:
         """
 
         self._data[self._timestamp].append(timestamp)
-        self._store_stats_group(stats, self._stats, time_step)
         self._store_stats_group(xstats, self._xstats, time_step)
-        for stats_group in self._stats_per_q.values():
-            self._store_stats_group(stats, stats_group, time_step)
         for stats_group in self._xstats_per_q.values():
             self._store_stats_group(xstats, stats_group, time_step)
 
-    def reset_last_counters(self, stats: dict, xstats: dict):
+    def reset_last_counters(self, xstats: dict):
         """Reset last values of counters.
 
         Typically, this method should be called at the very beginning of
@@ -450,16 +362,12 @@ class RxTxStats:
 
         Parameters
         ----------
-        stats : dict
-            Common statistics.
         xstats : dict
+            Extended statistics.
         """
 
         for k in self._last.keys():
-            try:
-                self._last[k] = stats[k]
-            except KeyError:
-                self._last[k] = xstats[k]
+            self._last[k] = xstats[k]
 
     def get_data(self) -> dict:
         """Retrieve stored statistics.
@@ -496,9 +404,9 @@ class RxTxMonProfiler(ThreadedProfiler):
     """Profiler that is running a thread that continuously collects data
     about Rx/Tx bytes and packets.
 
-    Profiler monitors selected Rx/Tx counters from common and extended
-    statistics. Recorded results are stored as a CSV and interactive
-    charts (html page).
+    Profiler monitors selected Rx/Tx counters from extended statistics.
+    Recorded results are stored as a CSV and interactive charts (html
+    page).
     """
 
     def __init__(
@@ -514,7 +422,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         csv_file : str
             Path to a CSV file with measured values.
         mark_file : str
-            Path to a mark file - TODO k cemu toto je? Pouziva to vubec nekdo?
+            Path to a mark file.
         charts_file : str
             Path to a file with charts.
         time_step : float, optional
@@ -543,11 +451,10 @@ class RxTxMonProfiler(ThreadedProfiler):
 
         pipeline.wait_until_active()
 
-        stats_storage.reset_last_counters(pipeline.get_stats(), pipeline.get_xstats())
+        stats_storage.reset_last_counters(pipeline.get_xstats())
         while not self.wait_stoppable(self._time_step):
             stats_storage.store_stats(
                 time.monotonic(),
-                pipeline.get_stats(),
                 pipeline.get_xstats(),
                 self._time_step,
             )
