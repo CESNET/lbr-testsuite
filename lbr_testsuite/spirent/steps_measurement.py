@@ -89,6 +89,8 @@ def profile_tx_rx_steps(
                 f"Measuring throughput at {s}% of maximal port load ({pps_step:_} pps)."
             )
             spirent.set_port_load("fps", pps_step)
+
+            profiler.mark()
             time.sleep(step_duration)
 
             measured_pps = stream_block._read_stats("FrameRate")[0]  # 0 for TX frame-rate
