@@ -6,6 +6,7 @@ Copyright: (C) 2021 CESNET, z.s.p.o.
 Functions for manipulation with kernel variables.
 """
 
+import os
 import re
 
 from ..executable import executable
@@ -42,8 +43,10 @@ def sysctl_set(variables, values, netns=None, failure_verbosity=None):
 
     variables_set_ok = 0
 
+    sudo_required = os.geteuid() != 0
+
     for var, val in zip(variables, values):
-        cmd = executable.Tool(["sysctl", "-w", f"{var}={val}"], netns=netns)
+        cmd = executable.Tool(["sysctl", "-w", f"{var}={val}"], netns=netns, sudo=sudo_required)
         if failure_verbosity:
             cmd.set_failure_verbosity(failure_verbosity)
         cmd.run()
