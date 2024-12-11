@@ -18,13 +18,15 @@ class ProfiledPipelineSubject(ProfiledSubject):
     def __init__(self, pipeline):
         super().__init__(pipeline.get_pid())
         self._pipeline = pipeline
+        # store sys interface for usage in __repr__ so the method will not fail
+        # even when pipeline is not ready
+        self._repr_sys_if = pipeline.get_sys_if()
 
     def get_pipeline(self):
         return self._pipeline
 
     def __repr__(self):
-        sys_if = self._pipeline.get_sys_if()
-        return f"subject-{self.get_pid()}-{sys_if}"
+        return f"subject-{self.get_pid()}-{self._repr_sys_if}"
 
 
 class PipelineMonContext:
