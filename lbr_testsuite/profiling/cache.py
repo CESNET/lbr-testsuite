@@ -282,6 +282,10 @@ class PAPIProfiler(ThreadedProfiler):
         self,
         df: pandas.DataFrame,
     ):
+        markers = self._make_timestamps_relative(
+            pandas.Series([m for m in self._marker]),
+            df["timestamp"].min(),
+        )
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
 
         ch_spec = []
@@ -293,8 +297,6 @@ class PAPIProfiler(ThreadedProfiler):
                     columns=self._event_group_columns(df, self._event_groups[group]),
                 )
             )
-
-        markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
 
         self._logger.info(f"saving charts file: {self._charts_file}")
         charts.create_charts_html(
