@@ -291,6 +291,14 @@ class TRexBase:
         This will significantly reduce performance
         as capturing is done in software.
 
+        Note that packets captured on TX can have wrong L3/L4 checksum.
+        They are captured before being sent to NIC and
+        checksum computation is typically offloaded to NIC
+        for better performance. Generated packets will
+        have correct checksum. Just keep that in mind when
+        you examine captured PCAP and Wireshark reports
+        incorrect checksums.
+
         Parameters
         ----------
         limit : int
