@@ -29,6 +29,7 @@ import pandas
 
 from lbr_testsuite.dpdk_application.pipeline_runtime import PipelineRuntime
 
+from ..common import common
 from . import _charts as charts
 from .pipeline import ProfiledPipelineSubject
 from .profiler import ProfilerMarker, ThreadedProfiler
@@ -450,19 +451,55 @@ class RxTxMonProfiler(ThreadedProfiler):
     def mark(self):
         self._marker.mark(time.monotonic())
 
+    def _restore_stats_reading(self, initial_pid, timeout=10):
+        def _pipeline_is_active():
+            try:
+                self._subject.get_pipeline().wait_until_active()
+                return True
+            except OSError:
+                return False
+
+        t1 = time.time()
+        common.wait_until_condition(_pipeline_is_active, timeout, sleep_step=self._time_step)
+
+        curr_pid = self._subject.get_pipeline().get_pid()
+        stats = self._subject.get_pipeline().get_xstats()
+
+        if initial_pid != curr_pid:
+            self._subject.stats().reset_last_counters(stats)
+            self.mark()
+            self._logger.info(
+                f"Pipeline has been restarted (PID changed): {initial_pid} -> {curr_pid}."
+            )
+            self._logger.info(f"Statistics reading restored after {time.time() - t1:.2f}s.")
+
+            # Do not return stats to store right after the restart as these
+            # would rather create unwanted artifacts in results.
+            return None, curr_pid
+
+        return stats, curr_pid
+
     def run(self):
         pipeline = self._subject.get_pipeline()
         stats_storage = self._subject.stats()
 
         pipeline.wait_until_active()
+        pid = pipeline.get_pid()
 
         stats_storage.reset_last_counters(pipeline.get_xstats())
         initial_timestamp = time.monotonic()
 
         while not self.wait_stoppable(self._time_step):
+            try:
+                p_xstats = pipeline.get_xstats()
+            except OSError:
+                p_xstats, pid = self._restore_stats_reading(pid)
+                if not p_xstats:
+                    continue
+
             stats_storage.store_stats(
                 time.monotonic(),
-                pipeline.get_xstats(),
+                p_xstats,
                 initial_timestamp,
             )
 
