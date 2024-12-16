@@ -287,14 +287,21 @@ class PAPIProfiler(ThreadedProfiler):
             df["timestamp"].min(),
         )
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
+        df["timestamp_diff"] = df["timestamp"].diff()
 
         ch_spec = []
         for group in self._event_groups.keys():
+            df = df.copy()
+            columns = self._event_group_columns(df, self._event_groups[group])
+
+            for c in columns:
+                df[c] = df[c].div(df["timestamp_diff"] / self._time_step)
+
             ch_spec.append(
                 charts.SubPlotSpec(
                     title=f"PAPI events: {group}",
                     y_label="event count",
-                    columns=self._event_group_columns(df, self._event_groups[group]),
+                    columns=columns,
                 )
             )
 
