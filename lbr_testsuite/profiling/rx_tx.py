@@ -327,7 +327,7 @@ class RxTxStats:
             else:
                 self._data[k].append(val)
 
-    def store_stats(self, timestamp: int, xstats: dict, time_step: float):
+    def store_stats(self, timestamp: int, xstats: dict, initial_timestamp: float):
         """Store statistics from single monitoring step.
 
         As all monitored statistics are incremental, difference between
@@ -345,6 +345,11 @@ class RxTxStats:
             Monitoring step length as a count of seconds (or fraction of
             second).
         """
+
+        if len(self._data[self._timestamp]) > 0:
+            time_step = timestamp - self._data[self._timestamp][-1]
+        else:
+            time_step = timestamp - initial_timestamp
 
         self._data[self._timestamp].append(timestamp)
         self._store_stats_group(xstats, self._xstats, time_step)
@@ -452,11 +457,13 @@ class RxTxMonProfiler(ThreadedProfiler):
         pipeline.wait_until_active()
 
         stats_storage.reset_last_counters(pipeline.get_xstats())
+        initial_timestamp = time.monotonic()
+
         while not self.wait_stoppable(self._time_step):
             stats_storage.store_stats(
                 time.monotonic(),
                 pipeline.get_xstats(),
-                self._time_step,
+                initial_timestamp,
             )
 
         self._logger.info(f"sampled {len(stats_storage.get_data())}x Rx/Tx statistics")
