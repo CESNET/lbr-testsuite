@@ -240,6 +240,38 @@ def create_charts_html(
                 annotation_position="top",
             )
 
+        markers_visible = {}
+        markers_hidden = {}
+
+        for i, antn in enumerate(fig.layout.annotations):
+            if antn["hovertext"] is not None:
+                if "mark" in antn["hovertext"]:
+                    markers_visible[f"annotations[{i}].visible"] = True
+                    markers_hidden[f"annotations[{i}].visible"] = False
+
+        fig.update_layout(
+            updatemenus=[
+                dict(
+                    buttons=list(
+                        [
+                            dict(
+                                args=[{"mode": ["lines+markers"]}, markers_visible],
+                                label="Show markers",
+                                method="update",
+                            ),
+                            dict(
+                                args=[{"mode": ["lines+markers"]}, markers_hidden],
+                                label="Hide Markers",
+                                method="update",
+                            ),
+                        ]
+                    ),
+                    direction="down",
+                    showactive=True,
+                ),
+            ],
+        )
+
     fig.update_layout(
         height=height * rows,
         title_text=title,
