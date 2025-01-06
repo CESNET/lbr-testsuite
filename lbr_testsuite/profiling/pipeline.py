@@ -18,13 +18,15 @@ class ProfiledPipelineSubject(ProfiledSubject):
     def __init__(self, pipeline):
         super().__init__(pipeline.get_pid())
         self._pipeline = pipeline
+        # store sys interface for usage in __repr__ so the method will not fail
+        # even when pipeline is not ready
+        self._repr_sys_if = pipeline.get_sys_if()
 
     def get_pipeline(self):
         return self._pipeline
 
     def __repr__(self):
-        sys_if = self._pipeline.get_sys_if()
-        return f"subject-{self.get_pid()}-{sys_if}"
+        return f"subject-{self.get_pid()}-{self._repr_sys_if}"
 
 
 class PipelineMonContext:
@@ -265,7 +267,10 @@ class PipelineMonProfiler(ThreadedProfiler):
             df = ctx.get_data_frame()
             df.to_csv(str(self._csv_file_pattern).format(ctx.get_name()))
 
+            markers = self._make_timestamps_relative(
+                pandas.Series([m for m in self._marker]),
+                df["timestamp"].min(),
+            )
             df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-            markers = self._make_timestamps_relative(pandas.Series([m for m in self._marker]))
             self._plot_general(ctx.get_name(), df, markers)
             self._plot_stage_latencies(ctx.get_name(), df, ctx.get_stages(), markers)

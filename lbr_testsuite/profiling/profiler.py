@@ -106,8 +106,9 @@ class Profiler:
         pass
 
     @staticmethod
-    def _make_timestamps_relative(timestamps: pandas.Series):
-        lowest = timestamps.min()
+    def _make_timestamps_relative(timestamps: pandas.Series, lowest=None):
+        if not lowest:
+            lowest = timestamps.min()
         return timestamps.sub(lowest).add(1).round(2).astype("float")
 
 
