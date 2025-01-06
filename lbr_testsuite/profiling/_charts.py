@@ -224,6 +224,10 @@ def create_charts_html(
         if spec.y_ticks:
             fig.update_layout({f"yaxis{row}": {"tickmode": "array", "tickvals": spec.y_ticks}})
 
+    # Following update needs to be done before marks are added so marks
+    # annotations are not affected
+    fig.update_annotations({"height": 40, "valign": "top"})
+
     if markers:
         for m in markers:
             fig.add_vline(
