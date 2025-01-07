@@ -224,6 +224,10 @@ def create_charts_html(
         if spec.y_ticks:
             fig.update_layout({f"yaxis{row}": {"tickmode": "array", "tickvals": spec.y_ticks}})
 
+    # Following update needs to be done before marks are added so marks
+    # annotations are not affected
+    fig.update_annotations({"height": 40, "valign": "top"})
+
     if markers:
         for m in markers:
             fig.add_vline(
@@ -239,6 +243,38 @@ def create_charts_html(
                 ),
                 annotation_position="top",
             )
+
+        markers_visible = {}
+        markers_hidden = {}
+
+        for i, antn in enumerate(fig.layout.annotations):
+            if antn["hovertext"] is not None:
+                if "mark" in antn["hovertext"]:
+                    markers_visible[f"annotations[{i}].visible"] = True
+                    markers_hidden[f"annotations[{i}].visible"] = False
+
+        fig.update_layout(
+            updatemenus=[
+                dict(
+                    buttons=list(
+                        [
+                            dict(
+                                args=[{"mode": ["lines+markers"]}, markers_visible],
+                                label="Show markers",
+                                method="update",
+                            ),
+                            dict(
+                                args=[{"mode": ["lines+markers"]}, markers_hidden],
+                                label="Hide Markers",
+                                method="update",
+                            ),
+                        ]
+                    ),
+                    direction="down",
+                    showactive=True,
+                ),
+            ],
+        )
 
     fig.update_layout(
         height=height * rows,
