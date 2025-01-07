@@ -187,6 +187,8 @@ class PipelineMonProfiler(ThreadedProfiler):
     def _plot_general(self, pipeline_name, df, markers):
         df = df.copy()
 
+        df["timestamp_diff"] = df["timestamp"].diff()
+
         ch_spec = []
         ch_spec.append(self._compose_ch_spec(df, "latencies", "latency [us]", "latency"))
         ch_spec.append(
@@ -200,7 +202,7 @@ class PipelineMonProfiler(ThreadedProfiler):
         ):
             for c in df.columns:
                 if c.startswith(f"{col_prefix}_"):
-                    df[c] = df[c].diff()
+                    df[c] = df[c].diff().div(df["timestamp_diff"] / self._time_step)
             ch_spec.append(self._compose_ch_spec(df, label, label, col_prefix))
 
         charts_file = str(self._charts_file_pattern).format("general", pipeline_name)
