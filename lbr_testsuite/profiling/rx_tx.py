@@ -318,17 +318,20 @@ class RxTxStats:
 
         return self._charts_spec
 
-    def _store_stats_group(self, source: dict, group: dict, time_step: float):
+    def _store_stats_group(self, source: dict | None, group: dict, time_step: float):
         for k, unit in group.items():
-            val = source[k] - self._last[k]
-            self._last[k] = source[k]
-            if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
-                per_second_approx = (1 / time_step) * val
-                self._data[k].append(per_second_approx)
+            if not source:
+                self._data[k].append(0)
             else:
-                self._data[k].append(val)
+                val = source[k] - self._last[k]
+                self._last[k] = source[k]
+                if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
+                    per_second_approx = (1 / time_step) * val
+                    self._data[k].append(per_second_approx)
+                else:
+                    self._data[k].append(val)
 
-    def store_stats(self, timestamp: int, xstats: dict, initial_timestamp: float):
+    def store_stats(self, timestamp: int, xstats: dict | None, initial_timestamp: float):
         """Store statistics from single monitoring step.
 
         As all monitored statistics are incremental, difference between
