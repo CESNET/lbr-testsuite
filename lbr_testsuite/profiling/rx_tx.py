@@ -498,8 +498,12 @@ class RxTxMonProfiler(ThreadedProfiler):
             try:
                 p_xstats = pipeline.get_xstats()
             except OSError:
+                t_outage = time.monotonic()
                 p_xstats, pid = self._restore_stats_reading(pid)
                 if not p_xstats:
+                    # if there are no stats, application has been restarted -> write zero stats
+                    stats_storage.store_stats(t_outage, None, initial_timestamp)  # outage start
+                    stats_storage.store_stats(time.monotonic(), None, initial_timestamp)  # out. end
                     continue
 
             stats_storage.store_stats(
