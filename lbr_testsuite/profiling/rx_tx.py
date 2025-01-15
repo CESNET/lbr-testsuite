@@ -347,6 +347,8 @@ class RxTxStats:
             second).
         """
 
+        # As waiting for <time-step> might not be exact, we would compute
+        # real duration of time step.
         if len(self._data[self._timestamp]) > 0:
             time_step = timestamp - self._data[self._timestamp][-1]
         else:
