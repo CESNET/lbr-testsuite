@@ -108,6 +108,14 @@ class ProfilerMarker:
 
         return marker
 
+    def to_dataframe(self):
+        return pandas.DataFrame(
+            dict(
+                time=[m.time for m in self._marks],
+                desc=[m.desc for m in self._marks],
+            )
+        )
+
 
 class Profiler:
     """
