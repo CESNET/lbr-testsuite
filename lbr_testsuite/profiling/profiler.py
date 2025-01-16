@@ -75,7 +75,7 @@ class ProfilerMarker:
         """
 
         for m in self._marks:
-            print(m.time, file=f)
+            print(f"{m.time},{m.desc}", file=f)
 
     @staticmethod
     def load(f, parse_line=float, parse_time=None):
@@ -103,7 +103,8 @@ class ProfilerMarker:
         marker = ProfilerMarker()
 
         for line in f.readlines():
-            marker.mark(parse_time(line))
+            time, desc = line.split(",")
+            marker.mark(parse_time(line), desc.strip())
 
         return marker
 
