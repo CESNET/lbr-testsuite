@@ -453,8 +453,8 @@ class RxTxMonProfiler(ThreadedProfiler):
             raise RuntimeError("subject must be of type ProfiledPipelineWithStatsSubject")
         super().start(subject)
 
-    def mark(self):
-        self._marker.mark(time.monotonic())
+    def mark(self, desc=None):
+        self._marker.mark(time.monotonic(), desc)
 
     def _restore_stats_reading(self, initial_pid, timeout=10):
         def _pipeline_is_active():

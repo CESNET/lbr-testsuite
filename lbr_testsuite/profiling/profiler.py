@@ -130,7 +130,7 @@ class Profiler:
         """
         pass
 
-    def mark(self):
+    def mark(self, desc=None):
         """Place a marker into the current time point. The marker would be
         used when generating visual outputs from the profiling. If a profiler
         does not work with any timeline, this call would be a no-op.
@@ -175,9 +175,9 @@ class PackedProfiler:
         if self._profiler is not None:
             self._profiler.stop()
 
-    def mark(self):
+    def mark(self, desc=None):
         if self._profiler is not None:
-            self._profiler.mark()
+            self._profiler.mark(desc)
 
 
 class ThreadedProfiler(Profiler):
@@ -412,8 +412,8 @@ class MultiProfiler(Profiler):
 
         self._stop_all(self._profilers)
 
-    def mark(self):
+    def mark(self, desc=None):
         """Call mark() on all underlying profilers."""
 
         for prof in self._profilers:
-            prof.mark()
+            prof.mark(desc)

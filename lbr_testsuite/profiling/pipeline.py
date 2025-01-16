@@ -244,8 +244,8 @@ class PipelineMonProfiler(ThreadedProfiler):
             markers=list(markers),
         )
 
-    def mark(self):
-        self._marker.mark(time.monotonic())
+    def mark(self, desc=None):
+        self._marker.mark(time.monotonic(), desc)
 
     def run(self):
         pipeline = self._subject.get_pipeline()

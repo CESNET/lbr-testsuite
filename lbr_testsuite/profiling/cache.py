@@ -319,8 +319,8 @@ class PAPIProfiler(ThreadedProfiler):
         self._marker = ProfilerMarker()
         super().start(subject)
 
-    def mark(self):
-        self._marker.mark(time.monotonic())
+    def mark(self, desc=None):
+        self._marker.mark(time.monotonic(), desc)
 
     def run(self):
         pid = self._subject.get_pid()
