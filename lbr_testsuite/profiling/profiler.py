@@ -78,7 +78,7 @@ class ProfilerMarker:
             print(m.time, file=f)
 
     @staticmethod
-    def load(f, parse_line=float):
+    def load(f, parse_line=float, parse_time=None):
         """Load marks from the given file and construct new instance of
         ProfilerMarker.
 
@@ -88,14 +88,22 @@ class ProfilerMarker:
         ----------
         f: io.TextIOWrapper
             Opened file handler where marks should be stored.
-        parse_line: callable
+        parse_line: callable, DEPRECATED
             A callback function used for parsing line value.
+            The argument is deprecated as optional description were
+            added to marks. Use `parse_time` instead.
+        parse_time: callable, optional
+            A callback function used for parsing time value of a single
+            mark.
         """
+
+        if not parse_time:
+            parse_time = parse_line
 
         marker = ProfilerMarker()
 
         for line in f.readlines():
-            marker.mark(parse_line(line))
+            marker.mark(parse_time(line))
 
         return marker
 
