@@ -520,15 +520,14 @@ class RxTxMonProfiler(ThreadedProfiler):
         with open(self._mark_file, "w") as f:
             self._marker.save(f)
 
-        markers = self._make_timestamps_relative(
-            pandas.Series([m for m in self._marker]),
-            df["timestamp"].min(),
-        )
+        markers = self._marker.to_dataframe()
+        markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())
+
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         charts.create_charts_html(
             df,
             stats_storage.get_chart_spec(),
             self._charts_file,
             title="Rx/Tx Statistics",
-            markers=list(markers),
+            markers=list(markers["time"]),
         )

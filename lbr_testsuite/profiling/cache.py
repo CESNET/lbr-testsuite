@@ -282,10 +282,8 @@ class PAPIProfiler(ThreadedProfiler):
         self,
         df: pandas.DataFrame,
     ):
-        markers = self._make_timestamps_relative(
-            pandas.Series([m for m in self._marker]),
-            df["timestamp"].min(),
-        )
+        markers = self._marker.to_dataframe()
+        markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         df["timestamp_diff"] = df["timestamp"].diff()
 
@@ -312,7 +310,7 @@ class PAPIProfiler(ThreadedProfiler):
             self._charts_file,
             title="Pipeline Statistics",
             height=800,
-            markers=list(markers),
+            markers=list(markers["time"]),
         )
 
     def start(self, subject):

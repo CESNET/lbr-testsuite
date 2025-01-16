@@ -269,10 +269,8 @@ class PipelineMonProfiler(ThreadedProfiler):
             df = ctx.get_data_frame()
             df.to_csv(str(self._csv_file_pattern).format(ctx.get_name()))
 
-            markers = self._make_timestamps_relative(
-                pandas.Series([m for m in self._marker]),
-                df["timestamp"].min(),
-            )
+            markers = self._marker.to_dataframe()
+            markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())
             df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-            self._plot_general(ctx.get_name(), df, markers)
-            self._plot_stage_latencies(ctx.get_name(), df, ctx.get_stages(), markers)
+            self._plot_general(ctx.get_name(), df, markers["time"])
+            self._plot_stage_latencies(ctx.get_name(), df, ctx.get_stages(), markers["time"])
