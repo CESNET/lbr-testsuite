@@ -33,8 +33,7 @@ class ProfiledSubject:
 
 
 class ProfilerMarker:
-    """
-    Generic implementation of call to Profiler.mark(). It collects all
+    """Generic implementation of call to Profiler.mark(). It collects all
     marks and finally allows to store them into file for post-processing.
     """
 
@@ -46,10 +45,18 @@ class ProfilerMarker:
 
     def mark(self, mark_time, desc=None):
         """
-        Record a mark of the measurement. The argument mark_time is any arbitrary
-        value that makes sense in the context of the calling profiler. It should
-        be usually a time point on the profiler timeline taken from some monotonic
-        time source.
+        Record a mark of the measurement.
+
+        Parameters
+        ----------
+        mark_time: Any
+            The argument is any arbitrary value that makes sense in
+            the context of the calling profiler. It should be usually
+            a time point on the profiler timeline taken from some
+            monotonic time source.
+        desc: str, optional
+            Additional description of the marked event. It should be
+            reasonably short (around 15 characters max).
         """
 
         d = desc if desc is not None else self.DEFAULT_DESC
@@ -59,8 +66,12 @@ class ProfilerMarker:
         return iter(self._marks)
 
     def save(self, f):
-        """
-        Save marks into the given file.
+        """Save marks into the given file.
+
+        Parameters
+        ----------
+        f: io.TextIOWrapper
+            Opened file handler where marks should be stored.
         """
 
         for m in self._marks:
@@ -68,10 +79,17 @@ class ProfilerMarker:
 
     @staticmethod
     def load(f, parse_line=float):
-        """
-        Load marks from the given file and construct new instance of ProfilerMarker.
-        Each line of the file should contain a single mark. Each line is parsed using
-        the callback given as parse_line.
+        """Load marks from the given file and construct new instance of
+        ProfilerMarker.
+
+        Each line of the file should contain a single mark.
+
+        Parameters
+        ----------
+        f: io.TextIOWrapper
+            Opened file handler where marks should be stored.
+        parse_line: callable
+            A callback function used for parsing line value.
         """
 
         marker = ProfilerMarker()
