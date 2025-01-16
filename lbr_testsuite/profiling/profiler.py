@@ -6,6 +6,7 @@ Copyright: (C) 2021-2024 CESNET, z.s.p.o.
 Supporting code for implementing application profilers.
 """
 
+import collections
 import logging
 import threading
 
@@ -37,10 +38,13 @@ class ProfilerMarker:
     marks and finally allows to store them into file for post-processing.
     """
 
+    Mark = collections.namedtuple("Mark", "time, desc")
+    DEFAULT_DESC = ""
+
     def __init__(self, marks=None):
         self._marks = [] if marks is None else marks
 
-    def mark(self, mark_time):
+    def mark(self, mark_time, desc=None):
         """
         Record a mark of the measurement. The argument mark_time is any arbitrary
         value that makes sense in the context of the calling profiler. It should
@@ -48,7 +52,8 @@ class ProfilerMarker:
         time source.
         """
 
-        self._marks.append(mark_time)
+        d = desc if desc is not None else self.DEFAULT_DESC
+        self._marks.append(self.Mark(mark_time, d))
 
     def __iter__(self):
         return iter(self._marks)
@@ -59,7 +64,7 @@ class ProfilerMarker:
         """
 
         for m in self._marks:
-            print(m, file=f)
+            print(m.time, file=f)
 
     @staticmethod
     def load(f, parse_line=float):
@@ -69,12 +74,12 @@ class ProfilerMarker:
         the callback given as parse_line.
         """
 
-        marks = []
+        marker = ProfilerMarker()
 
         for line in f.readlines():
-            marks.append(parse_line(line))
+            marker.mark(parse_line(line))
 
-        return ProfilerMarker(marks)
+        return marker
 
 
 class Profiler:
