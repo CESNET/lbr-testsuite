@@ -310,7 +310,7 @@ class PAPIProfiler(ThreadedProfiler):
             self._charts_file,
             title="Pipeline Statistics",
             height=800,
-            markers=list(markers["time"]),
+            markers=markers,
         )
 
     def start(self, subject):

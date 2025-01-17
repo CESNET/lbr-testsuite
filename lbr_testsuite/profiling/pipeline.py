@@ -211,7 +211,7 @@ class PipelineMonProfiler(ThreadedProfiler):
             ch_spec,
             charts_file,
             title="Pipeline Statistics",
-            markers=list(markers),
+            markers=markers,
         )
 
     def _plot_stage_latencies(self, pipeline_name, df, proc_names, markers):
@@ -241,7 +241,7 @@ class PipelineMonProfiler(ThreadedProfiler):
             ch_spec,
             charts_file,
             title="Pipeline Statistics",
-            markers=list(markers),
+            markers=markers,
         )
 
     def mark(self, desc=None):
@@ -272,5 +272,5 @@ class PipelineMonProfiler(ThreadedProfiler):
             markers = self._marker.to_dataframe()
             markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())
             df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-            self._plot_general(ctx.get_name(), df, markers["time"])
-            self._plot_stage_latencies(ctx.get_name(), df, ctx.get_stages(), markers["time"])
+            self._plot_general(ctx.get_name(), df, markers)
+            self._plot_stage_latencies(ctx.get_name(), df, ctx.get_stages(), markers)

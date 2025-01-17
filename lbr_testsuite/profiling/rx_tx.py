@@ -529,5 +529,5 @@ class RxTxMonProfiler(ThreadedProfiler):
             stats_storage.get_chart_spec(),
             self._charts_file,
             title="Rx/Tx Statistics",
-            markers=list(markers["time"]),
+            markers=markers,
         )

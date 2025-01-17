@@ -142,7 +142,7 @@ def create_charts_html(
     title: str = "",
     vertical_spacing: float = 0.07,
     height: int = 600,
-    markers: list[float] = None,
+    markers: pandas.DataFrame = None,
     barmode: str = "group",
     tag_traces: TracesTagMode = TracesTagMode.ZERO,
 ) -> graph_objects.Figure:
@@ -164,9 +164,11 @@ def create_charts_html(
         0 and 1.
     height : int, optional
         Total subplot height in pixels.
-    markers : list[float], optional
-        List of points on x-axis where vertical lines (i.e. markers)
-        should be drawn.
+    markers : pandas.DataFrame, optional
+        Data frame containing points on x-axis where vertical lines (i.e.
+        markers) should be drawn. The data frame should contain two
+        columns: "time" (x axis values) and "desc" (description of
+        a marker).
     barmode : str, optional
         Bar chart mode option propagated to "update_layout" method.
         The most common values are "group" and "stacked".
@@ -228,18 +230,18 @@ def create_charts_html(
     # annotations are not affected
     fig.update_annotations({"height": 40, "valign": "top"})
 
-    if markers:
-        for m in markers:
+    if markers is not None:
+        for m in markers.itertuples():
             fig.add_vline(
-                x=m,
+                x=m.time,
                 line_dash="dash",
                 line_color="black",
                 opacity=0.3,
                 annotation=dict(
-                    text=f"{m}s",
+                    text=f"{m.time}s",
                     font=dict(color="white"),
                     bgcolor="grey",
-                    hovertext=f"mark: {m}s",
+                    hovertext=m.desc if m.desc else f"mark: {m.time}s",
                 ),
                 annotation_position="top",
             )
