@@ -472,7 +472,7 @@ class RxTxMonProfiler(ThreadedProfiler):
 
         if initial_pid != curr_pid:
             self._subject.stats().reset_last_counters(stats)
-            self.mark()
+            self.mark(desc="Pipeline restarted")
             self._logger.info(
                 f"Pipeline has been restarted (PID changed): {initial_pid} -> {curr_pid}."
             )
