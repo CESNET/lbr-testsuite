@@ -166,7 +166,7 @@ class TRexStream:
     l4_dst: Optional[Union[int, tuple, list]] = None
     l4_op: Optional[str] = "inc"
     l4_flags: Optional[Union[list, TRexL4Flag]] = TRexL4Flag.SYN
-    pkt_len: int = 100
+    pkt_len: Optional[int] = None
     rate: str = "1kpps"
     mode_selector: TRexStreamModeSelector = TRexStreamModeSelector.CONTINUOUS
     burst_size: Optional[int] = None
@@ -301,8 +301,9 @@ class TRexStateless(TRexBase):
         flow_stats = None
         spec = {key: val for key, val in asdict(stream).items() if val is not None}
 
-        # 4B FCS is automatically added by NIC
-        spec["pkt_len"] -= 4
+        if "pkt_len" in spec:
+            # 4B FCS is automatically added by NIC
+            spec["pkt_len"] -= 4
 
         if "vlan_id" not in spec:
             if self.get_vlan(stream.port) != _EMPTY_VLAN:
