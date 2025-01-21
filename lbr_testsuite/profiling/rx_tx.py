@@ -318,17 +318,20 @@ class RxTxStats:
 
         return self._charts_spec
 
-    def _store_stats_group(self, source: dict, group: dict, time_step: float):
+    def _store_stats_group(self, source: dict | None, group: dict, time_step: float):
         for k, unit in group.items():
-            val = source[k] - self._last[k]
-            self._last[k] = source[k]
-            if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
-                per_second_approx = (1 / time_step) * val
-                self._data[k].append(per_second_approx)
+            if not source:
+                self._data[k].append(0)
             else:
-                self._data[k].append(val)
+                val = source[k] - self._last[k]
+                self._last[k] = source[k]
+                if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
+                    per_second_approx = (1 / time_step) * val
+                    self._data[k].append(per_second_approx)
+                else:
+                    self._data[k].append(val)
 
-    def store_stats(self, timestamp: int, xstats: dict, initial_timestamp: float):
+    def store_stats(self, timestamp: int, xstats: dict | None, initial_timestamp: float):
         """Store statistics from single monitoring step.
 
         As all monitored statistics are incremental, difference between
@@ -347,6 +350,8 @@ class RxTxStats:
             second).
         """
 
+        # As waiting for <time-step> might not be exact, we would compute
+        # real duration of time step.
         if len(self._data[self._timestamp]) > 0:
             time_step = timestamp - self._data[self._timestamp][-1]
         else:
@@ -493,8 +498,12 @@ class RxTxMonProfiler(ThreadedProfiler):
             try:
                 p_xstats = pipeline.get_xstats()
             except OSError:
+                t_outage = time.monotonic()
                 p_xstats, pid = self._restore_stats_reading(pid)
                 if not p_xstats:
+                    # if there are no stats, application has been restarted -> write zero stats
+                    stats_storage.store_stats(t_outage, None, initial_timestamp)  # outage start
+                    stats_storage.store_stats(time.monotonic(), None, initial_timestamp)  # out. end
                     continue
 
             stats_storage.store_stats(
