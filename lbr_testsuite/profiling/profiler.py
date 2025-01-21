@@ -6,6 +6,7 @@ Copyright: (C) 2021-2024 CESNET, z.s.p.o.
 Supporting code for implementing application profilers.
 """
 
+import collections
 import logging
 import threading
 
@@ -32,49 +33,88 @@ class ProfiledSubject:
 
 
 class ProfilerMarker:
-    """
-    Generic implementation of call to Profiler.mark(). It collects all
+    """Generic implementation of call to Profiler.mark(). It collects all
     marks and finally allows to store them into file for post-processing.
     """
+
+    Mark = collections.namedtuple("Mark", "time, desc")
+    DEFAULT_DESC = ""
 
     def __init__(self, marks=None):
         self._marks = [] if marks is None else marks
 
-    def mark(self, mark_time):
+    def mark(self, mark_time, desc=None):
         """
-        Record a mark of the measurement. The argument mark_time is any arbitrary
-        value that makes sense in the context of the calling profiler. It should
-        be usually a time point on the profiler timeline taken from some monotonic
-        time source.
+        Record a mark of the measurement.
+
+        Parameters
+        ----------
+        mark_time: Any
+            The argument is any arbitrary value that makes sense in
+            the context of the calling profiler. It should be usually
+            a time point on the profiler timeline taken from some
+            monotonic time source.
+        desc: str, optional
+            Additional description of the marked event. It should be
+            reasonably short (around 15 characters max).
         """
 
-        self._marks.append(mark_time)
+        d = desc if desc is not None else self.DEFAULT_DESC
+        self._marks.append(self.Mark(mark_time, d))
 
     def __iter__(self):
         return iter(self._marks)
 
     def save(self, f):
-        """
-        Save marks into the given file.
+        """Save marks into the given file.
+
+        Parameters
+        ----------
+        f: io.TextIOWrapper
+            Opened file handler where marks should be stored.
         """
 
         for m in self._marks:
-            print(m, file=f)
+            print(f"{m.time},{m.desc}", file=f)
 
     @staticmethod
-    def load(f, parse_line=float):
-        """
-        Load marks from the given file and construct new instance of ProfilerMarker.
-        Each line of the file should contain a single mark. Each line is parsed using
-        the callback given as parse_line.
+    def load(f, parse_line=float, parse_time=None):
+        """Load marks from the given file and construct new instance of
+        ProfilerMarker.
+
+        Each line of the file should contain a single mark.
+
+        Parameters
+        ----------
+        f: io.TextIOWrapper
+            Opened file handler where marks should be stored.
+        parse_line: callable, DEPRECATED
+            A callback function used for parsing line value.
+            The argument is deprecated as optional description were
+            added to marks. Use `parse_time` instead.
+        parse_time: callable, optional
+            A callback function used for parsing time value of a single
+            mark.
         """
 
-        marks = []
+        if not parse_time:
+            parse_time = parse_line
+
+        marker = ProfilerMarker()
 
         for line in f.readlines():
-            marks.append(parse_line(line))
+            time, desc = line.split(",")
+            marker.mark(parse_time(line), desc.strip())
 
-        return ProfilerMarker(marks)
+        return marker
+
+    def to_dataframe(self):
+        return pandas.DataFrame(
+            dict(
+                time=[m.time for m in self._marks],
+                desc=[m.desc for m in self._marks],
+            )
+        )
 
 
 class Profiler:
@@ -98,7 +138,7 @@ class Profiler:
         """
         pass
 
-    def mark(self):
+    def mark(self, desc=None):
         """Place a marker into the current time point. The marker would be
         used when generating visual outputs from the profiling. If a profiler
         does not work with any timeline, this call would be a no-op.
@@ -143,9 +183,9 @@ class PackedProfiler:
         if self._profiler is not None:
             self._profiler.stop()
 
-    def mark(self):
+    def mark(self, desc=None):
         if self._profiler is not None:
-            self._profiler.mark()
+            self._profiler.mark(desc)
 
 
 class ThreadedProfiler(Profiler):
@@ -380,8 +420,8 @@ class MultiProfiler(Profiler):
 
         self._stop_all(self._profilers)
 
-    def mark(self):
+    def mark(self, desc=None):
         """Call mark() on all underlying profilers."""
 
         for prof in self._profilers:
-            prof.mark()
+            prof.mark(desc)
