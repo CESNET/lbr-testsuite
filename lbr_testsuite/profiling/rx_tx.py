@@ -66,8 +66,6 @@ class RxTxStats:
 
     Attributes
     ----------
-    _timestamp : str
-        Name of timestamp counter.
     _xstats : dict
         Dictionary with selected counters from extended statistics. Keys
         are counter names, values are units.
@@ -191,6 +189,9 @@ class RxTxStats:
         ),
     )
 
+    """Name of timestamp column."""
+    TIMESTAMP_COL = "timestamp"
+
     @staticmethod
     def _per_q_stat_lookup(stat: tuple[str], lookup_group: dict[str, str]) -> str | None:
         for k in lookup_group.keys():
@@ -269,8 +270,6 @@ class RxTxStats:
     def __init__(self, stats_req: StatsRequest, q_cnt: int):
         self._verify_supported(stats_req)
 
-        self._timestamp = "timestamp"
-
         self._xstats = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
         self._xstats_per_q = self._init_stats_per_q(
             stats_req.xstats_per_q,
@@ -281,7 +280,7 @@ class RxTxStats:
         per_q_keys = [k for sq_group in self._xstats_per_q.values() for k in sq_group.keys()]
         keys = tuple(self._xstats.keys()) + tuple(per_q_keys)
         assert len(keys) == len(set(keys)), "Duplicate counter names are not supported."
-        self._data = {k: [] for k in (self._timestamp,) + keys}
+        self._data = {k: [] for k in (self.TIMESTAMP_COL,) + keys}
         self._last = {k: 0 for k in keys}
 
         self._charts_spec = self._create_charts_spec(q_cnt)
@@ -367,12 +366,12 @@ class RxTxStats:
 
         # As waiting for <time-step> might not be exact, we would compute
         # real duration of time step.
-        if len(self._data[self._timestamp]) > 0:
-            time_step = timestamp - self._data[self._timestamp][-1]
+        if len(self._data[self.TIMESTAMP_COL]) > 0:
+            time_step = timestamp - self._data[self.TIMESTAMP_COL][-1]
         else:
             time_step = timestamp - initial_timestamp
 
-        self._data[self._timestamp].append(timestamp)
+        self._data[self.TIMESTAMP_COL].append(timestamp)
         self._store_stats_group(xstats, self._xstats, time_step)
         for stats_group in self._xstats_per_q.values():
             self._store_stats_group(xstats, stats_group, time_step)
