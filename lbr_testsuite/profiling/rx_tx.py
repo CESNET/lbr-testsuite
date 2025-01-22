@@ -192,14 +192,14 @@ class RxTxStats:
     )
 
     @staticmethod
-    def _per_q_stat_lookup(stat, lookup_group):
+    def _per_q_stat_lookup(stat: tuple[str], lookup_group: dict[str, str]) -> str | None:
         for k in lookup_group.keys():
             if stat == k.replace("{q_id}", ""):
                 return k
 
         return None
 
-    def _verify_supported(self, stats_req):
+    def _verify_supported(self, stats_req: StatsRequest):
         for s in stats_req.xstats:
             if s not in RxTxStats._SUPPORTED_XSTATS.keys():
                 raise ValueError(f"{s} is not a supported name in extended statistics")
@@ -217,7 +217,7 @@ class RxTxStats:
         return "<events>"
 
     @staticmethod
-    def _specs_per_unit(stats):
+    def _specs_per_unit(stats: dict[str, CounterUnit]) -> dict[CounterUnit, list[str]]:
         per_unit = dict()
         for s, unit in stats.items():
             if unit not in per_unit:
@@ -226,7 +226,7 @@ class RxTxStats:
 
         return per_unit
 
-    def _create_charts_spec(self, q_cnt):
+    def _create_charts_spec(self, q_cnt: int) -> list[charts.SubPlotSpec]:
         ch_spec = []
 
         for unit, columns in self._specs_per_unit(self._xstats).items():
@@ -251,7 +251,12 @@ class RxTxStats:
 
         return ch_spec
 
-    def _init_stats_per_q(self, stats_per_q, q_cnt, lookup_group):
+    def _init_stats_per_q(
+        self,
+        stats_per_q: tuple[str],
+        q_cnt: int,
+        lookup_group: dict[str, str],
+    ) -> dict[str, dict[str, CounterUnit]]:
         result = dict()
         for sq in stats_per_q:
             s_tmplt = self._per_q_stat_lookup(sq, lookup_group)
@@ -281,7 +286,7 @@ class RxTxStats:
 
         self._charts_spec = self._create_charts_spec(q_cnt)
 
-    def xstats(self) -> dict:
+    def xstats(self) -> dict[str, CounterUnit]:
         """Get specification of monitored extended global statistics.
 
         Returns
@@ -293,7 +298,7 @@ class RxTxStats:
 
         return self._xstats
 
-    def xstats_per_q(self) -> dict:
+    def xstats_per_q(self) -> dict[str, dict[str, CounterUnit]]:
         """Get specification of monitored extended per-queue statistics.
 
         Returns
@@ -307,7 +312,7 @@ class RxTxStats:
 
         return self._xstats_per_q
 
-    def get_chart_spec(self) -> tuple:
+    def get_chart_spec(self) -> tuple[charts.SubPlotSpec]:
         """Get charts specification.
 
         Returns
@@ -318,7 +323,12 @@ class RxTxStats:
 
         return self._charts_spec
 
-    def _store_stats_group(self, source: dict | None, group: dict, time_step: float):
+    def _store_stats_group(
+        self,
+        source: dict[str, int | float] | None,
+        group: dict[str, CounterUnit],
+        time_step: float,
+    ):
         for k, unit in group.items():
             if not source:
                 self._data[k].append(0)
@@ -331,7 +341,12 @@ class RxTxStats:
                 else:
                     self._data[k].append(val)
 
-    def store_stats(self, timestamp: int, xstats: dict | None, initial_timestamp: float):
+    def store_stats(
+        self,
+        timestamp: int,
+        xstats: dict[str, int | float] | None,
+        initial_timestamp: float,
+    ):
         """Store statistics from single monitoring step.
 
         As all monitored statistics are incremental, difference between
@@ -362,7 +377,7 @@ class RxTxStats:
         for stats_group in self._xstats_per_q.values():
             self._store_stats_group(xstats, stats_group, time_step)
 
-    def reset_last_counters(self, xstats: dict):
+    def reset_last_counters(self, xstats: dict[str, int | float]):
         """Reset last values of counters.
 
         Typically, this method should be called at the very beginning of
@@ -380,7 +395,7 @@ class RxTxStats:
         for k in self._last.keys():
             self._last[k] = xstats[k]
 
-    def get_data(self) -> dict:
+    def get_data(self) -> dict[str, list[int | float]]:
         """Retrieve stored statistics.
 
         Returns
@@ -456,7 +471,7 @@ class RxTxMonProfiler(ThreadedProfiler):
     def mark(self, desc=None):
         self._marker.mark(time.monotonic(), desc)
 
-    def _restore_stats_reading(self, initial_pid, timeout=10):
+    def _restore_stats_reading(self, initial_pid: int, timeout: int = 10):
         def _pipeline_is_active():
             try:
                 self._subject.get_pipeline().wait_until_active()
