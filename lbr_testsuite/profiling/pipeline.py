@@ -247,7 +247,7 @@ class PipelineMonProfiler(ThreadedProfiler):
     def mark(self, desc=None):
         self._marker.mark(time.monotonic(), desc)
 
-    def run(self):
+    def _data_collect(self) -> list:
         pipeline = self._subject.get_pipeline()
         names = pipeline.get_pipeline_names()
         contexts = [PipelineMonContext(pipeline, name) for name in names]
@@ -261,11 +261,13 @@ class PipelineMonProfiler(ThreadedProfiler):
                 ctx.sample(now)
 
         self._logger.info(f"sampled {len(contexts[0].get_samples())}x pipeline status")
+        return contexts
 
+    def _data_postprocess(self, data: list):
         with open(self._mark_file, "w") as f:
             self._marker.save(f)
 
-        for ctx in contexts:
+        for ctx in data:
             df = ctx.get_data_frame()
             df.to_csv(str(self._csv_file_pattern).format(ctx.get_name()))
 

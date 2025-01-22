@@ -510,7 +510,7 @@ class RxTxMonProfiler(ThreadedProfiler):
 
         return stats, curr_pid
 
-    def run(self):
+    def _data_collect(self) -> RxTxStats:
         pipeline = self._subject.get_pipeline()
         stats_storage = self._subject.stats()
 
@@ -532,11 +532,15 @@ class RxTxMonProfiler(ThreadedProfiler):
                     stats_storage.store_stats(time.monotonic(), None)  # out. end
                     continue
 
+
             stats_storage.store_stats(time.monotonic(), p_xstats)
 
         self._logger.info(f"sampled {len(stats_storage.get_data())}x Rx/Tx statistics")
 
-        df = pandas.DataFrame(stats_storage.get_data())
+        return stats_storage
+
+    def _data_postprocess(self, data: RxTxStats):
+        df = pandas.DataFrame(data.get_data())
         df.to_csv(self._csv_file)
 
         with open(self._mark_file, "w") as f:
@@ -548,7 +552,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         charts.create_charts_html(
             df,
-            stats_storage.get_chart_spec(),
+            data.get_chart_spec(),
             self._charts_file,
             title="Rx/Tx Statistics",
             markers=markers,

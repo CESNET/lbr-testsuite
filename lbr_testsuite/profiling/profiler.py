@@ -9,10 +9,14 @@ Supporting code for implementing application profilers.
 import collections
 import logging
 import threading
+from typing import TypeAlias
 
 import pandas
 
 from ..executable import executable
+
+
+CollectedData: TypeAlias = any
 
 
 class ProfiledSubject:
@@ -255,6 +259,12 @@ class ThreadedProfiler(Profiler):
         with self._stopper:
             return self._stopper.wait_for(self.should_stop, timeout)
 
+    def _data_collect(self) -> CollectedData:
+        pass
+
+    def _data_postprocess(self, data: CollectedData):
+        pass
+
     def run(self):
         """To be overriden by profiler implementation. Most of the time, the
         implementation would do something like:
@@ -263,7 +273,8 @@ class ThreadedProfiler(Profiler):
                 do_something_useful()
         """
 
-        pass
+        data = self._data_collect()
+        data = self._data_postprocess(data)
 
 
 class PidProfiler(Profiler):

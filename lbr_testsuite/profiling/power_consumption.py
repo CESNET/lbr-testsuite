@@ -63,9 +63,11 @@ class pyJoulesProfiler(ThreadedProfiler):
     def _make_timestamps_relative(self, timestamps):
         return timestamps.sub(timestamps.min()).add(1).round().astype("int64")
 
-    def run(self):
-        """This method should be started from a thread. It snapshots power consumption
-        metrics periodically according to time_step. Finally, CSV and charts files are generated.
+    def _data_collect(self) -> list:
+        """This method should be started from a thread. It snapshots
+        power consumption metrics periodically according to time_step.
+        Finally, CSV and charts files are generated in _data_postprocess
+        method.
         """
 
         domains_repr = [repr(domain) for domain in self._domains]
@@ -79,6 +81,9 @@ class pyJoulesProfiler(ThreadedProfiler):
         finally:
             self._meter.stop()
 
+        return domains_repr
+
+    def _data_postprocess(self, data: list):
         global_logger.info(f"saving to {self._csv_file} and {self._charts_file}")
 
         handler = PandasHandler()
@@ -94,7 +99,7 @@ class pyJoulesProfiler(ThreadedProfiler):
             ch_spec = charts.SubPlotSpec(
                 title="Power Consumption",
                 y_label="consumption [uJ]",
-                columns=domains_repr,
+                columns=data,
                 chart_type=charts.ChartType.BAR,
             )
 
