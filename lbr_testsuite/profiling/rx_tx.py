@@ -66,6 +66,8 @@ class RxTxStats:
 
     Attributes
     ----------
+    _initial_timestamp : float
+        Initial time (start of data storing).
     _xstats : dict
         Dictionary with selected counters from extended statistics. Keys
         are counter names, values are units.
@@ -270,6 +272,8 @@ class RxTxStats:
     def __init__(self, stats_req: StatsRequest, q_cnt: int):
         self._verify_supported(stats_req)
 
+        self._initial_timestamp = None
+
         self._xstats = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
         self._xstats_per_q = self._init_stats_per_q(
             stats_req.xstats_per_q,
@@ -284,6 +288,15 @@ class RxTxStats:
         self._last = {k: 0 for k in keys}
 
         self._charts_spec = self._create_charts_spec(q_cnt)
+
+    def init_time(self):
+        """Initialize data storing start time.
+
+        Call this method at the beginning of data storing for later
+        computation of precise time step.
+        """
+
+        self._initial_timestamp = time.monotonic()
 
     def xstats(self) -> dict[str, CounterUnit]:
         """Get specification of monitored extended global statistics.
@@ -344,7 +357,6 @@ class RxTxStats:
         self,
         timestamp: int,
         xstats: dict[str, int | float] | None,
-        initial_timestamp: float,
     ):
         """Store statistics from single monitoring step.
 
@@ -369,7 +381,7 @@ class RxTxStats:
         if len(self._data[self.TIMESTAMP_COL]) > 0:
             time_step = timestamp - self._data[self.TIMESTAMP_COL][-1]
         else:
-            time_step = timestamp - initial_timestamp
+            time_step = timestamp - self._initial_timestamp
 
         self._data[self.TIMESTAMP_COL].append(timestamp)
         self._store_stats_group(xstats, self._xstats, time_step)
@@ -506,7 +518,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         pid = pipeline.get_pid()
 
         stats_storage.reset_last_counters(pipeline.get_xstats())
-        initial_timestamp = time.monotonic()
+        stats_storage.init_time()
 
         while not self.wait_stoppable(self._time_step):
             try:
@@ -516,15 +528,11 @@ class RxTxMonProfiler(ThreadedProfiler):
                 p_xstats, pid = self._restore_stats_reading(pid)
                 if not p_xstats:
                     # if there are no stats, application has been restarted -> write zero stats
-                    stats_storage.store_stats(t_outage, None, initial_timestamp)  # outage start
-                    stats_storage.store_stats(time.monotonic(), None, initial_timestamp)  # out. end
+                    stats_storage.store_stats(t_outage, None)  # outage start
+                    stats_storage.store_stats(time.monotonic(), None)  # out. end
                     continue
 
-            stats_storage.store_stats(
-                time.monotonic(),
-                p_xstats,
-                initial_timestamp,
-            )
+            stats_storage.store_stats(time.monotonic(), p_xstats)
 
         self._logger.info(f"sampled {len(stats_storage.get_data())}x Rx/Tx statistics")
 
