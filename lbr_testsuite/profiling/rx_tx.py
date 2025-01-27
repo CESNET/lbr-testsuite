@@ -254,7 +254,7 @@ class RxTxStats:
     def _init_stats_per_q(self, stats_per_q, q_cnt, lookup_group):
         result = dict()
         for sq in stats_per_q:
-            s_tmplt = s_tmplt = self._per_q_stat_lookup(sq, lookup_group)
+            s_tmplt = self._per_q_stat_lookup(sq, lookup_group)
             sq_group = dict()
             for i in range(q_cnt):
                 sq_group[s_tmplt.format(q_id=i)] = lookup_group[s_tmplt]
