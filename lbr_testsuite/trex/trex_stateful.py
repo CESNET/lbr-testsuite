@@ -75,6 +75,12 @@ class TRexProfile:
         Destination port.
         Server listens for incoming connections on this port.
         Client generates traffic with this destination port.
+    use_inbound_mac : bool, optional
+        If False (default), use destination MAC defined
+        in configuration file or set via API.
+        If True, use source MAC address of incoming
+        packet as destination MAC address for reply.
+        This option is relevant only for server.
     """
 
     program: Tuple[trex_astf_profile.ASTFProgram, trex_astf_profile.ASTFProgram]
@@ -82,6 +88,7 @@ class TRexProfile:
     server_net: str
     conn_rate: int
     l4_dst: int = 80
+    use_inbound_mac: bool = False
 
     def __post_init__(self):
         """Post-init check of parameters."""
@@ -117,11 +124,18 @@ class TRexProfilePcap:
         Server IP network, eg. '10.0.1.0/26'.
         IPv6 addresses must have prefix length in 96-128 range
         due to 32bit limitations in TRex engine.
+    use_inbound_mac : bool, optional
+        If False (default), use destination MAC defined
+        in configuration file or set via API.
+        If True, use source MAC address of incoming
+        packet as destination MAC address for reply.
+        This option is relevant only for server.
     """
 
     pcap_files: List[Tuple[str, float]]
     client_net: str
     server_net: str
+    use_inbound_mac: bool = False
 
     def __post_init__(self):
         """Post-init check of parameters."""
@@ -210,8 +224,8 @@ class TRexAdvancedStateful(TRexBase):
         client_network = ipaddress.ip_network(profile.client_net)
         server_network = ipaddress.ip_network(profile.server_net)
 
-        c_global_info = self._create_global_info(client_network)
-        s_global_info = self._create_global_info(server_network)
+        c_global_info = self._create_global_info(client_network, profile.use_inbound_mac)
+        s_global_info = self._create_global_info(server_network, profile.use_inbound_mac)
         c_ip_range = self._create_ip_range(client_network)
         s_ip_range = self._create_ip_range(server_network)
 
@@ -435,7 +449,7 @@ class TRexAdvancedStateful(TRexBase):
             async_port=async_port,
         )
 
-    def _create_global_info(self, l3_network):
+    def _create_global_info(self, l3_network, use_inbound_mac):
         """Create ASTF global info object based on IP version and network.
 
         For more information see table at
@@ -443,8 +457,7 @@ class TRexAdvancedStateful(TRexBase):
         """
 
         glob_info = trex_astf_profile.ASTFGlobalInfo()
-        # Use dest. MAC from port configuration when sending reply
-        glob_info.ip.dont_use_inbound_mac = 1
+        glob_info.ip.dont_use_inbound_mac = int(not use_inbound_mac)
 
         if l3_network.version == 6:
             glob_info.ipv6.enable = 1
