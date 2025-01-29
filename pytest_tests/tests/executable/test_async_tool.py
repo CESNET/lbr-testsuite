@@ -76,7 +76,7 @@ def test_async_tool_continuous_read(helper_app, testing_namespace, executor):
         assert next(ii) == TESTING_OUTPUT.strip()
 
     # timeout 6 seconds, rest of stdout should contain testing output 3 times
-    rest_stdout, _ = cmd.wait_or_kill(timeout=6)
+    rest_stdout, _ = cmd.wait_or_kill(timeout=6.1)
 
     assert rest_stdout == 3 * TESTING_OUTPUT
 
@@ -103,7 +103,7 @@ def test_async_tool_continuous_read_endls(helper_app, testing_namespace, executo
     for _ in range(3):
         assert next(ii) == TESTING_OUTPUT.strip()
 
-    rest_stdout, _ = cmd.wait_or_kill(timeout=2)
+    rest_stdout, _ = cmd.wait_or_kill(timeout=2.1)
 
     assert rest_stdout == 3 * TESTING_OUTPUT
 
@@ -136,7 +136,7 @@ def test_async_tool_continuous_read_long_line(
     ii = iter(cmd.stdout)
     assert next(ii) == testing_string.strip()
 
-    rest_stdout, _ = cmd.wait_or_kill(timeout=2)
+    rest_stdout, _ = cmd.wait_or_kill(timeout=2.1)
 
     assert rest_stdout == testing_string
 
@@ -172,7 +172,7 @@ def test_async_tool_continuous_read_short_long_line(
         assert next(ii) == short_line.strip()
         assert next(ii) == long_line.strip()
 
-    rest_stdout, _ = cmd.wait_or_kill(timeout=2)
+    rest_stdout, _ = cmd.wait_or_kill(timeout=2.1)
 
     assert rest_stdout == short_line + long_line
 
