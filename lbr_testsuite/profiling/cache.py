@@ -320,7 +320,7 @@ class PAPIProfiler(ThreadedProfiler):
     def mark(self, desc=None):
         self._marker.mark(time.monotonic(), desc)
 
-    def run(self):
+    def _data_collect(self) -> defaultdict:
         pid = self._subject.get_pid()
         workers = find_dpdk_worker_threads(pid)
         data = defaultdict(list)
@@ -340,6 +340,9 @@ class PAPIProfiler(ThreadedProfiler):
 
         self._logger.info(f"sampled {len(data)}x cache status")
 
+        return data
+
+    def _data_postprocess(self, data: defaultdict):
         df = pandas.DataFrame(data)
         df.to_csv(self._csv_file)
 

@@ -66,8 +66,8 @@ class RxTxStats:
 
     Attributes
     ----------
-    _timestamp : str
-        Name of timestamp counter.
+    _initial_timestamp : float
+        Initial time (start of data storing).
     _xstats : dict
         Dictionary with selected counters from extended statistics. Keys
         are counter names, values are units.
@@ -83,8 +83,6 @@ class RxTxStats:
         for each used per-queue counter.
     _data : dict
         Is a storage for monitored statistics (with timestamp).
-    _last : dict
-        Is a storage with last values of monitored statistics.
     """
 
     """Listing of supported extended global statistics."""
@@ -191,15 +189,22 @@ class RxTxStats:
         ),
     )
 
+    """Name of timestamp column."""
+    TIMESTAMP_COL = "timestamp"
+
     @staticmethod
-    def _per_q_stat_lookup(stat, lookup_group):
+    def _stat_name_postprocessed(stat_name: str) -> str:
+        return f"{stat_name}_postprocessed"
+
+    @staticmethod
+    def _per_q_stat_lookup(stat: tuple[str], lookup_group: dict[str, str]) -> str | None:
         for k in lookup_group.keys():
             if stat == k.replace("{q_id}", ""):
                 return k
 
         return None
 
-    def _verify_supported(self, stats_req):
+    def _verify_supported(self, stats_req: StatsRequest):
         for s in stats_req.xstats:
             if s not in RxTxStats._SUPPORTED_XSTATS.keys():
                 raise ValueError(f"{s} is not a supported name in extended statistics")
@@ -217,7 +222,7 @@ class RxTxStats:
         return "<events>"
 
     @staticmethod
-    def _specs_per_unit(stats):
+    def _specs_per_unit(stats: dict[str, CounterUnit]) -> dict[CounterUnit, list[str]]:
         per_unit = dict()
         for s, unit in stats.items():
             if unit not in per_unit:
@@ -226,7 +231,7 @@ class RxTxStats:
 
         return per_unit
 
-    def _create_charts_spec(self, q_cnt):
+    def _create_charts_spec(self, q_cnt: int) -> list[charts.SubPlotSpec]:
         ch_spec = []
 
         for unit, columns in self._specs_per_unit(self._xstats).items():
@@ -234,7 +239,7 @@ class RxTxStats:
                 charts.SubPlotSpec(
                     title=f"Extended Statistics ({unit})",
                     y_label=self._y_label_from_unit(unit),
-                    columns=columns,
+                    columns=[self._stat_name_postprocessed(c) for c in columns],
                 )
             )
 
@@ -244,17 +249,22 @@ class RxTxStats:
                 charts.SubPlotSpec(
                     title=f"{title} (per queue)",
                     y_label=self._y_label_from_unit(unit),
-                    columns=list(sq_group.keys()),
+                    columns=[self._stat_name_postprocessed(c) for c in sq_group.keys()],
                     col_names=list(range(q_cnt)),
                 )
             )
 
         return ch_spec
 
-    def _init_stats_per_q(self, stats_per_q, q_cnt, lookup_group):
+    def _init_stats_per_q(
+        self,
+        stats_per_q: tuple[str],
+        q_cnt: int,
+        lookup_group: dict[str, str],
+    ) -> dict[str, dict[str, CounterUnit]]:
         result = dict()
         for sq in stats_per_q:
-            s_tmplt = s_tmplt = self._per_q_stat_lookup(sq, lookup_group)
+            s_tmplt = self._per_q_stat_lookup(sq, lookup_group)
             sq_group = dict()
             for i in range(q_cnt):
                 sq_group[s_tmplt.format(q_id=i)] = lookup_group[s_tmplt]
@@ -264,7 +274,7 @@ class RxTxStats:
     def __init__(self, stats_req: StatsRequest, q_cnt: int):
         self._verify_supported(stats_req)
 
-        self._timestamp = "timestamp"
+        self._initial_timestamp = None
 
         self._xstats = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
         self._xstats_per_q = self._init_stats_per_q(
@@ -276,12 +286,20 @@ class RxTxStats:
         per_q_keys = [k for sq_group in self._xstats_per_q.values() for k in sq_group.keys()]
         keys = tuple(self._xstats.keys()) + tuple(per_q_keys)
         assert len(keys) == len(set(keys)), "Duplicate counter names are not supported."
-        self._data = {k: [] for k in (self._timestamp,) + keys}
-        self._last = {k: 0 for k in keys}
+        self._data = {k: [] for k in (self.TIMESTAMP_COL,) + keys}
 
         self._charts_spec = self._create_charts_spec(q_cnt)
 
-    def xstats(self) -> dict:
+    def init_time(self):
+        """Initialize data storing start time.
+
+        Call this method at the beginning of data storing for later
+        computation of precise time step.
+        """
+
+        self._initial_timestamp = time.monotonic()
+
+    def xstats(self) -> dict[str, CounterUnit]:
         """Get specification of monitored extended global statistics.
 
         Returns
@@ -293,7 +311,7 @@ class RxTxStats:
 
         return self._xstats
 
-    def xstats_per_q(self) -> dict:
+    def xstats_per_q(self) -> dict[str, dict[str, CounterUnit]]:
         """Get specification of monitored extended per-queue statistics.
 
         Returns
@@ -307,7 +325,7 @@ class RxTxStats:
 
         return self._xstats_per_q
 
-    def get_chart_spec(self) -> tuple:
+    def get_chart_spec(self) -> tuple[charts.SubPlotSpec]:
         """Get charts specification.
 
         Returns
@@ -318,20 +336,22 @@ class RxTxStats:
 
         return self._charts_spec
 
-    def _store_stats_group(self, source: dict | None, group: dict, time_step: float):
-        for k, unit in group.items():
+    def _store_stats_group(
+        self,
+        source: dict[str, int | float] | None,
+        group: dict[str, CounterUnit],
+    ):
+        for k in group.keys():
             if not source:
                 self._data[k].append(0)
             else:
-                val = source[k] - self._last[k]
-                self._last[k] = source[k]
-                if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
-                    per_second_approx = (1 / time_step) * val
-                    self._data[k].append(per_second_approx)
-                else:
-                    self._data[k].append(val)
+                self._data[k].append(source[k])
 
-    def store_stats(self, timestamp: int, xstats: dict | None, initial_timestamp: float):
+    def store_stats(
+        self,
+        timestamp: int,
+        xstats: dict[str, int | float] | None,
+    ):
         """Store statistics from single monitoring step.
 
         As all monitored statistics are incremental, difference between
@@ -345,42 +365,60 @@ class RxTxStats:
             Timestamp of a monitoring step.
         xstats : dict
             Extended statistics.
-        time_step : float
-            Monitoring step length as a count of seconds (or fraction of
-            second).
         """
 
-        # As waiting for <time-step> might not be exact, we would compute
-        # real duration of time step.
-        if len(self._data[self._timestamp]) > 0:
-            time_step = timestamp - self._data[self._timestamp][-1]
-        else:
-            time_step = timestamp - initial_timestamp
+        self._data[self.TIMESTAMP_COL].append(timestamp)
 
-        self._data[self._timestamp].append(timestamp)
-        self._store_stats_group(xstats, self._xstats, time_step)
+        self._store_stats_group(xstats, self._xstats)
         for stats_group in self._xstats_per_q.values():
-            self._store_stats_group(xstats, stats_group, time_step)
+            self._store_stats_group(xstats, stats_group)
 
-    def reset_last_counters(self, xstats: dict):
-        """Reset last values of counters.
+    def _post_process_stats_group(self, group, time_steps):
+        for col, unit in group.items():
+            prev = None
+            pp_col = self._stat_name_postprocessed(col)
+            self._data[pp_col] = []
 
-        Typically, this method should be called at the very beginning of
-        statistics monitoring. Without calling of this method, first
-        stored values might show significant peak as counters will
-        contain values since start of an application until the first
-        monitoring step.
+            for i, val in enumerate(self._data[col]):
 
-        Parameters
-        ----------
-        xstats : dict
-            Extended statistics.
+                if val == 0:  # no measurement available (start or outage )
+                    self._data[pp_col].append(0)
+                    prev = None
+                    continue
+
+                if not prev:  # counter reset (beginning of measurement)
+                    prev = val
+
+                pp_val = val - prev
+                prev = val
+                if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
+                    per_second_approx = (1 / time_steps[i]) * pp_val
+                    self._data[pp_col].append(per_second_approx)
+                else:
+                    self._data[pp_col].append(pp_val)
+
+    def post_process_stats(self):
+        """Post-process captured data.
+
+        From stored timestamp compute real time-steps. Using these
+        time-steps ad cumulative counters compute approximated
+        <unit>-per-seconds statistics where it makes sense (mainly
+        for bytes and packet statistics).
         """
 
-        for k in self._last.keys():
-            self._last[k] = xstats[k]
+        time_steps = list()
+        ts_prev = self._initial_timestamp
+        for ts in self._data[self.TIMESTAMP_COL]:
+            # As waiting for defined time step might not be exact, we
+            # compute real duration of time step.
+            time_steps.append(ts - ts_prev)
+            ts_prev = ts
 
-    def get_data(self) -> dict:
+        self._post_process_stats_group(self._xstats, time_steps)
+        for stats_group in self._xstats_per_q.values():
+            self._post_process_stats_group(stats_group, time_steps)
+
+    def get_data(self) -> dict[str, list[int | float]]:
         """Retrieve stored statistics.
 
         Returns
@@ -456,65 +494,60 @@ class RxTxMonProfiler(ThreadedProfiler):
     def mark(self, desc=None):
         self._marker.mark(time.monotonic(), desc)
 
-    def _restore_stats_reading(self, initial_pid, timeout=10):
+    def _restore_stats_reading(self, initial_pid: int, timeout: int = 10):
+        last_unavailable = None
+
         def _pipeline_is_active():
             try:
                 self._subject.get_pipeline().wait_until_active()
                 return True
             except OSError:
+                nonlocal last_unavailable
+                last_unavailable = time.monotonic()
                 return False
 
         t1 = time.time()
         common.wait_until_condition(_pipeline_is_active, timeout, sleep_step=self._time_step)
 
+        self._subject.stats().store_stats(last_unavailable, None)  # outage end
+
         curr_pid = self._subject.get_pipeline().get_pid()
         stats = self._subject.get_pipeline().get_xstats()
 
         if initial_pid != curr_pid:
-            self._subject.stats().reset_last_counters(stats)
             self.mark(desc="Pipeline restarted")
             self._logger.info(
                 f"Pipeline has been restarted (PID changed): {initial_pid} -> {curr_pid}."
             )
             self._logger.info(f"Statistics reading restored after {time.time() - t1:.2f}s.")
 
-            # Do not return stats to store right after the restart as these
-            # would rather create unwanted artifacts in results.
-            return None, curr_pid
-
         return stats, curr_pid
 
-    def run(self):
+    def _data_collect(self) -> RxTxStats:
         pipeline = self._subject.get_pipeline()
         stats_storage = self._subject.stats()
 
         pipeline.wait_until_active()
         pid = pipeline.get_pid()
 
-        stats_storage.reset_last_counters(pipeline.get_xstats())
-        initial_timestamp = time.monotonic()
+        stats_storage.init_time()
 
         while not self.wait_stoppable(self._time_step):
             try:
                 p_xstats = pipeline.get_xstats()
             except OSError:
-                t_outage = time.monotonic()
+                stats_storage.store_stats(time.monotonic(), None)  # outage start
                 p_xstats, pid = self._restore_stats_reading(pid)
-                if not p_xstats:
-                    # if there are no stats, application has been restarted -> write zero stats
-                    stats_storage.store_stats(t_outage, None, initial_timestamp)  # outage start
-                    stats_storage.store_stats(time.monotonic(), None, initial_timestamp)  # out. end
-                    continue
 
-            stats_storage.store_stats(
-                time.monotonic(),
-                p_xstats,
-                initial_timestamp,
-            )
+            stats_storage.store_stats(time.monotonic(), p_xstats)
 
         self._logger.info(f"sampled {len(stats_storage.get_data())}x Rx/Tx statistics")
 
-        df = pandas.DataFrame(stats_storage.get_data())
+        return stats_storage
+
+    def _data_postprocess(self, data: RxTxStats):
+        data.post_process_stats()
+        df = pandas.DataFrame(data.get_data())
         df.to_csv(self._csv_file)
 
         with open(self._mark_file, "w") as f:
@@ -526,7 +559,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         charts.create_charts_html(
             df,
-            stats_storage.get_chart_spec(),
+            data.get_chart_spec(),
             self._charts_file,
             title="Rx/Tx Statistics",
             markers=markers,

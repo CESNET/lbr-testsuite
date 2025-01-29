@@ -144,7 +144,7 @@ class CPUMonProfiler(ThreadedProfiler):
 
         charts.create_charts_html(df, chart_spec, charts_file, title="CPU Frequencies")
 
-    def run(self):
+    def _data_collect(self) -> dict:
         cpu_names = self._cpu_names()
         data = {"timestamp": []}
 
@@ -158,6 +158,9 @@ class CPUMonProfiler(ThreadedProfiler):
             for i, freq in enumerate(psutil.cpu_freq(True)):
                 data[f"cpu_{i}"].append(freq.current)
 
+        return data
+
+    def _data_postprocess(self, data: dict):
         df = pandas.DataFrame(data)
         df.to_csv(str(self._csv_file_pattern).format("raw"))
 

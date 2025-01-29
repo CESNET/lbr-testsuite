@@ -113,10 +113,8 @@ class IrqMonProfiler(ThreadedProfiler):
 
             df[f"group{i}"] = df[cpus[first:last]].sum(axis=1)
 
-    def run(self):
-        """Sample all system interrupts per CPU, write CSV file with sampled data
-        and generate plots.
-        """
+    def _data_collect(self) -> tuple:
+        """Sample all system interrupts per CPU."""
 
         last = self._collect_interrupts()
         cpus = list(last.keys())
@@ -133,11 +131,17 @@ class IrqMonProfiler(ThreadedProfiler):
 
             last = stats
 
-        self._logger.info(f"save interrupt stats into {self._csv_file}")
+        return data, cpus
 
-        df = pandas.DataFrame(data)
+    def _data_postprocess(self, data: tuple):
+        """write CSV file with sampled data and generate plots."""
+
+        df = pandas.DataFrame(data[0])
+
+        self._logger.info(f"save interrupt stats into {self._csv_file}")
         df.to_csv(self._csv_file)
 
+        cpus = data[1]
         groups = len(cpus) // self.GROUP_SIZE + (1 if len(cpus) % self.GROUP_SIZE != 0 else 0)
 
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
