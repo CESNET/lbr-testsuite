@@ -11,7 +11,7 @@ import time
 import pandas
 
 from . import _charts as charts
-from .profiler import ProfiledSubject, ProfilerMarker, ThreadedProfiler
+from .profiler import ProfiledSubject, ThreadedProfiler
 
 
 class ProfiledPipelineSubject(ProfiledSubject):
@@ -161,19 +161,14 @@ class PipelineMonContext:
 
 
 class PipelineMonProfiler(ThreadedProfiler):
-    def __init__(self, csv_file_pattern, mark_file, charts_file_pattern, time_step=0.1):
-        super().__init__()
+    def __init__(self, time_step=0.1, **kwargs):
+        super().__init__(**kwargs)
 
-        self._csv_file_pattern = csv_file_pattern
-        self._mark_file = mark_file
-        self._charts_file_pattern = charts_file_pattern
         self._time_step = time_step
 
     def start(self, subject: ProfiledSubject):
         if not isinstance(subject, ProfiledPipelineSubject):
             raise RuntimeError("subject must be of type ProfiledPipelineSubject")
-
-        self._marker = ProfilerMarker()
         super().start(subject)
 
     @staticmethod
@@ -205,7 +200,7 @@ class PipelineMonProfiler(ThreadedProfiler):
                     df[c] = df[c].diff().div(df["timestamp_diff"] / self._time_step)
             ch_spec.append(self._compose_ch_spec(df, label, label, col_prefix))
 
-        charts_file = str(self._charts_file_pattern).format("general", pipeline_name)
+        charts_file = str(self._charts_file).format("general", pipeline_name)
         charts.create_charts_html(
             df,
             ch_spec,
@@ -235,7 +230,7 @@ class PipelineMonProfiler(ThreadedProfiler):
                 )
             )
 
-        charts_file = str(self._charts_file_pattern).format("stage_latencies", pipeline_name)
+        charts_file = str(self._charts_file).format("stage_latencies", pipeline_name)
         charts.create_charts_html(
             df,
             ch_spec,
@@ -269,7 +264,7 @@ class PipelineMonProfiler(ThreadedProfiler):
 
         for ctx in data:
             df = ctx.get_data_frame()
-            df.to_csv(str(self._csv_file_pattern).format(ctx.get_name()))
+            df.to_csv(str(self._csv_file).format(ctx.get_name()))
 
             markers = self._marker.to_dataframe()
             markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())

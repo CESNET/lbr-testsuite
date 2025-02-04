@@ -18,7 +18,7 @@ from pypapi import papi_low as papi
 from pypapi.exceptions import PapiNoEventError
 
 from . import _charts as charts
-from .profiler import ProfilerMarker, ThreadedProfiler
+from .profiler import ThreadedProfiler
 
 
 class ThreadInfo(NamedTuple):
@@ -219,31 +219,24 @@ class PAPIProfiler(ThreadedProfiler):
 
     def __init__(
         self,
-        csv_file: Path,
-        mark_file: str,
-        charts_file: str,
         event_groups: Dict[str, List],
         time_step: float = 0.1,
+        **kwargs,
     ):
         """
         Parameters
         ----------
-        csv_file : Path
-            Path to the output csv file.
-        charts_file : str
-            Path to the charts output file.
         event_groups : Dict[str, List]
             Event groups dictionary in the format:
                 {"name": list of events in group}
         time_step : float
             Time step between two consecutive measurements.
+        kwargs
+            Options to pass to ThreadedProfiler initializer.
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
 
-        self._csv_file = csv_file
-        self._mark_file = mark_file
-        self._charts_file = charts_file
         self._time_step = time_step
 
         papi_ver = int(os.environ.get("PYPAPI_VER", 0x7010000))
@@ -314,7 +307,6 @@ class PAPIProfiler(ThreadedProfiler):
         )
 
     def start(self, subject):
-        self._marker = ProfilerMarker()
         super().start(subject)
 
     def mark(self, desc=None):

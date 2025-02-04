@@ -29,22 +29,18 @@ class IrqMonProfiler(ThreadedProfiler):
 
     GROUP_SIZE = 8
 
-    def __init__(self, csv_file, charts_file, time_step=0.1):
+    def __init__(self, time_step=0.1, **kwargs):
         """
         Parameters
         ----------
-        csv_file : str
-            Path to CSV file where to store all sampled data.
-        charts_file : str
-            Path to charts file where to plot the data.
         time_step : float, optional
             Sampling period (seconds).
+        kwargs
+            Options to pass to ThreadedProfiler initializer.
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
 
-        self._csv_file = csv_file
-        self._charts_file = charts_file
         self._time_step = time_step
 
     def _read_proc_interrupts(self):

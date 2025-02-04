@@ -200,7 +200,7 @@ class ThreadedProfiler(Profiler):
     that runs as a Python code in thread.
     """
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, csv_file=None, charts_file=None, mark_file=None):
         self._request_stop = True
         self._stopper = None
 
@@ -208,6 +208,11 @@ class ThreadedProfiler(Profiler):
             self._logger = logging.getLogger(type(self).__name__)
         else:
             self._logger = logger
+
+        self._csv_file = csv_file
+        self._charts_file = charts_file
+        self._mark_file = mark_file
+        self._marker= None
 
     def get_thread(self):
         """Get thread used for running this profiler."""
@@ -220,6 +225,9 @@ class ThreadedProfiler(Profiler):
         self._subject = subject
         self._request_stop = False
         self._stopper = threading.Condition()
+
+        if self._mark_file:
+            self._marker = ProfilerMarker()
 
         def run_safe():
             try:

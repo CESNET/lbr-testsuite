@@ -178,7 +178,13 @@ def collect_profilers(pyt_request, output_dir):
 
         csv_file = compose_output_path(pyt_request, "pyJoules", ".csv", output_dir)
         charts_file = compose_output_path(pyt_request, "pyJoules", ".html", output_dir)
-        profilers.append(pyJoulesProfiler(csv_file, charts_file, numa_sockets=numa_sockets))
+        profilers.append(
+            pyJoulesProfiler(
+                numa_sockets=numa_sockets,
+                csv_file=csv_file,
+                charts_file=charts_file,
+            )
+        )
 
     use_cpumon = pyt_request.config.getoption("use_cpumon")
     if use_cpumon:
@@ -188,7 +194,13 @@ def collect_profilers(pyt_request, output_dir):
         csv_file_pattern = compose_output_path(pyt_request, "cpumon_{0}", ".csv", output_dir)
         charts_file_pattern = compose_output_path(pyt_request, "cpumon_{0}", ".html", output_dir)
         time_step = use_cpumon
-        profilers.append(CPUMonProfiler(csv_file_pattern, charts_file_pattern, time_step=time_step))
+        profilers.append(
+            CPUMonProfiler(
+                time_step=time_step,
+                csv_file=csv_file_pattern,
+                charts_file=charts_file_pattern,
+            )
+        )
 
     use_pipelinemon = pyt_request.config.getoption("use_pipelinemon")
     if use_pipelinemon:
@@ -206,7 +218,10 @@ def collect_profilers(pyt_request, output_dir):
         time_step = use_pipelinemon
         profilers.append(
             PipelineMonProfiler(
-                csv_file_pattern, mark_file, charts_file_pattern, time_step=time_step
+                time_step=time_step,
+                csv_file=csv_file_pattern,
+                mark_file=mark_file,
+                charts_file=charts_file_pattern,
             )
         )
 
@@ -218,7 +233,14 @@ def collect_profilers(pyt_request, output_dir):
         csv_file = compose_output_path(pyt_request, "rxtxmon", ".csv", output_dir)
         mark_file = compose_output_path(pyt_request, "rxtxmon", ".mark", output_dir)
         charts_file = compose_output_path(pyt_request, "rxtxmon", ".html", output_dir)
-        profilers.append(RxTxMonProfiler(csv_file, mark_file, charts_file, time_step=use_rxtxmon))
+        profilers.append(
+            RxTxMonProfiler(
+                time_step=use_rxtxmon,
+                csv_file=csv_file,
+                mark_file=mark_file,
+                charts_file=charts_file
+            )
+        )
 
     use_irqmon = pyt_request.config.getoption("use_irqmon")
     if use_irqmon:
@@ -228,7 +250,13 @@ def collect_profilers(pyt_request, output_dir):
         csv_file = compose_output_path(pyt_request, "irqmon", ".csv", output_dir)
         charts_file = compose_output_path(pyt_request, "irqmon", ".html", output_dir)
         time_step = use_irqmon
-        profilers.append(IrqMonProfiler(csv_file, charts_file, time_step=time_step))
+        profilers.append(
+            IrqMonProfiler(
+                time_step=time_step,
+                csv_file=csv_file,
+                charts_file=charts_file,
+            )
+        )
 
     use_cache_prof = pyt_request.config.getoption("use_cache_prof")
     if use_cache_prof:
@@ -258,7 +286,13 @@ def collect_profilers(pyt_request, output_dir):
             ],
         }
         profilers.append(
-            PAPIProfiler(csv_file, mark_file, charts_file, papi_evs, time_step=time_step),
+            PAPIProfiler(
+                papi_evs,
+                time_step=time_step,
+                csv_file=csv_file,
+                mark_file=mark_file,
+                charts_file=charts_file,
+            ),
         )
 
     return profilers
