@@ -80,14 +80,14 @@ class pyJoulesProfiler(ThreadedProfiler):
         return domains_repr
 
     def _data_postprocess(self, data: list):
-        global_logger.info(f"saving to {self._csv_file} and {self._charts_file}")
+        global_logger.info(f"saving to {self.csv_file()} and {self.charts_file()}")
 
         handler = PandasHandler()
         try:
             handler.process(self._meter.get_trace())
         finally:
             df = handler.get_dataframe().iloc[:-1]  # drop last, it is too close to second last
-            df.to_csv(self._csv_file)
+            df.to_csv(self.csv_file())
 
             global_logger.debug("plotting power consumption...")
 
@@ -102,7 +102,7 @@ class pyJoulesProfiler(ThreadedProfiler):
             charts.create_charts_html(
                 df,
                 ch_spec,
-                self._charts_file,
+                self.charts_file(),
                 title="Power Consumption",
             )
 

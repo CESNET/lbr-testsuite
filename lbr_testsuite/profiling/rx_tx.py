@@ -538,9 +538,9 @@ class RxTxMonProfiler(ThreadedProfiler):
     def _data_postprocess(self, data: RxTxStats):
         data.post_process_stats()
         df = pandas.DataFrame(data.get_data())
-        df.to_csv(self._csv_file)
+        df.to_csv(self.csv_file())
 
-        with open(self._mark_file, "w") as f:
+        with open(self.mark_file(), "w") as f:
             self._marker.save(f)
 
         markers = self._marker.to_dataframe()
@@ -550,7 +550,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         charts.create_charts_html(
             df,
             data.get_chart_spec(),
-            self._charts_file,
+            self.charts_file(),
             title="Rx/Tx Statistics",
             markers=markers,
         )

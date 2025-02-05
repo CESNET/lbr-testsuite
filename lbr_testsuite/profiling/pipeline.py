@@ -200,11 +200,10 @@ class PipelineMonProfiler(ThreadedProfiler):
                     df[c] = df[c].diff().div(df["timestamp_diff"] / self._time_step)
             ch_spec.append(self._compose_ch_spec(df, label, label, col_prefix))
 
-        charts_file = str(self._charts_file).format("general", pipeline_name)
         charts.create_charts_html(
             df,
             ch_spec,
-            charts_file,
+            self.charts_file(f"_general_{pipeline_name}"),
             title="Pipeline Statistics",
             markers=markers,
         )
@@ -230,11 +229,10 @@ class PipelineMonProfiler(ThreadedProfiler):
                 )
             )
 
-        charts_file = str(self._charts_file).format("stage_latencies", pipeline_name)
         charts.create_charts_html(
             df,
             ch_spec,
-            charts_file,
+            self.charts_file(f"_stage_latencies_{pipeline_name}"),
             title="Pipeline Statistics",
             markers=markers,
         )
@@ -259,12 +257,12 @@ class PipelineMonProfiler(ThreadedProfiler):
         return contexts
 
     def _data_postprocess(self, data: list):
-        with open(self._mark_file, "w") as f:
+        with open(self.mark_file(), "w") as f:
             self._marker.save(f)
 
         for ctx in data:
             df = ctx.get_data_frame()
-            df.to_csv(str(self._csv_file).format(ctx.get_name()))
+            df.to_csv(self.csv_file(f"_{ctx.get_name()}"))
 
             markers = self._marker.to_dataframe()
             markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())

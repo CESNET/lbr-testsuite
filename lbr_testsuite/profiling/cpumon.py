@@ -160,16 +160,16 @@ class CPUMonProfiler(ThreadedProfiler):
 
     def _data_postprocess(self, data: dict):
         df = pandas.DataFrame(data)
-        df.to_csv(str(self._csv_file).format("raw"))
+        df.to_csv(self.csv_file("raw"))
 
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         self._plot_freqs_per_cpu(
             df,
-            str(self._csv_file).format("freqs_per_cpu"),
-            str(self._charts_file).format("freqs_per_cpu"),
+            self.csv_file("freqs_per_cpu"),
+            self.charts_file("freqs_per_cpu"),
         )
         self._plot_freqs(
             df,
-            str(self._csv_file).format("freqs"),
-            str(self._charts_file).format("freqs"),
+            self.csv_file("freqs"),
+            self.charts_file("freqs"),
         )

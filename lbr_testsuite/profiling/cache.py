@@ -296,11 +296,11 @@ class PAPIProfiler(ThreadedProfiler):
                 )
             )
 
-        self._logger.info(f"saving charts file: {self._charts_file}")
+        self._logger.info(f"saving charts file: {self.charts_file()}")
         charts.create_charts_html(
             df,
             ch_spec,
-            self._charts_file,
+            self.charts_file(),
             title="Pipeline Statistics",
             height=800,
             markers=markers,
@@ -336,9 +336,9 @@ class PAPIProfiler(ThreadedProfiler):
 
     def _data_postprocess(self, data: defaultdict):
         df = pandas.DataFrame(data)
-        df.to_csv(self._csv_file)
+        df.to_csv(self.csv_file())
 
-        with open(self._mark_file, "w") as f:
+        with open(self.mark_file(), "w") as f:
             self._marker.save(f)
 
         self._plot_events_cumulative(df)

@@ -176,13 +176,11 @@ def collect_profilers(pyt_request, output_dir):
         else:
             numa_sockets = [int(s) for s in use_pyJoules.split(",")]
 
-        csv_file = compose_output_path(pyt_request, "pyJoules", ".csv", output_dir)
-        charts_file = compose_output_path(pyt_request, "pyJoules", ".html", output_dir)
+        out_file_base = compose_output_path(pyt_request, "pyJoules", directory=output_dir)
         profilers.append(
             pyJoulesProfiler(
                 numa_sockets=numa_sockets,
-                csv_file=csv_file,
-                charts_file=charts_file,
+                output_file_base=out_file_base,
             )
         )
 
@@ -191,14 +189,12 @@ def collect_profilers(pyt_request, output_dir):
         if use_cpumon <= 0:
             raise Exception(f"invalid scaling-period for cpumon: {use_cpumon}")
 
-        csv_file_pattern = compose_output_path(pyt_request, "cpumon_{0}", ".csv", output_dir)
-        charts_file_pattern = compose_output_path(pyt_request, "cpumon_{0}", ".html", output_dir)
+        out_file_base_pattern = compose_output_path(pyt_request, "cpumon_{0}", directory=output_dir)
         time_step = use_cpumon
         profilers.append(
             CPUMonProfiler(
                 time_step=time_step,
-                csv_file=csv_file_pattern,
-                charts_file=charts_file_pattern,
+                output_file_base=out_file_base_pattern,
             )
         )
 
@@ -207,21 +203,16 @@ def collect_profilers(pyt_request, output_dir):
         if use_pipelinemon <= 0:
             raise Exception(f"invalid scaling-period for pipelinemon: {use_pipelinemon}")
 
-        csv_file_pattern = compose_output_path(pyt_request, "pipelinemon_{0}", ".csv", output_dir)
-        mark_file = compose_output_path(pyt_request, "pipelinemon", ".mark", output_dir)
-        charts_file_pattern = compose_output_path(
+        out_file_base_pattern = compose_output_path(
             pyt_request,
-            "pipelinemon_{0}_{1}",
-            ".html",
-            output_dir,
+            "pipelinemon{0}",
+            directory=output_dir,
         )
         time_step = use_pipelinemon
         profilers.append(
             PipelineMonProfiler(
                 time_step=time_step,
-                csv_file=csv_file_pattern,
-                mark_file=mark_file,
-                charts_file=charts_file_pattern,
+                output_file_base=out_file_base_pattern,
             )
         )
 
@@ -230,15 +221,11 @@ def collect_profilers(pyt_request, output_dir):
         if use_rxtxmon <= 0:
             raise Exception(f"invalid scaling-period for rxtxmon: {use_rxtxmon}")
 
-        csv_file = compose_output_path(pyt_request, "rxtxmon", ".csv", output_dir)
-        mark_file = compose_output_path(pyt_request, "rxtxmon", ".mark", output_dir)
-        charts_file = compose_output_path(pyt_request, "rxtxmon", ".html", output_dir)
+        out_file_base = compose_output_path(pyt_request, "rxtxmon", directory=output_dir)
         profilers.append(
             RxTxMonProfiler(
                 time_step=use_rxtxmon,
-                csv_file=csv_file,
-                mark_file=mark_file,
-                charts_file=charts_file
+                output_file_base=out_file_base,
             )
         )
 
@@ -247,14 +234,12 @@ def collect_profilers(pyt_request, output_dir):
         if use_irqmon <= 0:
             raise Exception(f"invalid scaling-period for irqmon: {use_irqmon}")
 
-        csv_file = compose_output_path(pyt_request, "irqmon", ".csv", output_dir)
-        charts_file = compose_output_path(pyt_request, "irqmon", ".html", output_dir)
+        out_file_base = compose_output_path(pyt_request, "irqmon", directory=output_dir)
         time_step = use_irqmon
         profilers.append(
             IrqMonProfiler(
                 time_step=time_step,
-                csv_file=csv_file,
-                charts_file=charts_file,
+                output_file_base=out_file_base,
             )
         )
 
@@ -263,9 +248,7 @@ def collect_profilers(pyt_request, output_dir):
         if use_cache_prof <= 0:
             raise Exception(f"invalid scaling-period for irqmon: {use_cache_prof}")
 
-        csv_file = compose_output_path(pyt_request, "cache_prof", ".csv", output_dir)
-        mark_file = compose_output_path(pyt_request, "cache_prof", ".mark", output_dir)
-        charts_file = compose_output_path(pyt_request, "cache_prof", ".html", output_dir)
+        out_file_base = compose_output_path(pyt_request, "cache_prof", directory=output_dir)
         time_step = use_cache_prof
         papi_evs = {
             "L1 Misses": [
@@ -289,9 +272,7 @@ def collect_profilers(pyt_request, output_dir):
             PAPIProfiler(
                 papi_evs,
                 time_step=time_step,
-                csv_file=csv_file,
-                mark_file=mark_file,
-                charts_file=charts_file,
+                output_file_base=out_file_base,
             ),
         )
 

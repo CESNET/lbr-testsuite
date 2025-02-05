@@ -200,7 +200,7 @@ class ThreadedProfiler(Profiler):
     that runs as a Python code in thread.
     """
 
-    def __init__(self, logger=None, csv_file=None, charts_file=None, mark_file=None):
+    def __init__(self, logger=None, output_file_base="./"):
         self._request_stop = True
         self._stopper = None
 
@@ -209,10 +209,22 @@ class ThreadedProfiler(Profiler):
         else:
             self._logger = logger
 
-        self._csv_file = csv_file
-        self._charts_file = charts_file
-        self._mark_file = mark_file
-        self._marker= None
+        self._output_file_base = output_file_base
+        self._marker = None
+
+    @staticmethod
+    def _format_file_name(file_name_base, *args):
+        default_args = 100 * ("",)  # Fills empty strings for up to 100 arguments
+        return str(file_name_base).format(*(args + default_args))
+
+    def csv_file(self, *args):
+        return f"{self._format_file_name(self._output_file_base, *args)}.csv"
+
+    def charts_file(self, *args):
+        return f"{self._format_file_name(self._output_file_base, *args)}.html"
+
+    def mark_file(self, *args):
+        return f"{self._format_file_name(self._output_file_base, *args)}.mark"
 
     def get_thread(self):
         """Get thread used for running this profiler."""
@@ -226,8 +238,7 @@ class ThreadedProfiler(Profiler):
         self._request_stop = False
         self._stopper = threading.Condition()
 
-        if self._mark_file:
-            self._marker = ProfilerMarker()
+        self._marker = ProfilerMarker()
 
         def run_safe():
             try:

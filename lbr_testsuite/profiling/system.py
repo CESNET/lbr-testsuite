@@ -134,8 +134,8 @@ class IrqMonProfiler(ThreadedProfiler):
 
         df = pandas.DataFrame(data[0])
 
-        self._logger.info(f"save interrupt stats into {self._csv_file}")
-        df.to_csv(self._csv_file)
+        self._logger.info(f"save interrupt stats into {self.csv_file()}")
+        df.to_csv(self.csv_file())
 
         cpus = data[1]
         groups = len(cpus) // self.GROUP_SIZE + (1 if len(cpus) % self.GROUP_SIZE != 0 else 0)
@@ -173,11 +173,11 @@ class IrqMonProfiler(ThreadedProfiler):
                 )
             )
 
-        self._logger.info(f"save charts file: {self._charts_file}")
+        self._logger.info(f"save charts file: {self.charts_file()}")
         charts.create_charts_html(
             df,
             ch_spec,
-            self._charts_file,
+            self.charts_file(),
             title="System Interrupts",
             vertical_spacing=0.03,
         )
