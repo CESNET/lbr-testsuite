@@ -373,51 +373,6 @@ class RxTxStats:
         for stats_group in self._config.xstats_per_q.values():
             self._store_stats_group(xstats, stats_group)
 
-    def _post_process_stats_group(self, group, time_steps):
-        for col, unit in group.items():
-            prev = None
-            pp_col = self._stat_name_postprocessed(col)
-            self._data[pp_col] = []
-
-            for i, val in enumerate(self._data[col]):
-
-                if val == 0:  # no measurement available (start or outage )
-                    self._data[pp_col].append(0)
-                    prev = None
-                    continue
-
-                if not prev:  # counter reset (beginning of measurement)
-                    prev = val
-
-                pp_val = val - prev
-                prev = val
-                if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
-                    per_second_approx = (1 / time_steps[i]) * pp_val
-                    self._data[pp_col].append(per_second_approx)
-                else:
-                    self._data[pp_col].append(pp_val)
-
-    def post_process_stats(self):
-        """Post-process captured data.
-
-        From stored timestamp compute real time-steps. Using these
-        time-steps ad cumulative counters compute approximated
-        <unit>-per-seconds statistics where it makes sense (mainly
-        for bytes and packet statistics).
-        """
-
-        time_steps = list()
-        ts_prev = self._initial_timestamp
-        for ts in self._data[self.TIMESTAMP_COL]:
-            # As waiting for defined time step might not be exact, we
-            # compute real duration of time step.
-            time_steps.append(ts - ts_prev)
-            ts_prev = ts
-
-        self._post_process_stats_group(self._config.xstats, time_steps)
-        for stats_group in self._config.xstats_per_q.values():
-            self._post_process_stats_group(stats_group, time_steps)
-
     def get_data(self) -> dict[str, list[int | float]]:
         """Retrieve stored statistics.
 
@@ -535,9 +490,60 @@ class RxTxMonProfiler(ThreadedProfiler):
 
         return stats_storage
 
+    @staticmethod
+    def _postprocess_stats_group(stats, group, time_steps):
+        for col, unit in group.items():
+            prev = None
+            pp_col = RxTxStats._stat_name_postprocessed(col)
+            stats[pp_col] = []
+
+            for i, val in enumerate(stats[col]):
+
+                if val == 0:  # no measurement available (start or outage )
+                    stats[pp_col].append(0)
+                    prev = None
+                    continue
+
+                if not prev:  # counter reset (beginning of measurement)
+                    prev = val
+
+                pp_val = val - prev
+                prev = val
+                if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
+                    if time_steps[i] == 0:
+                        stats[pp_col].append(0)
+                    else:
+                        per_second_approx = (1 / time_steps[i]) * pp_val
+                        stats[pp_col].append(per_second_approx)
+                else:
+                    stats[pp_col].append(pp_val)
+
+    @staticmethod
+    def _postprocess_stats(stats, config):
+        """Post-process captured data.
+
+        From stored timestamp compute real time-steps. Using these
+        time-steps and cumulative counters compute approximated
+        <unit>-per-seconds statistics where it makes sense (mainly
+        for bytes and packet statistics).
+        """
+
+        time_steps = list()
+        ts_prev = stats[RxTxStats.TIMESTAMP_COL][0]  # first value will be zero after subtraction
+        for ts in stats[RxTxStats.TIMESTAMP_COL]:
+            # As waiting for defined time step might not be exact, we
+            # compute real duration of time step.
+            time_steps.append(ts - ts_prev)
+            ts_prev = ts
+
+        RxTxMonProfiler._postprocess_stats_group(stats, config.xstats, time_steps)
+        for stats_group in config.xstats_per_q.values():
+            RxTxMonProfiler._postprocess_stats_group(stats, stats_group, time_steps)
+
     def _data_postprocess(self, data: RxTxStats):
-        data.post_process_stats()
-        df = pandas.DataFrame(data.get_data())
+        stats = data.get_data()
+        self._postprocess_stats(stats, data.get_config())
+        df = pandas.DataFrame(stats)
         df.to_csv(self.csv_file())
 
         with open(self.mark_file(), "w") as f:
