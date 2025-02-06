@@ -58,6 +58,31 @@ class StatsRequest:
     xstats_per_q: tuple = ()
 
 
+@dataclass
+class RxTxStatsConf:
+    """Rx-Tx statistics container configuration.
+
+    Attributes
+    ----------
+    xstats : dict
+        Dictionary with selected counters from extended statistics. Keys
+        are counter names, values are units.
+    xstats_per_q : dict
+        Dictionary with selected counters from extended statistics for
+        for every queue. Keys are general counter names (templates)
+        and values are dictionaries. Keys of these dictionaries are
+        counter names (with queue ID filled), values are units.
+    charts_spec : list(charts.SubPlotSpec)
+        A list of charts specifications. There will be one chart for
+        each used counter unit for basic statistics, one chart for
+        each used counter unit for extended statistics and one chart
+        for each used per-queue counter.
+    """
+
+    xstats: dict[str, CounterUnit]
+    xstats_per_q: dict[str, dict[str, CounterUnit]]
+    charts_spec: list[charts.SubPlotSpec]
+
 class RxTxStats:
     """Class for Rx/Tx statistics definition and recording.
 
@@ -68,19 +93,11 @@ class RxTxStats:
     ----------
     _initial_timestamp : float
         Initial time (start of data storing).
-    _xstats : dict
-        Dictionary with selected counters from extended statistics. Keys
-        are counter names, values are units.
-    _xstats_per_q : dict
-        Dictionary with selected counters from extended statistics for
-        for every queue. Keys are general counter names (templates)
-        and values are dictionaries. Keys of these dictionaries are
-        counter names (with queue ID filled), values are units.
-    _charts_spec : list(charts.SubPlotSpec)
-        A list of charts specifications. There will be one chart for
-        each used counter unit for basic statistics, one chart for
-        each used counter unit for extended statistics and one chart
-        for each used per-queue counter.
+    _config : RxTxStatsConf
+        Contains statistics configuration and charts specification.
+        Statistics configuration consists of two dictionaries - one for
+        extended statistics and per-queue extended statistics.
+        Dictionaries stores counter names and related unit.
     _data : dict
         Is a storage for monitored statistics (with timestamp).
     """
@@ -231,10 +248,15 @@ class RxTxStats:
 
         return per_unit
 
-    def _create_charts_spec(self, q_cnt: int) -> list[charts.SubPlotSpec]:
+    def _create_charts_spec(
+        self,
+        q_cnt: int,
+        xstats: dict[str, CounterUnit],
+        xstats_per_q: dict[str, dict[str, CounterUnit]],
+    ) -> list[charts.SubPlotSpec]:
         ch_spec = []
 
-        for unit, columns in self._specs_per_unit(self._xstats).items():
+        for unit, columns in self._specs_per_unit(xstats).items():
             ch_spec.append(
                 charts.SubPlotSpec(
                     title=f"Extended Statistics ({unit})",
@@ -243,7 +265,7 @@ class RxTxStats:
                 )
             )
 
-        for title, sq_group in self._xstats_per_q.items():
+        for title, sq_group in xstats_per_q.items():
             unit = next(iter(sq_group.values()))  # all items in a group have same value
             ch_spec.append(
                 charts.SubPlotSpec(
@@ -276,19 +298,23 @@ class RxTxStats:
 
         self._initial_timestamp = None
 
-        self._xstats = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
-        self._xstats_per_q = self._init_stats_per_q(
+        xs = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
+        xs_per_q = self._init_stats_per_q(
             stats_req.xstats_per_q,
             q_cnt,
             RxTxStats._SUPPORTED_XSTATS_PER_Q,
         )
+        self._config = RxTxStatsConf(
+            xstats=xs,
+            xstats_per_q=xs_per_q,
+            charts_spec=self._create_charts_spec(q_cnt, xs, xs_per_q),
+        )
 
-        per_q_keys = [k for sq_group in self._xstats_per_q.values() for k in sq_group.keys()]
-        keys = tuple(self._xstats.keys()) + tuple(per_q_keys)
+        per_q_keys = [k for sq_group in self._config.xstats_per_q.values() for k in sq_group.keys()]
+        keys = tuple(self._config.xstats.keys()) + tuple(per_q_keys)
         assert len(keys) == len(set(keys)), "Duplicate counter names are not supported."
-        self._data = {k: [] for k in (self.TIMESTAMP_COL,) + keys}
 
-        self._charts_spec = self._create_charts_spec(q_cnt)
+        self._data = {k: [] for k in (self.TIMESTAMP_COL,) + keys}
 
     def init_time(self):
         """Initialize data storing start time.
@@ -299,42 +325,16 @@ class RxTxStats:
 
         self._initial_timestamp = time.monotonic()
 
-    def xstats(self) -> dict[str, CounterUnit]:
-        """Get specification of monitored extended global statistics.
+    def get_config(self) -> RxTxStatsConf:
+        """Get current configuration.
 
         Returns
         -------
-        dict
-            Dictionary with selected counters from extended statistics.
-            Keys are counter names, values are units.
+        RxTxStatsConf
+            Returns statistics configuration and charts specification.
         """
 
-        return self._xstats
-
-    def xstats_per_q(self) -> dict[str, dict[str, CounterUnit]]:
-        """Get specification of monitored extended per-queue statistics.
-
-        Returns
-        -------
-        dict
-            Dictionary with selected counters from extended statistics
-            for every queue. Keys are general counter names (templates)
-            and values are dictionaries. Keys of these dictionaries are
-            counter names (with queue ID filled), values are units.
-        """
-
-        return self._xstats_per_q
-
-    def get_chart_spec(self) -> tuple[charts.SubPlotSpec]:
-        """Get charts specification.
-
-        Returns
-        -------
-        list(charts.SubPlotSpec)
-            A list of charts specifications.
-        """
-
-        return self._charts_spec
+        return self._config
 
     def _store_stats_group(
         self,
@@ -369,8 +369,8 @@ class RxTxStats:
 
         self._data[self.TIMESTAMP_COL].append(timestamp)
 
-        self._store_stats_group(xstats, self._xstats)
-        for stats_group in self._xstats_per_q.values():
+        self._store_stats_group(xstats, self._config.xstats)
+        for stats_group in self._config.xstats_per_q.values():
             self._store_stats_group(xstats, stats_group)
 
     def _post_process_stats_group(self, group, time_steps):
@@ -414,8 +414,8 @@ class RxTxStats:
             time_steps.append(ts - ts_prev)
             ts_prev = ts
 
-        self._post_process_stats_group(self._xstats, time_steps)
-        for stats_group in self._xstats_per_q.values():
+        self._post_process_stats_group(self._config.xstats, time_steps)
+        for stats_group in self._config.xstats_per_q.values():
             self._post_process_stats_group(stats_group, time_steps)
 
     def get_data(self) -> dict[str, list[int | float]]:
@@ -549,7 +549,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         charts.create_charts_html(
             df,
-            data.get_chart_spec(),
+            data.get_config().charts_spec,
             self.charts_file(),
             title="Rx/Tx Statistics",
             markers=markers,
