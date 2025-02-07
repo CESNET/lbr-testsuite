@@ -69,6 +69,9 @@ class ProfilerMarker:
     def __iter__(self):
         return iter(self._marks)
 
+    def __len__(self):
+        return len(self._marks)
+
     def save(self, f):
         """Save marks into the given file.
 
