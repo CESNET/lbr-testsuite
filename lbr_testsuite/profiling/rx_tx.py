@@ -531,29 +531,21 @@ class RxTxMonProfiler(ThreadedProfiler):
         first_prev = timestamps[0]  # first value will be zero after subtraction
         return timestamps - timestamps.shift(1, fill_value=first_prev)
 
-    @staticmethod
-    def _postprocess_stats(
-        stats: pandas.DataFrame,
-        config: RxTxStatsConf,
-        timestamp_col: str = RxTxStats.TIMESTAMP_COL,
-    ):
-        time_steps = RxTxMonProfiler._compute_time_steps(stats[timestamp_col])
-
-        RxTxMonProfiler._postprocess_stats_group(stats, config.xstats, time_steps)
-        for stats_group in config.xstats_per_q.values():
-            RxTxMonProfiler._postprocess_stats_group(stats, stats_group, time_steps)
-
     def _data_postprocess(self, data: pandas.DataFrame, config: RxTxStatsConf):
-        self._postprocess_stats(data, config)
-        data.to_csv(self.csv_file())
-
-        with open(self.mark_file(), "w") as f:
-            self._marker.save(f)
+        time_steps = self._compute_time_steps(data[RxTxStats.TIMESTAMP_COL])
+        self._postprocess_stats_group(data, config.xstats, time_steps)
+        for stats_group in config.xstats_per_q.values():
+            self._postprocess_stats_group(data, stats_group, time_steps)
 
         markers = self._marker.to_dataframe()
-        markers["time"] = self._make_timestamps_relative(markers["time"], data["timestamp"].min())
+        markers["time"] = self._make_timestamps_relative(
+            markers["time"],
+            data[RxTxStats.TIMESTAMP_COL].min(),
+        )
 
-        data["timestamp"] = self._make_timestamps_relative(data["timestamp"])
+        data[RxTxStats.TIMESTAMP_COL] = self._make_timestamps_relative(
+            data[RxTxStats.TIMESTAMP_COL],
+        )
         charts.create_charts_html(
             data,
             self._create_charts_spec(config),

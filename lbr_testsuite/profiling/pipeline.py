@@ -35,7 +35,7 @@ class PipelineMonContext:
     def __init__(self, runtime, name=None):
         self._name = name
         self._workers = runtime.get_workers_count(name=self._name)
-        self._stages = runtime.get_pipeline_stage_names(name=self._name)
+        self._stages = list(runtime.get_pipeline_stage_names(name=self._name))
         self._data = {"timestamp": []}
         self._runtime = runtime
 
@@ -52,6 +52,11 @@ class PipelineMonContext:
             for name in self._stages:
                 self._data[f"stage_max_latency_{name}_{ids}"] = []
                 self._data[f"stage_cur_latency_{name}_{ids}"] = []
+
+    def terminate(self):
+        """Terminate data collection and prepare context for storage."""
+
+        self._runtime = None
 
     def get_name(self):
         """Get name of this pipeline.
@@ -240,7 +245,7 @@ class PipelineMonProfiler(ThreadedProfiler):
     def mark(self, desc=None):
         self._marker.mark(time.monotonic(), desc)
 
-    def _data_collect(self) -> list:
+    def _data_collect(self) -> list[PipelineMonContext]:
         pipeline = self._subject.get_pipeline()
         names = pipeline.get_pipeline_names()
         contexts = [PipelineMonContext(pipeline, name) for name in names]
@@ -254,15 +259,15 @@ class PipelineMonProfiler(ThreadedProfiler):
                 ctx.sample(now)
 
         self._logger.info(f"sampled {len(contexts[0].get_samples())}x pipeline status")
+
+        for ctx in contexts:
+            ctx.terminate()
         return contexts
 
-    def _data_postprocess(self, data: list):
-        with open(self.mark_file(), "w") as f:
-            self._marker.save(f)
-
+    def _data_postprocess(self, data: list[PipelineMonContext]):
         for ctx in data:
             df = ctx.get_data_frame()
-            df.to_csv(self.csv_file(f"_{ctx.get_name()}"))
+            df.to_csv(self.custom_file("csv", f"_{ctx.get_name()}"))
 
             markers = self._marker.to_dataframe()
             markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())

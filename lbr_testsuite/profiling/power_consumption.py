@@ -8,6 +8,7 @@ Implementation of profiler measuring power consumption by pyJoules library.
 
 import logging
 
+from pandas import DataFrame
 from pyJoules.device import DeviceFactory
 from pyJoules.device.rapl_device import RaplDevice
 from pyJoules.energy_meter import EnergyMeter
@@ -59,7 +60,7 @@ class pyJoulesProfiler(ThreadedProfiler):
     def _make_timestamps_relative(self, timestamps):
         return timestamps.sub(timestamps.min()).add(1).round().astype("int64")
 
-    def _data_collect(self) -> list:
+    def _data_collect(self) -> tuple[DataFrame, list[str]]:
         """This method should be started from a thread. It snapshots
         power consumption metrics periodically according to time_step.
         Finally, CSV and charts files are generated in _data_postprocess
@@ -77,33 +78,30 @@ class pyJoulesProfiler(ThreadedProfiler):
         finally:
             self._meter.stop()
 
-        return domains_repr
-
-    def _data_postprocess(self, data: list):
-        global_logger.info(f"saving to {self.csv_file()} and {self.charts_file()}")
-
         handler = PandasHandler()
         try:
             handler.process(self._meter.get_trace())
         finally:
             df = handler.get_dataframe().iloc[:-1]  # drop last, it is too close to second last
-            df.to_csv(self.csv_file())
 
-            global_logger.debug("plotting power consumption...")
+            return df, domains_repr
 
-            df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
-            ch_spec = charts.SubPlotSpec(
-                title="Power Consumption",
-                y_label="consumption [uJ]",
-                columns=data,
-                chart_type=charts.ChartType.BAR,
-            )
+    def _data_postprocess(self, data: DataFrame, domains_repr: list[str]):
+        global_logger.debug("plotting power consumption...")
 
-            charts.create_charts_html(
-                df,
-                ch_spec,
-                self.charts_file(),
-                title="Power Consumption",
-            )
+        data["timestamp"] = self._make_timestamps_relative(data["timestamp"])
+        ch_spec = charts.SubPlotSpec(
+            title="Power Consumption",
+            y_label="consumption [uJ]",
+            columns=domains_repr,
+            chart_type=charts.ChartType.BAR,
+        )
 
-            global_logger.debug("power consumption chart has been saved")
+        charts.create_charts_html(
+            data,
+            ch_spec,
+            self.charts_file(),
+            title="Power Consumption",
+        )
+
+        global_logger.debug("power consumption chart has been saved")

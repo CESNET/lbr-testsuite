@@ -8,6 +8,7 @@ Supporting code for implementing application profilers.
 
 import collections
 import logging
+import pickle
 import threading
 from typing import TypeAlias
 
@@ -16,7 +17,7 @@ import pandas
 from ..executable import executable
 
 
-CollectedData: TypeAlias = any
+CollectedData: TypeAlias = tuple[pandas.DataFrame, any] | tuple[any]
 
 
 class ProfiledSubject:
@@ -210,6 +211,11 @@ class ThreadedProfiler(Profiler):
             self._logger = logger
 
         self._output_file_base = output_file_base
+        self._reserved_files = dict(
+            csv=f"{self._format_file_name(output_file_base)}_raw.csv",
+            raw=f"{self._format_file_name(output_file_base)}_raw",
+            mark=f"{self._format_file_name(output_file_base)}_raw.mark",
+        )
         self._marker = None
 
     @staticmethod
@@ -217,14 +223,16 @@ class ThreadedProfiler(Profiler):
         default_args = 100 * ("",)  # Fills empty strings for up to 100 arguments
         return str(file_name_base).format(*(args + default_args))
 
-    def csv_file(self, *args):
-        return f"{self._format_file_name(self._output_file_base, *args)}.csv"
+    def custom_file(self, suffix, *args):
+        fn = f"{self._format_file_name(self._output_file_base, *args)}.{suffix}"
+        assert (
+            fn not in self._reserved_files.values()
+        ), "Requested custom file may overwrite a reserved file"
+
+        return fn
 
     def charts_file(self, *args):
         return f"{self._format_file_name(self._output_file_base, *args)}.html"
-
-    def mark_file(self, *args):
-        return f"{self._format_file_name(self._output_file_base, *args)}.mark"
 
     def get_thread(self):
         """Get thread used for running this profiler."""
@@ -281,10 +289,34 @@ class ThreadedProfiler(Profiler):
         with self._stopper:
             return self._stopper.wait_for(self.should_stop, timeout)
 
-    def _data_collect(self) -> CollectedData:
+    def _data_collect(self) -> pandas.DataFrame | CollectedData:
         pass
 
-    def _data_postprocess(self, data: CollectedData):
+    def _data_store(self, data: CollectedData):
+        """Store data from data collection phase and marks (if any).
+
+        There are three supported kinds of collected data:
+        1) Data frame only,
+        2) Data frame with some additional data,
+        3) Custom data.
+
+        Data frame is always saved as a csv file. Custom data is saved
+        using pickle.dump method.
+        """
+
+        if isinstance(data[0], pandas.DataFrame):
+            data[0].to_csv(self._reserved_files["csv"])
+            data = data[1:]
+
+        if data:
+            with open(self._reserved_files["raw"], "wb") as out_f:
+                pickle.dump(data, out_f)
+
+        if self._marker:
+            with open(self._reserved_files["mark"], "w") as f:
+                self._marker.save(f)
+
+    def _data_postprocess(self, *args):
         pass
 
     def run(self):
@@ -296,7 +328,12 @@ class ThreadedProfiler(Profiler):
         """
 
         data = self._data_collect()
-        data = self._data_postprocess(data)
+        if not isinstance(data, tuple):
+            data = (data,)
+
+        self._data_store(data)
+
+        self._data_postprocess(*data)
 
 
 class PidProfiler(Profiler):
