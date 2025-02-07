@@ -108,7 +108,7 @@ class ProfilerMarker:
 
         for line in f.readlines():
             time, desc = line.split(",")
-            marker.mark(parse_time(line), desc.strip())
+            marker.mark(parse_time(time), desc.strip())
 
         return marker
 
