@@ -305,7 +305,7 @@ class ThreadedProfiler(Profiler):
         """
 
         if isinstance(data[0], pandas.DataFrame):
-            data[0].to_csv(self._reserved_files["csv"])
+            data[0].to_csv(self._reserved_files["csv"], index=False)
             data = data[1:]
 
         if data:
