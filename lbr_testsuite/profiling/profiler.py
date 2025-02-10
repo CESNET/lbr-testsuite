@@ -10,6 +10,7 @@ import collections
 import logging
 import pickle
 import threading
+from pathlib import Path
 from typing import TypeAlias
 
 import pandas
@@ -316,6 +317,28 @@ class ThreadedProfiler(Profiler):
             with open(self._reserved_files["mark"], "w") as f:
                 self._marker.save(f)
 
+    def _data_restore(self) -> CollectedData:
+        df = None
+        data = tuple()
+        if Path(self._reserved_files["csv"]).is_file():
+            df = pandas.read_csv(self._reserved_files["csv"])
+
+        if Path(self._reserved_files["raw"]).is_file():
+            with open(self._reserved_files["raw"], "rb") as in_f:
+                data = pickle.load(in_f)
+
+        if Path(self._reserved_files["mark"]).is_file():
+            with open(self._reserved_files["mark"], "r") as in_f:
+                self._marker = ProfilerMarker.load(in_f)
+
+        if df is None and not data:
+            raise RuntimeError("No data files to restore.")
+
+        if df is not None:
+            return (df,) + data
+        else:
+            return data
+
     def _data_postprocess(self, *args):
         pass
 
@@ -332,6 +355,11 @@ class ThreadedProfiler(Profiler):
             data = (data,)
 
         self._data_store(data)
+
+        self._data_postprocess(*data)
+
+    def postprocess_stored_data(self):
+        data = self._data_restore()
 
         self._data_postprocess(*data)
 
@@ -495,3 +523,7 @@ class MultiProfiler(Profiler):
 
         for prof in self._profilers:
             prof.mark(desc)
+
+    def postprocess_stored_data(self):
+        for prof in self._profilers:
+            prof.postprocess_stored_data()
