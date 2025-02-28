@@ -462,6 +462,28 @@ class Spirent(Generator):
         for block in stream_blocks_names:
             self._stc_handler.stc_set_stream_block_packet_length(block, packet_length)
 
+    def set_stream_blocks_fill_type(self, stream_blocks_names, fill_type):
+        """Set packet payload fill type for provided stream block names.
+        Supported values are "CONSTANT", "INCR", "DECR", "PRBS", "INCRWORD", "DECRWORD"
+        and "CUSTOM"
+
+        Parameters
+        ----------
+        stream_blocks_names : str or list(str)
+            Stream block names to be configured.
+        fill_type : str
+            Requested fill type (see doc)
+        """
+
+        if isinstance(stream_blocks_names, str):
+            stream_blocks_names = [stream_blocks_names]
+
+        for block in stream_blocks_names:
+            handle = self._stc_handler.stc_stream_block(block)
+            self._stc_handler.stc_attribute(handle, "FillType", fill_type)
+            if fill_type == "PRBS":
+                self._stc_handler.stc_attribute(handle, "InsertSig", "TRUE")
+
     def set_port_load(self, port_load_type, port_load_value):
         """Set port load on spirent port.
 
