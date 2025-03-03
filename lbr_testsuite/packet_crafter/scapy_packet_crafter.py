@@ -154,6 +154,28 @@ class ScapyPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
 
         return [scapy.ICMPv6ND_NS(tgt=dst_ip) for dst_ip in dst]
 
+    def _prepare_l7_dns(self, spec, context=None):
+        """Prepare L7 scapy DNS header"""
+        hdrs = []
+
+        if spec.get("l7_dns_query"):
+            qname = spec["l7_dns_query"]
+            if len(qname) > 255:
+                RuntimeError(f'max size of "l7_dns_query" parameter is 255 bytes')
+        else:
+            qname = "example.org"
+
+        hdrs.append(
+            scapy.DNS(
+                qr=0,  # DNS Query
+                rd=1,  # Recursion desired
+                qdcount=1,
+                qd=scapy.DNSQR(qname=qname, qtype="A"),
+            ),
+        )
+
+        return hdrs
+
     def packets(self, spec):
         """Return list of scapy packets based on specification.
 
@@ -188,6 +210,11 @@ class ScapyPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
                 10, (10-20), [10,12,17,20]. For more info see ``packet_crafter.ports.L4Ports``.
             l4_dst : int or list or tuple
                 Destination port(s). Same format as ``l4_src``.
+            l7 : str, optional
+                Supported L7 protocols: 'dns'.
+            l7_dns_query : str, optional
+                Domain name for which DNS query (type "A") will be generated.
+                If not set, default "example.org" will be used.
             pkt_len : int
                 Packet length (without Ethernet's FCS).
             pkt_paylen : int
