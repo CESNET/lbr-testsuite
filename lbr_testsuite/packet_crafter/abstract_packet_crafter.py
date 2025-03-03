@@ -134,7 +134,22 @@ class AbstractPacketCrafter(abc.ABC):
         else:
             raise RuntimeError(f'unsupported l4: {spec["l4"]}')
 
-    def _cross_headers(self, l2_list, l3_list, l4_list):
+    @abc.abstractmethod
+    def _prepare_l7_dns(self, spec, context=None):
+        """Prepare L7 scapy DNS header"""
+        ...
+
+    def _prepare_l7(self, spec, context=None):
+        """Prepare L7 scapy headers."""
+        if "l7" not in spec:
+            return []
+
+        if spec["l7"] in ("dns"):
+            return self._prepare_l7_dns(spec, context)
+        else:
+            raise RuntimeError(f'unsupported l7: {spec["l7"]}')
+
+    def _cross_headers(self, l2_list, l3_list, l4_list, l7_list):
         """Do cartesian product of L2, L3 and L4 headers.
 
         For example:
@@ -147,7 +162,18 @@ class AbstractPacketCrafter(abc.ABC):
 
         headers = []
 
-        if len(l4_list) > 0:
+        if len(l7_list) > 0:
+            if len(l3_list) == 0:
+                raise RuntimeError("missing l3 specification, but l7 was given")
+            if len(l4_list) == 0:
+                raise RuntimeError("missing l4 specification, but l7 was given")
+
+            for l2 in l2_list:
+                for l3 in l3_list:
+                    for l4 in l4_list:
+                        for l7 in l7_list:
+                            headers.append(l2 / l3 / l4 / l7)
+        elif len(l4_list) > 0:
             if len(l3_list) == 0:
                 raise RuntimeError("missing l3 specification, but l4 was given")
 
@@ -169,8 +195,9 @@ class AbstractPacketCrafter(abc.ABC):
         l2_list = self._prepare_l2(spec, context)
         l3_list = self._prepare_l3(spec, context)
         l4_list = self._prepare_l4(spec, context)
+        l7_list = self._prepare_l7(spec, context)
 
-        return self._cross_headers(l2_list, l3_list, l4_list)
+        return self._cross_headers(l2_list, l3_list, l4_list, l7_list)
 
     def _pkt_finalize(self, hdr, pkt_len, pkt_paylen):
         """Finalize packet - add padding to reach desired packet length."""
