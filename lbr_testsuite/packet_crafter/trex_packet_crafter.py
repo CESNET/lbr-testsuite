@@ -262,6 +262,38 @@ class TRexInstructionCrafter:
 
         return fe_instructions
 
+    def prepare_dns_instructions(self, subdomain_size):
+        """Create Field Engine instructions for DNS layer."""
+        fe_instructions = []
+
+        # ASCII characters a-z
+        values = {}
+        values["min_value"] = 97
+        values["max_value"] = 122
+
+        self.build_instructions(
+            fe_instructions,
+            str(uuid.uuid4()),
+            {"min_value": 1, "max_value": 65535},
+            2,
+            pkt_offset="DNS.id",
+            op="random",
+        )
+
+        for i in range(subdomain_size):
+            self.build_instructions(
+                fe_instructions,
+                str(uuid.uuid4()),
+                values,
+                1,
+                pkt_offset="DNS.qd",
+                # First byte defines size of subdomain
+                offset_fixup=1 + i,
+                op="random",
+            )
+
+        return fe_instructions
+
 
 class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
     """Packet crafter for TRex traffic generator.
@@ -414,6 +446,35 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
 
         return [scapy.ICMPv6ND_NS(tgt=dst_ip)]
 
+    def _prepare_l7_dns(self, spec, context=None):
+        """Prepare L7 scapy DNS header"""
+        hdrs = []
+
+        if spec.get("l7_dns_query"):
+            qname = spec["l7_dns_query"]
+            if len(qname) > 255:
+                RuntimeError(f'max size of "l7_dns_query" parameter is 255 bytes')
+        else:
+            qname = "example.org"
+
+        if spec.get("l7_dns_query_sub_randomize"):
+            subdomain_size = spec.get("l7_dns_query_sub_randomize")
+            qname = subdomain_size * "x" + "." + qname
+            l7_dns_instr = self._fe_builder.prepare_dns_instructions(subdomain_size)
+            context.extend(l7_dns_instr)
+
+        hdrs.append(
+            scapy.DNS(
+                id=scapy.RandShort(),
+                qr=0,  # DNS Query
+                rd=1,  # Recursion desired
+                qdcount=1,
+                qd=scapy.DNSQR(qname=qname, qtype="A"),
+            ),
+        )
+
+        return hdrs
+
     def packet_with_fe_instructions(self, spec):
         """Return one scapy packet and list of TRex Field Engine instructions
         based on specification.
@@ -461,6 +522,22 @@ class TRexPacketCrafter(abstract_packet_crafter.AbstractPacketCrafter):
                 - "random" for random distribution.
             l4_flag : TRexL4Flag or list(TRexL4Flag), optional
                 Any combination of TCP flags.
+            l7 : str, optional
+                Supported L7 protocols: 'dns'.
+            l7_dns_query : str, optional
+                Domain name for which DNS query (type "A") will be generated.
+                If not set, default "example.org" will be used.
+            l7_dns_query_sub_randomize : int, optional
+                Generate random subdomains for domain specified in "l7_dns_query".
+                This parameter sets length of subdomains.
+                Maximum supported size of subdomain is 44 (could be more
+                depending on configuration).
+                For example, if "l7_dns_query" is set to "example.org" and
+                this paremeter is set to 30, then generated packets will contain
+                queries to domains like this:
+                    - rmenouxwebctnmsidknmviudqqipwu.example.org
+                    - kxviyphggrinbjzpmswmklctwkwigi.example.org
+                    - qydhnqrtfqpmeyehfswjvqytsgitlp.example.org
             pkt_len : int
                 Packet length (without Ethernet's FCS).
             pkt_paylen : int
