@@ -86,8 +86,6 @@ class RxTxStats:
 
     Attributes
     ----------
-    _initial_timestamp : float
-        Initial time (start of data storing).
     _config : RxTxStatsConf
         Contains statistics configuration.
         Statistics configuration consists of two dictionaries - one for
@@ -247,8 +245,6 @@ class RxTxStats:
     def __init__(self, stats_req: StatsRequest, q_cnt: int):
         self._verify_supported(stats_req)
 
-        self._initial_timestamp = None
-
         xs = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
         xs_per_q = self._init_stats_per_q(
             stats_req.xstats_per_q,
@@ -262,15 +258,6 @@ class RxTxStats:
         assert len(keys) == len(set(keys)), "Duplicate counter names are not supported."
 
         self._data = {k: [] for k in (self.TIMESTAMP_COL,) + keys}
-
-    def init_time(self):
-        """Initialize data storing start time.
-
-        Call this method at the beginning of data storing for later
-        computation of precise time step.
-        """
-
-        self._initial_timestamp = time.monotonic()
 
     def get_config(self) -> RxTxStatsConf:
         """Get current configuration.
