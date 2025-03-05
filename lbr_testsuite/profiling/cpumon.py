@@ -68,6 +68,27 @@ class CPUMonProfiler(ThreadedProfiler):
         return df
 
     def _plot_freqs_per_cpu(self, df, csv_file, charts_file):
+        """Plot percentage of time spent on given frequency for each
+        CPU (as a bar chart).
+
+        For each CPU compute in how many measurements each frequency
+        group was used (per-frequency group histogram). From this
+        histogram compute percentage for every frequency group, per-cpu,
+        resulting in a df like this:
+
+        +-----------------------+
+        |        |  3400 | 3500 |
+        +--------+-------+------+
+        | cpu_0  |    98 |    2 |
+        | cpu_1  |    50 |   50 |
+        | ...    |   ... |  ... |
+        | cpu_N  |     0 |  100 |
+        +-----------------------+
+
+        This function stores the computed data-frame as a CSV and
+        created bar chart as a html page.
+        """
+
         cpus = self._collect_cpu_freq_columns(df)
         all_freqs = self._collect_freqs(df, cpus)
         data = defaultdict(list)
@@ -120,6 +141,29 @@ class CPUMonProfiler(ThreadedProfiler):
         return hist
 
     def _plot_freqs(self, df, csv_file, charts_file):
+        """Plot usage of frequency groups in time (i.e. how many CPUs
+        used a frequency in given time).
+
+        For each measurement (time step) compute histogram of used
+        frequencies (i.e. how many CPUs used given frequency in that
+        time). New data frame is created, columns are frequency groups,
+        rows contains values of how many CPUs used given frequency in
+        that time:
+
+        we have e.g. 64 CPUs
+        +-----------------------+
+        |     |  3400 | 3500 |
+        +-----+-------+------+
+        | t1  |    32 |   32 |
+        | t2  |     0 |   64 |
+        | ... |   ... |  ... |
+        | tN  |    12 |   52 |
+        +-----------------------+
+
+        This function stores the computed data-frame as a CSV and
+        created bar chart as a html page.
+        """
+
         cpus = self._collect_cpu_freq_columns(df)
         data = defaultdict(list)
 
