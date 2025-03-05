@@ -459,6 +459,13 @@ class TRexAdvancedStateful(TRexBase):
         glob_info = trex_astf_profile.ASTFGlobalInfo()
         glob_info.ip.dont_use_inbound_mac = int(not use_inbound_mac)
 
+        # Some NICs (e.g. ConnectX-6) may modify the lowest bit of the TOS header.
+        # Specifically, the ECN bit 0 would be set to 1. This, however, breaks TRex server
+        # as it will filter all packets with this bit set. As a workaround, we explicitly
+        # set the ip.tos tunable parameter to 0x2 (0b10) of the TOS header. This way, the
+        # NIC does not set the extra bit and TRex server can process the packets.
+        glob_info.ip.tos = 0x2
+
         if l3_network.version == 6:
             glob_info.ipv6.enable = 1
             glob_info.ipv6.src_msb = str(l3_network.network_address)
