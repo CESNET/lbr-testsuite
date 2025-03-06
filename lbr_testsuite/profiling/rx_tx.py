@@ -58,6 +58,26 @@ class StatsRequest:
     xstats_per_q: tuple = ()
 
 
+@dataclass
+class RxTxStatsConf:
+    """Rx-Tx statistics container configuration.
+
+    Attributes
+    ----------
+    xstats : dict
+        Dictionary with selected counters from extended statistics. Keys
+        are counter names, values are units.
+    xstats_per_q : dict
+        Dictionary with selected counters from extended statistics for
+        for every queue. Keys are general counter names (templates)
+        and values are dictionaries. Keys of these dictionaries are
+        counter names (with queue ID filled), values are units.
+    """
+
+    xstats: dict[str, CounterUnit]
+    xstats_per_q: dict[str, dict[str, CounterUnit]]
+
+
 class RxTxStats:
     """Class for Rx/Tx statistics definition and recording.
 
@@ -66,21 +86,11 @@ class RxTxStats:
 
     Attributes
     ----------
-    _initial_timestamp : float
-        Initial time (start of data storing).
-    _xstats : dict
-        Dictionary with selected counters from extended statistics. Keys
-        are counter names, values are units.
-    _xstats_per_q : dict
-        Dictionary with selected counters from extended statistics for
-        for every queue. Keys are general counter names (templates)
-        and values are dictionaries. Keys of these dictionaries are
-        counter names (with queue ID filled), values are units.
-    _charts_spec : list(charts.SubPlotSpec)
-        A list of charts specifications. There will be one chart for
-        each used counter unit for basic statistics, one chart for
-        each used counter unit for extended statistics and one chart
-        for each used per-queue counter.
+    _config : RxTxStatsConf
+        Contains statistics configuration.
+        Statistics configuration consists of two dictionaries - one for
+        extended statistics and per-queue extended statistics.
+        Dictionaries stores counter names and related unit.
     _data : dict
         Is a storage for monitored statistics (with timestamp).
     """
@@ -193,10 +203,6 @@ class RxTxStats:
     TIMESTAMP_COL = "timestamp"
 
     @staticmethod
-    def _stat_name_postprocessed(stat_name: str) -> str:
-        return f"{stat_name}_postprocessed"
-
-    @staticmethod
     def _per_q_stat_lookup(stat: tuple[str], lookup_group: dict[str, str]) -> str | None:
         for k in lookup_group.keys():
             if stat == k.replace("{q_id}", ""):
@@ -221,41 +227,6 @@ class RxTxStats:
             return "Bps (approximated)"
         return "<events>"
 
-    @staticmethod
-    def _specs_per_unit(stats: dict[str, CounterUnit]) -> dict[CounterUnit, list[str]]:
-        per_unit = dict()
-        for s, unit in stats.items():
-            if unit not in per_unit:
-                per_unit[unit] = []
-            per_unit[unit].append(s)
-
-        return per_unit
-
-    def _create_charts_spec(self, q_cnt: int) -> list[charts.SubPlotSpec]:
-        ch_spec = []
-
-        for unit, columns in self._specs_per_unit(self._xstats).items():
-            ch_spec.append(
-                charts.SubPlotSpec(
-                    title=f"Extended Statistics ({unit})",
-                    y_label=self._y_label_from_unit(unit),
-                    columns=[self._stat_name_postprocessed(c) for c in columns],
-                )
-            )
-
-        for title, sq_group in self._xstats_per_q.items():
-            unit = next(iter(sq_group.values()))  # all items in a group have same value
-            ch_spec.append(
-                charts.SubPlotSpec(
-                    title=f"{title} (per queue)",
-                    y_label=self._y_label_from_unit(unit),
-                    columns=[self._stat_name_postprocessed(c) for c in sq_group.keys()],
-                    col_names=list(range(q_cnt)),
-                )
-            )
-
-        return ch_spec
-
     def _init_stats_per_q(
         self,
         stats_per_q: tuple[str],
@@ -274,67 +245,30 @@ class RxTxStats:
     def __init__(self, stats_req: StatsRequest, q_cnt: int):
         self._verify_supported(stats_req)
 
-        self._initial_timestamp = None
-
-        self._xstats = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
-        self._xstats_per_q = self._init_stats_per_q(
+        xs = {k: RxTxStats._SUPPORTED_XSTATS[k] for k in stats_req.xstats}
+        xs_per_q = self._init_stats_per_q(
             stats_req.xstats_per_q,
             q_cnt,
             RxTxStats._SUPPORTED_XSTATS_PER_Q,
         )
+        self._config = RxTxStatsConf(xstats=xs, xstats_per_q=xs_per_q)
 
-        per_q_keys = [k for sq_group in self._xstats_per_q.values() for k in sq_group.keys()]
-        keys = tuple(self._xstats.keys()) + tuple(per_q_keys)
+        per_q_keys = [k for sq_group in self._config.xstats_per_q.values() for k in sq_group.keys()]
+        keys = tuple(self._config.xstats.keys()) + tuple(per_q_keys)
         assert len(keys) == len(set(keys)), "Duplicate counter names are not supported."
+
         self._data = {k: [] for k in (self.TIMESTAMP_COL,) + keys}
 
-        self._charts_spec = self._create_charts_spec(q_cnt)
-
-    def init_time(self):
-        """Initialize data storing start time.
-
-        Call this method at the beginning of data storing for later
-        computation of precise time step.
-        """
-
-        self._initial_timestamp = time.monotonic()
-
-    def xstats(self) -> dict[str, CounterUnit]:
-        """Get specification of monitored extended global statistics.
+    def get_config(self) -> RxTxStatsConf:
+        """Get current configuration.
 
         Returns
         -------
-        dict
-            Dictionary with selected counters from extended statistics.
-            Keys are counter names, values are units.
+        RxTxStatsConf
+            Returns statistics configuration.
         """
 
-        return self._xstats
-
-    def xstats_per_q(self) -> dict[str, dict[str, CounterUnit]]:
-        """Get specification of monitored extended per-queue statistics.
-
-        Returns
-        -------
-        dict
-            Dictionary with selected counters from extended statistics
-            for every queue. Keys are general counter names (templates)
-            and values are dictionaries. Keys of these dictionaries are
-            counter names (with queue ID filled), values are units.
-        """
-
-        return self._xstats_per_q
-
-    def get_chart_spec(self) -> tuple[charts.SubPlotSpec]:
-        """Get charts specification.
-
-        Returns
-        -------
-        list(charts.SubPlotSpec)
-            A list of charts specifications.
-        """
-
-        return self._charts_spec
+        return self._config
 
     def _store_stats_group(
         self,
@@ -369,54 +303,9 @@ class RxTxStats:
 
         self._data[self.TIMESTAMP_COL].append(timestamp)
 
-        self._store_stats_group(xstats, self._xstats)
-        for stats_group in self._xstats_per_q.values():
+        self._store_stats_group(xstats, self._config.xstats)
+        for stats_group in self._config.xstats_per_q.values():
             self._store_stats_group(xstats, stats_group)
-
-    def _post_process_stats_group(self, group, time_steps):
-        for col, unit in group.items():
-            prev = None
-            pp_col = self._stat_name_postprocessed(col)
-            self._data[pp_col] = []
-
-            for i, val in enumerate(self._data[col]):
-
-                if val == 0:  # no measurement available (start or outage )
-                    self._data[pp_col].append(0)
-                    prev = None
-                    continue
-
-                if not prev:  # counter reset (beginning of measurement)
-                    prev = val
-
-                pp_val = val - prev
-                prev = val
-                if unit == CounterUnit.PACKETS or CounterUnit.BYTES:
-                    per_second_approx = (1 / time_steps[i]) * pp_val
-                    self._data[pp_col].append(per_second_approx)
-                else:
-                    self._data[pp_col].append(pp_val)
-
-    def post_process_stats(self):
-        """Post-process captured data.
-
-        From stored timestamp compute real time-steps. Using these
-        time-steps ad cumulative counters compute approximated
-        <unit>-per-seconds statistics where it makes sense (mainly
-        for bytes and packet statistics).
-        """
-
-        time_steps = list()
-        ts_prev = self._initial_timestamp
-        for ts in self._data[self.TIMESTAMP_COL]:
-            # As waiting for defined time step might not be exact, we
-            # compute real duration of time step.
-            time_steps.append(ts - ts_prev)
-            ts_prev = ts
-
-        self._post_process_stats_group(self._xstats, time_steps)
-        for stats_group in self._xstats_per_q.values():
-            self._post_process_stats_group(stats_group, time_steps)
 
     def get_data(self) -> dict[str, list[int | float]]:
         """Retrieve stored statistics.
@@ -484,6 +373,59 @@ class RxTxMonProfiler(ThreadedProfiler):
     def mark(self, desc=None):
         self._marker.mark(time.monotonic(), desc)
 
+    @staticmethod
+    def _stat_name_postprocessed(stat_name: str) -> str:
+        return f"{stat_name}_postprocessed"
+
+    @staticmethod
+    def _specs_per_unit(stats: dict[str, CounterUnit]) -> dict[CounterUnit, list[str]]:
+        per_unit = dict()
+        for s, unit in stats.items():
+            if unit not in per_unit:
+                per_unit[unit] = []
+            per_unit[unit].append(s)
+
+        return per_unit
+
+    def _create_charts_spec(
+        self,
+        config: RxTxStatsConf,
+    ) -> list[charts.SubPlotSpec]:
+        """Create charts specification.
+
+        Returns
+        -------
+        charts_spec : list(charts.SubPlotSpec)
+            A list of charts specifications. There will be one chart for
+            each used counter unit for basic statistics, one chart for
+            each used counter unit for extended statistics and one chart
+            for each used per-queue counter.
+        """
+
+        ch_spec = []
+
+        for unit, columns in self._specs_per_unit(config.xstats).items():
+            ch_spec.append(
+                charts.SubPlotSpec(
+                    title=f"Extended Statistics ({unit})",
+                    y_label=RxTxStats._y_label_from_unit(unit),
+                    columns=[self._stat_name_postprocessed(c) for c in columns],
+                )
+            )
+
+        for title, sq_group in config.xstats_per_q.items():
+            unit = next(iter(sq_group.values()))  # all items in a group have same value
+            ch_spec.append(
+                charts.SubPlotSpec(
+                    title=f"{title} (per queue)",
+                    y_label=RxTxStats._y_label_from_unit(unit),
+                    columns=[self._stat_name_postprocessed(c) for c in sq_group.keys()],
+                    col_names=list(range(len(sq_group))),
+                )
+            )
+
+        return ch_spec
+
     def _restore_stats_reading(self, initial_pid: int, timeout: int = 10):
         last_unavailable = None
 
@@ -513,7 +455,7 @@ class RxTxMonProfiler(ThreadedProfiler):
 
         return stats, curr_pid
 
-    def _data_collect(self) -> RxTxStats:
+    def _data_collect(self) -> tuple[pandas.DataFrame, RxTxStatsConf]:
         pipeline = self._subject.get_pipeline()
         stats_storage = self._subject.stats()
 
@@ -533,23 +475,88 @@ class RxTxMonProfiler(ThreadedProfiler):
 
         self._logger.info(f"sampled {len(stats_storage.get_data())}x Rx/Tx statistics")
 
-        return stats_storage
+        return pandas.DataFrame(stats_storage.get_data()), stats_storage.get_config()
 
-    def _data_postprocess(self, data: RxTxStats):
-        data.post_process_stats()
-        df = pandas.DataFrame(data.get_data())
-        df.to_csv(self.csv_file())
+    @staticmethod
+    def _postprocess_stats_group(stats, group, time_steps):
+        for col, unit in group.items():
+            prev = None
+            new_col = []
+
+            for i in range(len(stats[col])):
+                val = stats[col].iloc[i]
+                if val == 0:  # no measurement available (start or outage )
+                    new_col.append(0)
+                    prev = None
+                    continue
+
+                if not prev:  # counter reset (beginning of measurement)
+                    prev = val
+
+                pp_val = val - prev
+                prev = val
+                if unit == CounterUnit.PACKETS or unit == CounterUnit.BYTES:
+                    if time_steps[i] == 0:
+                        new_col.append(0)
+                    else:
+                        per_second_approx = (1 / time_steps[i]) * pp_val
+                        new_col.append(per_second_approx)
+                else:
+                    new_col.append(pp_val)
+
+            pp_col = RxTxMonProfiler._stat_name_postprocessed(col)
+            assert pp_col not in stats.columns
+            stats[pp_col] = new_col
+
+    @staticmethod
+    def _compute_time_steps(timestamps: pandas.Series) -> pandas.Series:
+        """Compute time-steps between two consequent measurements.
+
+        Waiting for defined time step might not be exact, we compute
+        real duration of time step. As there is no "previous" value
+        for first timestamp, first time-step is always zero.
+
+        Parameters
+        ----------
+        timestamps: pandas.Series
+            Series of timestamps from which time-steps are computed.
+
+        Returns
+        -------
+        pandas.Series
+            Series of computed time-steps (length is as same as length
+            of timestamps Series).
+        """
+
+        first_prev = timestamps[0]  # first value will be zero after subtraction
+        return timestamps - timestamps.shift(1, fill_value=first_prev)
+
+    @staticmethod
+    def _postprocess_stats(
+        stats: pandas.DataFrame,
+        config: RxTxStatsConf,
+        timestamp_col: str = RxTxStats.TIMESTAMP_COL,
+    ):
+        time_steps = RxTxMonProfiler._compute_time_steps(stats[timestamp_col])
+
+        RxTxMonProfiler._postprocess_stats_group(stats, config.xstats, time_steps)
+        for stats_group in config.xstats_per_q.values():
+            RxTxMonProfiler._postprocess_stats_group(stats, stats_group, time_steps)
+
+    def _data_postprocess(self, data: pandas.DataFrame, config: RxTxStatsConf):
+        self._postprocess_stats(data, config)
+        data.to_csv(self.csv_file())
 
         with open(self.mark_file(), "w") as f:
             self._marker.save(f)
 
         markers = self._marker.to_dataframe()
-        markers["time"] = self._make_timestamps_relative(markers["time"], df["timestamp"].min())
+        markers["time"] = self._make_timestamps_relative(markers["time"], data["timestamp"].min())
 
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
+        data["timestamp"] = self._make_timestamps_relative(data["timestamp"])
         charts.create_charts_html(
-            df,
-            data.get_chart_spec(),
+            data,
+            self._create_charts_spec(config),
             self.charts_file(),
             title="Rx/Tx Statistics",
             markers=markers,
