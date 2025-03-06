@@ -69,6 +69,9 @@ class ProfilerMarker:
     def __iter__(self):
         return iter(self._marks)
 
+    def __len__(self):
+        return len(self._marks)
+
     def save(self, f):
         """Save marks into the given file.
 
@@ -108,7 +111,7 @@ class ProfilerMarker:
 
         for line in f.readlines():
             time, desc = line.split(",")
-            marker.mark(parse_time(line), desc.strip())
+            marker.mark(parse_time(time), desc.strip())
 
         return marker
 
@@ -197,7 +200,7 @@ class ThreadedProfiler(Profiler):
     that runs as a Python code in thread.
     """
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, output_file_base="./"):
         self._request_stop = True
         self._stopper = None
 
@@ -205,6 +208,23 @@ class ThreadedProfiler(Profiler):
             self._logger = logging.getLogger(type(self).__name__)
         else:
             self._logger = logger
+
+        self._output_file_base = output_file_base
+        self._marker = None
+
+    @staticmethod
+    def _format_file_name(file_name_base, *args):
+        default_args = 100 * ("",)  # Fills empty strings for up to 100 arguments
+        return str(file_name_base).format(*(args + default_args))
+
+    def csv_file(self, *args):
+        return f"{self._format_file_name(self._output_file_base, *args)}.csv"
+
+    def charts_file(self, *args):
+        return f"{self._format_file_name(self._output_file_base, *args)}.html"
+
+    def mark_file(self, *args):
+        return f"{self._format_file_name(self._output_file_base, *args)}.mark"
 
     def get_thread(self):
         """Get thread used for running this profiler."""
@@ -217,6 +237,8 @@ class ThreadedProfiler(Profiler):
         self._subject = subject
         self._request_stop = False
         self._stopper = threading.Condition()
+
+        self._marker = ProfilerMarker()
 
         def run_safe():
             try:

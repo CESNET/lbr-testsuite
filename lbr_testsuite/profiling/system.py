@@ -29,22 +29,18 @@ class IrqMonProfiler(ThreadedProfiler):
 
     GROUP_SIZE = 8
 
-    def __init__(self, csv_file, charts_file, time_step=0.1):
+    def __init__(self, time_step=0.1, **kwargs):
         """
         Parameters
         ----------
-        csv_file : str
-            Path to CSV file where to store all sampled data.
-        charts_file : str
-            Path to charts file where to plot the data.
         time_step : float, optional
             Sampling period (seconds).
+        kwargs
+            Options to pass to ThreadedProfiler initializer.
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
 
-        self._csv_file = csv_file
-        self._charts_file = charts_file
         self._time_step = time_step
 
     def _read_proc_interrupts(self):
@@ -138,8 +134,8 @@ class IrqMonProfiler(ThreadedProfiler):
 
         df = pandas.DataFrame(data[0])
 
-        self._logger.info(f"save interrupt stats into {self._csv_file}")
-        df.to_csv(self._csv_file)
+        self._logger.info(f"save interrupt stats into {self.csv_file()}")
+        df.to_csv(self.csv_file())
 
         cpus = data[1]
         groups = len(cpus) // self.GROUP_SIZE + (1 if len(cpus) % self.GROUP_SIZE != 0 else 0)
@@ -177,11 +173,11 @@ class IrqMonProfiler(ThreadedProfiler):
                 )
             )
 
-        self._logger.info(f"save charts file: {self._charts_file}")
+        self._logger.info(f"save charts file: {self.charts_file()}")
         charts.create_charts_html(
             df,
             ch_spec,
-            self._charts_file,
+            self.charts_file(),
             title="System Interrupts",
             vertical_spacing=0.03,
         )

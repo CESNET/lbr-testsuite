@@ -32,7 +32,7 @@ from lbr_testsuite.dpdk_application.pipeline_runtime import PipelineRuntime
 from ..common import common
 from . import _charts as charts
 from .pipeline import ProfiledPipelineSubject
-from .profiler import ProfilerMarker, ThreadedProfiler
+from .profiler import ThreadedProfiler
 
 
 class CounterUnit(StrEnum):
@@ -460,31 +460,21 @@ class RxTxMonProfiler(ThreadedProfiler):
 
     def __init__(
         self,
-        csv_file: str,
-        mark_file: str,
-        charts_file: str,
         time_step: float = 0.1,
+        **kwargs,
     ):
         """
         Parameters
         ----------
-        csv_file : str
-            Path to a CSV file with measured values.
-        mark_file : str
-            Path to a mark file.
-        charts_file : str
-            Path to a file with charts.
         time_step : float, optional
             Measurements step as fraction of seconds.
+        kwargs
+            Options to pass to ThreadedProfiler initializer.
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
 
-        self._csv_file = csv_file
-        self._mark_file = mark_file
-        self._charts_file = charts_file
         self._time_step = time_step
-        self._marker = ProfilerMarker()
 
     def start(self, subject: ProfiledPipelineWithStatsSubject):
         if not isinstance(subject, ProfiledPipelineWithStatsSubject):
@@ -548,9 +538,9 @@ class RxTxMonProfiler(ThreadedProfiler):
     def _data_postprocess(self, data: RxTxStats):
         data.post_process_stats()
         df = pandas.DataFrame(data.get_data())
-        df.to_csv(self._csv_file)
+        df.to_csv(self.csv_file())
 
-        with open(self._mark_file, "w") as f:
+        with open(self.mark_file(), "w") as f:
             self._marker.save(f)
 
         markers = self._marker.to_dataframe()
@@ -560,7 +550,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         charts.create_charts_html(
             df,
             data.get_chart_spec(),
-            self._charts_file,
+            self.charts_file(),
             title="Rx/Tx Statistics",
             markers=markers,
         )

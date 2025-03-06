@@ -32,11 +32,9 @@ class CPUMonProfiler(ThreadedProfiler):
     the frequencies are rounded to hundred MHz (the original precision is not useful).
     """
 
-    def __init__(self, csv_file_pattern, charts_file_pattern, time_step=0.1):
-        super().__init__()
+    def __init__(self, time_step=0.1, **kwargs):
+        super().__init__(**kwargs)
 
-        self._csv_file_pattern = csv_file_pattern
-        self._charts_file_pattern = charts_file_pattern
         self._time_step = time_step
 
     def _cpu_names(self):
@@ -162,16 +160,16 @@ class CPUMonProfiler(ThreadedProfiler):
 
     def _data_postprocess(self, data: dict):
         df = pandas.DataFrame(data)
-        df.to_csv(str(self._csv_file_pattern).format("raw"))
+        df.to_csv(self.csv_file("raw"))
 
         df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
         self._plot_freqs_per_cpu(
             df,
-            str(self._csv_file_pattern).format("freqs_per_cpu"),
-            str(self._charts_file_pattern).format("freqs_per_cpu"),
+            self.csv_file("freqs_per_cpu"),
+            self.charts_file("freqs_per_cpu"),
         )
         self._plot_freqs(
             df,
-            str(self._csv_file_pattern).format("freqs"),
-            str(self._charts_file_pattern).format("freqs"),
+            self.csv_file("freqs"),
+            self.charts_file("freqs"),
         )

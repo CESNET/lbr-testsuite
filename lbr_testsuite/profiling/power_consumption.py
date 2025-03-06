@@ -25,24 +25,20 @@ class pyJoulesProfiler(ThreadedProfiler):
     about power consumption of the system by using pyJoules framework.
     """
 
-    def __init__(self, csv_file, charts_file, numa_sockets=None, time_step=1):
+    def __init__(self, numa_sockets=None, time_step=1, **kwargs):
         """
         Parameters
         ----------
-        csv_file : str | Path
-            Where to store generated CSV file.
-        charts_file : str | Path
-            Where to store generated charts file.
         numa_sockets : list[int], optional
             List of NUMA sockets to measure. When omitted, NUMA autodetection is used.
         time_step : double
             Data collection frequency (time period) in seconds.
+        kwargs
+            Options to pass to ThreadedProfiler initializer.
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
 
-        self._csv_file = csv_file
-        self._charts_file = charts_file
         self._time_step = time_step
         self._domains = []
 
@@ -84,14 +80,14 @@ class pyJoulesProfiler(ThreadedProfiler):
         return domains_repr
 
     def _data_postprocess(self, data: list):
-        global_logger.info(f"saving to {self._csv_file} and {self._charts_file}")
+        global_logger.info(f"saving to {self.csv_file()} and {self.charts_file()}")
 
         handler = PandasHandler()
         try:
             handler.process(self._meter.get_trace())
         finally:
             df = handler.get_dataframe().iloc[:-1]  # drop last, it is too close to second last
-            df.to_csv(self._csv_file)
+            df.to_csv(self.csv_file())
 
             global_logger.debug("plotting power consumption...")
 
@@ -106,7 +102,7 @@ class pyJoulesProfiler(ThreadedProfiler):
             charts.create_charts_html(
                 df,
                 ch_spec,
-                self._charts_file,
+                self.charts_file(),
                 title="Power Consumption",
             )
 
