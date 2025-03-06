@@ -261,6 +261,20 @@ class AbstractStreamBlock(ABC):
         else:
             self._spirent.delete_stream_blocks_vlan(self._name)
 
+    def _apply_fill_type(self, fill_type: str):
+        """Set stream block's frame fill type
+
+        This method is considered "protected" and should only be
+        used in inherited classes.
+
+        Parameters
+        ----------
+        fill_type : str
+            Requested fill type to be set
+        """
+
+        self._spirent.set_stream_blocks_fill_type(self._name, fill_type)
+
 
 class StreamBlock(AbstractStreamBlock):
     """Stream block class that can be dynamically configured through the
@@ -282,6 +296,7 @@ class StreamBlock(AbstractStreamBlock):
         src_mac: Optional[str] = None
         dst_mac: Optional[str] = None
         vlan: int = None
+        fill_type = None
 
     def __init__(
         self,
@@ -360,6 +375,18 @@ class StreamBlock(AbstractStreamBlock):
 
         self._working_config.vlan = vlan
 
+    def set_fill_type(self, fill_type: str):
+        """Set frame payload fill type. Supported values are "CONSTANT", "INCR",
+        "DECR", "PRBS", "INCRWORD", "DECRWORD" and "CUSTOM"
+
+        Parameters
+        ----------
+        fill_type : str
+            Requested fill type
+        """
+
+        self._working_config.fill_type = fill_type
+
     def apply(self):
         """Apply the working configuration.
 
@@ -383,5 +410,8 @@ class StreamBlock(AbstractStreamBlock):
 
         if self._working_config.dst_mac != self._applied_config.dst_mac:
             self._apply_dst_mac(self._working_config.dst_mac)
+
+        if self._working_config.fill_type != self._applied_config.fill_type:
+            self._apply_fill_type(self._working_config.fill_type)
 
         self._applied_config = replace(self._working_config)
