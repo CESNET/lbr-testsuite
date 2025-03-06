@@ -122,6 +122,26 @@ class TRexStream:
     l4_flags : various, optional
         Any combination of TCP flags. Default value/flag is SYN.
 
+    l7 : str, optional
+        L7 protocol. Supported types:
+            | DNS
+    l7_dns_query : str, optional
+        Domain name for which DNS query (type "A") will be generated.
+        If not set, default "example.org" will be used.
+    l7_dns_query_sub_randomize : int, optional
+        Generate random subdomains for domain specified in "l7_dns_query".
+        This parameter sets length of subdomains.
+        Maximum supported size of subdomain depends
+        on number of Field Engine instructions used. If "l4_dst"
+        is fixed to port 53, then it's 46 at minimum.
+        For example, if "l7_dns_query" is set to "example.org" and
+        this paremeter is set to 30, then generated packets will contain
+        queries to domains like this:
+            - rmenouxwebctnmsidknmviudqqipwu.example.org
+            - kxviyphggrinbjzpmswmklctwkwigi.example.org
+            - qydhnqrtfqpmeyehfswjvqytsgitlp.example.org
+        Additionally, DNS ID field is also randomized.
+
     pkt_len : int, optional
         Packet length including Ethernet FCS field.
 
@@ -149,7 +169,8 @@ class TRexStream:
     disable_vm : bool, optional
         If True, do not apply any Field Engine instructions.
         This removes ability to set more than one L3/L4
-        source/destination, but it can increase throughput.
+        source/destination and DNS randomization, but it can
+        increase throughput.
     enabled : bool, optional
         If False, stream won't be transmited.
     """
@@ -166,6 +187,9 @@ class TRexStream:
     l4_dst: Optional[Union[int, tuple, list]] = None
     l4_op: Optional[str] = "inc"
     l4_flags: Optional[Union[list, TRexL4Flag]] = TRexL4Flag.SYN
+    l7: Optional[str] = None
+    l7_dns_query: Optional[str] = None
+    l7_dns_query_sub_randomize: Optional[int] = None
     pkt_len: Optional[int] = None
     rate: str = "1kpps"
     mode_selector: TRexStreamModeSelector = TRexStreamModeSelector.CONTINUOUS

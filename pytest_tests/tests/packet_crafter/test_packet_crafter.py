@@ -1138,3 +1138,62 @@ def test_random_mld():
     assert ip_0.code != ip_1.code, "MLD code should be random"
     assert ip_0.mrd != ip_1.mrd, "MLD MRD field should be random"
     assert ip_0.mladdr != ip_1.mladdr, "MLD mladdr field should be random"
+
+
+def test_dns_default():
+    """Ensure scapy_packet_crafter.ScapyPacketCrafter returns expected Scapy
+    packets based on given specification.
+    """
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l3_src": "10.0.0.0",
+        "l3_dst": "11.0.0.0",
+        "l4": "udp",
+        "l4_src": 10000,
+        "l4_dst": 53,
+        "l7": "dns",
+    }
+    packets = pc.packets(spec)
+
+    assert packets == [
+        scapy.Ether()
+        / scapy.IP(src="10.0.0.0", dst="11.0.0.0")
+        / scapy.UDP(sport=10000, dport=53)
+        / scapy.DNS(
+            qr=0,
+            rd=1,
+            qdcount=1,
+            qd=scapy.DNSQR(qname="example.org", qtype="A"),
+        ),
+    ]
+
+
+def test_dns_custom():
+    """Ensure scapy_packet_crafter.ScapyPacketCrafter returns expected Scapy
+    packets based on given specification.
+    """
+    pc = scapy_packet_crafter.ScapyPacketCrafter()
+    spec = {
+        "l3": "ipv4",
+        "l3_src": "10.0.0.0",
+        "l3_dst": "11.0.0.0",
+        "l4": "udp",
+        "l4_src": 10000,
+        "l4_dst": 53,
+        "l7": "dns",
+        "l7_dns_query": "github.com",
+    }
+    packets = pc.packets(spec)
+
+    assert packets == [
+        scapy.Ether()
+        / scapy.IP(src="10.0.0.0", dst="11.0.0.0")
+        / scapy.UDP(sport=10000, dport=53)
+        / scapy.DNS(
+            qr=0,
+            rd=1,
+            qdcount=1,
+            qd=scapy.DNSQR(qname="github.com", qtype="A"),
+        ),
+    ]
