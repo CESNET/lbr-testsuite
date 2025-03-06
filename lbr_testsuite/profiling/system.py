@@ -109,7 +109,7 @@ class IrqMonProfiler(ThreadedProfiler):
 
             df[f"group{i}"] = df[cpus[first:last]].sum(axis=1)
 
-    def _data_collect(self) -> tuple:
+    def _data_collect(self) -> tuple[pandas.DataFrame, list[str]]:
         """Sample all system interrupts per CPU."""
 
         last = self._collect_interrupts()
@@ -127,23 +127,15 @@ class IrqMonProfiler(ThreadedProfiler):
 
             last = stats
 
-        return data, cpus
+        return pandas.DataFrame(data), cpus
 
-    def _data_postprocess(self, data: tuple):
-        """write CSV file with sampled data and generate plots."""
-
-        df = pandas.DataFrame(data[0])
-
-        self._logger.info(f"save interrupt stats into {self.csv_file()}")
-        df.to_csv(self.csv_file())
-
-        cpus = data[1]
+    def _data_postprocess(self, data: pandas.DataFrame, cpus: list[str]):
         groups = len(cpus) // self.GROUP_SIZE + (1 if len(cpus) % self.GROUP_SIZE != 0 else 0)
 
-        df["timestamp"] = self._make_timestamps_relative(df["timestamp"])
+        data["timestamp"] = self._make_timestamps_relative(data["timestamp"])
 
-        self._compute_stats(df, cpus)
-        self._compute_groups_stats(df, groups, self.GROUP_SIZE, cpus)
+        self._compute_stats(data, cpus)
+        self._compute_groups_stats(data, groups, self.GROUP_SIZE, cpus)
 
         # plot summary, groups summary and each particular group
         ch_spec = []
@@ -175,7 +167,7 @@ class IrqMonProfiler(ThreadedProfiler):
 
         self._logger.info(f"save charts file: {self.charts_file()}")
         charts.create_charts_html(
-            df,
+            data,
             ch_spec,
             self.charts_file(),
             title="System Interrupts",
