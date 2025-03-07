@@ -462,8 +462,6 @@ class RxTxMonProfiler(ThreadedProfiler):
         pipeline.wait_until_active()
         pid = pipeline.get_pid()
 
-        stats_storage.init_time()
-
         while not self.wait_stoppable(self._time_step):
             try:
                 p_xstats = pipeline.get_xstats()
