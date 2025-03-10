@@ -43,7 +43,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-repository = "https://gitlab.liberouter.org/tmc/testsuite/"
+repository = "https://github.com/CESNET/lbr-testsuite/"
 
 [project.entry-points."pytest11"]
 lbr_testsuite = "lbr_testsuite._pytest_plugins.plugin"
