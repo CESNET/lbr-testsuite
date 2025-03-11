@@ -49,13 +49,13 @@ class CPUMonProfiler(ThreadedProfiler):
         return list(filter(lambda name: name.startswith("cpu_"), df.columns))
 
     def _collect_freqs(self, df, cpus):
-        all_freqs = set()
+        all_freqs = list()
 
         for i in range(len(df)):
             for cpu in cpus:
-                all_freqs.add(df.iloc[i].loc[cpu])
+                all_freqs.extend(df[cpu].unique())
 
-        return all_freqs
+        return set(all_freqs)
 
     def _store_df(self, df, csv_file):
         global_logger.info(f"save CSV file: {csv_file}")
@@ -86,18 +86,13 @@ class CPUMonProfiler(ThreadedProfiler):
         all_freqs = self._collect_freqs(df, cpus)
         data = defaultdict(list)
 
+        zero_freqs = pandas.Series({f: 0 for f in all_freqs})
         for cpu in cpus:
-            freq_hist = {}
-
-            for freq in all_freqs:
-                freq_hist[freq] = 0
-
-            for i in range(len(df)):
-                freq_hist[df.iloc[i].loc[cpu]] += 1
-
             data["cpu"].append(cpu)
 
-            freq_total = sum(freq_hist.values())
+            freq_hist = zero_freqs.add(df[cpu].value_counts(), fill_value=0)
+
+            freq_total = freq_hist.sum()
             for freq, count in freq_hist.items():
                 data[freq].append(100 * count / freq_total)
 
