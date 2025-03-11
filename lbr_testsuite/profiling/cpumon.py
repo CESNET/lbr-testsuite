@@ -45,9 +45,6 @@ class CPUMonProfiler(ThreadedProfiler):
 
         return names
 
-    def _round_freq(self, freq):
-        return round(freq / 100) * 100
-
     def _collect_cpu_freq_columns(self, df):
         return list(filter(lambda name: name.startswith("cpu_"), df.columns))
 
@@ -56,7 +53,7 @@ class CPUMonProfiler(ThreadedProfiler):
 
         for i in range(len(df)):
             for cpu in cpus:
-                all_freqs.add(self._round_freq(df.iloc[i].loc[cpu]))
+                all_freqs.add(df.iloc[i].loc[cpu])
 
         return all_freqs
 
@@ -67,7 +64,7 @@ class CPUMonProfiler(ThreadedProfiler):
 
         return df
 
-    def _plot_freqs_per_cpu(self, df, csv_file, charts_file):
+    def _plot_freqs_per_cpu(self, df, cpus, csv_file, charts_file):
         """Plot percentage of time spent on given frequency for each
         CPU (as a bar chart).
 
@@ -89,7 +86,6 @@ class CPUMonProfiler(ThreadedProfiler):
         created bar chart as a html page.
         """
 
-        cpus = self._collect_cpu_freq_columns(df)
         all_freqs = self._collect_freqs(df, cpus)
         data = defaultdict(list)
 
@@ -100,7 +96,7 @@ class CPUMonProfiler(ThreadedProfiler):
                 freq_hist[freq] = 0
 
             for i in range(len(df)):
-                freq_hist[self._round_freq(df.iloc[i].loc[cpu])] += 1
+                freq_hist[df.iloc[i].loc[cpu]] += 1
 
             data["cpu"].append(cpu)
 
@@ -136,11 +132,11 @@ class CPUMonProfiler(ThreadedProfiler):
             hist[freq] = 0
 
         for cpu in cpus:
-            hist[self._round_freq(df.iloc[row].loc[cpu])] += 1
+            hist[df.iloc[row].loc[cpu]] += 1
 
         return hist
 
-    def _plot_freqs(self, df, csv_file, charts_file):
+    def _plot_freqs(self, df, cpus, csv_file, charts_file):
         """Plot usage of frequency groups in time (i.e. how many CPUs
         used a frequency in given time).
 
@@ -164,7 +160,6 @@ class CPUMonProfiler(ThreadedProfiler):
         created bar chart as a html page.
         """
 
-        cpus = self._collect_cpu_freq_columns(df)
         data = defaultdict(list)
 
         for i in range(len(df)):
@@ -204,13 +199,20 @@ class CPUMonProfiler(ThreadedProfiler):
 
     def _data_postprocess(self, data: pandas.DataFrame):
         data["timestamp"] = self._make_timestamps_relative(data["timestamp"])
+
+        cpu_cols = self._collect_cpu_freq_columns(data)
+        data = data.round({c: -2 for c in cpu_cols})  # round frequencies to whole hundreds
+        data[cpu_cols] = data[cpu_cols].astype("int")
+
         self._plot_freqs_per_cpu(
             data,
+            cpu_cols,
             self.custom_file("csv", "_freqs_per_cpu"),
             self.charts_file("_freqs_per_cpu"),
         )
         self._plot_freqs(
             data,
+            cpu_cols,
             self.custom_file("csv", "_freqs"),
             self.charts_file("_freqs"),
         )
