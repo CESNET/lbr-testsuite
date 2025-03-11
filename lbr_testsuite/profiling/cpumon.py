@@ -123,17 +123,6 @@ class CPUMonProfiler(ThreadedProfiler):
             barmode="stack",
         )
 
-    def _make_freqs_hist(self, df, cpus, row):
-        hist = {}
-
-        for freq in self._collect_freqs(df, cpus):
-            hist[freq] = 0
-
-        for cpu in cpus:
-            hist[df.iloc[row].loc[cpu]] += 1
-
-        return hist
-
     def _plot_freqs(self, df, cpus, csv_file, charts_file):
         """Plot usage of frequency groups in time (i.e. how many CPUs
         used a frequency in given time).
@@ -145,36 +134,60 @@ class CPUMonProfiler(ThreadedProfiler):
         that time:
 
         we have e.g. 64 CPUs
-        +-----------------------+
+        +--------------------+
         |     |  3400 | 3500 |
         +-----+-------+------+
         | t1  |    32 |   32 |
         | t2  |     0 |   64 |
         | ... |   ... |  ... |
-        | tN  |    12 |   52 |
-        +-----------------------+
+        | tN  |    11 |   53 |
+        +--------------------+
 
         This function stores the computed data-frame as a CSV and
         created bar chart as a html page.
         """
 
-        data = defaultdict(list)
+        """
+        stack() creates a multi-index df where 1st level index is row
+        index of original df and 2nd level index is a CPU - it is
+        created from column names of df[cpus] 'sub-dataframe'. Value
+        is a frequency as same as in original df.
 
-        for i in range(len(df)):
-            data["timestamp"].append(df.iloc[i].loc["timestamp"])
+        groupby() creates groups - one group for one row of original
+        df (i.e. index level 0). One group contains series of
+        frequencies with CPU (i.e. original df column name) as index.
 
-            for freq, count in self._make_freqs_hist(df, cpus, i).items():
-                data[freq].append(count)
+        value_counts() on group-by object computes occurrences of unique
+        values (frequency values). It creates multi-index series. 1st
+        level index is again row index, 2nd level index is frequency.
+        Value is count of frequency occurrences in given group.
 
-        df = pandas.DataFrame(data)
-        self._store_df(df, csv_file)
+        +----------------------+
+        |index0  index1 |
+        +----------------------+
+        |    0     3500 |   32 |
+        |          3400 |   32 |
+        |    1     3500 |   64 |
+        |          3400 |    0 |
+        |    2     3500 |   12 |
+        |    ...    ... |  ... |
+        |    N     3500 |   11 |
+        |          3400 |   53 |
+        +----------------------+
 
-        all_cols = list(df.keys())
-        all_cols.remove("timestamp")
+        unstack() creates df with frequencies as columns.
+
+        As a result, we have new column for each frequency measured with
+        count of CPUs using that frequency in given time.
+        """
+        freq_df = df[cpus].stack().groupby(level=0).value_counts().unstack(fill_value=0)
+        self._store_df(freq_df, csv_file)
+        df = df.join(freq_df)
+
         chart_spec = charts.SubPlotSpec(
             title="CPU frequencies in time (MHz)",
             y_label=f"CPU count (out of {len(cpus)} CPUs)",
-            columns=all_cols,
+            columns=list(freq_df.keys()),
             y_ticks=list(range(0, len(cpus) + 1, 3)),
         )
 
