@@ -57,12 +57,9 @@ class CPUMonProfiler(ThreadedProfiler):
 
         return all_freqs
 
-    def _data_to_df(self, data, csv_file):
-        df = pandas.DataFrame(data)
+    def _store_df(self, df, csv_file):
         global_logger.info(f"save CSV file: {csv_file}")
         df.to_csv(csv_file)
-
-        return df
 
     def _plot_freqs_per_cpu(self, df, cpus, csv_file, charts_file):
         """Plot percentage of time spent on given frequency for each
@@ -104,7 +101,8 @@ class CPUMonProfiler(ThreadedProfiler):
             for freq, count in freq_hist.items():
                 data[freq].append(100 * count / freq_total)
 
-        df = self._data_to_df(data, csv_file)
+        df = pandas.DataFrame(data)
+        self._store_df(df, csv_file)
 
         all_cols = list(df.keys())
         all_cols.remove("cpu")
@@ -168,7 +166,8 @@ class CPUMonProfiler(ThreadedProfiler):
             for freq, count in self._make_freqs_hist(df, cpus, i).items():
                 data[freq].append(count)
 
-        df = self._data_to_df(data, csv_file)
+        df = pandas.DataFrame(data)
+        self._store_df(df, csv_file)
 
         all_cols = list(df.keys())
         all_cols.remove("timestamp")
