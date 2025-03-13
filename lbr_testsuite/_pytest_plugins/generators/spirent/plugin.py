@@ -37,7 +37,35 @@ def pytest_addoption(parser):
 
 
 @fixture(scope="module")
-def spirent_config_suffix(request, generator):
+def generator_spirent(topology):
+    """Fixture providing a spirent generator object.
+
+    Parameters
+    ----------
+    topology: lbr_testsuite.topology.topology.Topology
+        Instance holding current topology.
+
+    Returns
+    -------
+    Spirent | None
+        Spirent generator if found, None otherwise.
+
+    Raise
+    -----
+    RuntimeError
+        When no spirent generator is available.
+    """
+
+    generator_spirent = topology.get_generator(lbrt_spirent.Spirent)
+
+    if not generator_spirent:
+        raise RuntimeError("Spirent generator is not available.")
+
+    return generator_spirent
+
+
+@fixture(scope="module")
+def spirent_config_suffix(request, generator_spirent):
     """Fixture providing spirent configuration file suffix based on
     per-port mapping.
 
@@ -46,7 +74,7 @@ def spirent_config_suffix(request, generator):
     request: Fixture
         Special pytest fixture (here for acquiring command line
         arguments).
-    generator : Spirent
+    generator_spirent : Spirent
         An initialized instance of Spirent generator.
 
     Returns
@@ -55,13 +83,11 @@ def spirent_config_suffix(request, generator):
         Configuration file suffix.
     """
 
-    assert isinstance(generator, lbrt_spirent.Spirent)
-
     port_cfg_mappings = request.config.getoption("spirent_config_mapping")
     port_cfg_mappings = [mapping.split(",") for mapping in port_cfg_mappings]
     port_cfg_mappings = {port: suffix for port, suffix in port_cfg_mappings}
 
-    spirent_port = generator.get_port()
+    spirent_port = generator_spirent.get_port()
     cfg_suffix = ""
     if port_cfg_mappings.get(spirent_port) is not None:
         cfg_suffix = f"_{port_cfg_mappings[spirent_port]}"
@@ -93,12 +119,12 @@ def spirent_config_default_dir(request):
 
 
 @fixture(scope="module")
-def spirent(generator, spirent_config_suffix, spirent_config_default_dir):
+def spirent(generator_spirent, spirent_config_suffix, spirent_config_default_dir):
     """Fixture representing spirent.
 
     Parameters
     ----------
-    generator : Spirent
+    generator_spirent : Spirent
         An initialized instance of Spirent generator.
     spirent_config_suffix : str (fixture)
         Spirent configuration file suffix for used spirent port.
@@ -112,13 +138,11 @@ def spirent(generator, spirent_config_suffix, spirent_config_default_dir):
         spirent connected.
     """
 
-    assert isinstance(generator, lbrt_spirent.Spirent)
-
     cfg_file_name = f"{DEFAULT_CONFIG_FILENAME_BASE}{spirent_config_suffix}.xml"
     default_configuration_file = str(spirent_config_default_dir / cfg_file_name)
-    generator.set_config_file(default_configuration_file)
+    generator_spirent.set_config_file(default_configuration_file)
 
-    return generator
+    return generator_spirent
 
 
 @fixture(scope="module")
