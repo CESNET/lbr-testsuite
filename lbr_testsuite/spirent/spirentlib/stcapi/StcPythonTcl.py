@@ -206,7 +206,7 @@ class StcPythonTcl:
         # multiword strings | -key value | -key {v a l u e s}
         # regex = r"(\w+-?\w+ ?\w+-?\w+)|(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w|\s]*)}(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w|\s]*)}"
 
-        regex = r"(^[\w\n\s:\\\/=,._';+<>~!?()\[\]@#$%^&*-]*$)|(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w\n\s:\\\/-=,._';+<>~!?()\[\]@#$%^&*]*)}"
+        regex = r"(^[\w\n\s:\\\/=,._';+<>~!?()\[\]@#$%^&*-]*$)|(-[^\s]+\s+[^\s|{]+)|(-[^\s]+)\s+{([\w\n\s:\\\/\-=,._';+<>~!?()\[\]@#$%^&*]*)}"
         matches = re.finditer(regex, tcl_output, re.MULTILINE)
         parsed_output = []
 
