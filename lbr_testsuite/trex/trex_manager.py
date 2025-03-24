@@ -12,6 +12,7 @@ import logging
 
 from .trex_base import TRexZMQPortsUsedError
 from .trex_configuration_file import randomize_ports, setup_cfg_file
+from .trex_emulation import TRexEmulation
 from .trex_stateful import TRexAdvancedStateful
 from .trex_stateless import TRexStateless
 
@@ -116,6 +117,46 @@ class TRexManager:
             core_count,
             TRexAdvancedStateful,
             role,
+        )
+
+    def request_emulation(
+        self,
+        request,
+        interface_count=1,
+        core_count=3,
+    ):
+        """Request emulation TRex generator.
+
+        Note: Emulation TRex runs with --software flag, which
+        limits it's performance.
+
+        Warning: Currently only one active instance of emulation
+        TRex generator is supported.
+
+        Parameters
+        ----------
+        request : fixture
+            Special pytest fixture.
+        interface_count : int, optional
+            Number of physical ports/interfaces of NIC to use.
+            Port ID always begins from 0.
+            For example, if ``interface_count`` is 3, then
+            ports ID 0, 1, 2 will be available.
+        core_count : int, optional
+            Count of CPU cores to use (minimum is 3).
+            More cores will generally increase performance.
+
+        Returns
+        -------
+        TRexEmulation
+            TRexEmulation if request was successful.
+        """
+
+        return self._request_generator(
+            request,
+            interface_count,
+            core_count,
+            TRexEmulation,
         )
 
     def _request_generator(
