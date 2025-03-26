@@ -262,8 +262,6 @@ def setup_cfg_file(
         Special pytest fixture.
     generator: TRexGenerator
         TRex generator.
-    first_core : int
-        ID of first CPU core.
     cores : list
         List of CPU cores (minimum is 3).
         If ``generator`` uses more than 2 interfaces, then it's
