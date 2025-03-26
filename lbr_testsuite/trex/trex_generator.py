@@ -196,8 +196,8 @@ class TRexMachine:
         assert generator.get_host() == self._host, "Generator from different host"
 
         self._daemons.append(generator.get_daemon())
-        self._interfaces.extend(generator.get_interfaces())
-        self._available_cores.extend(generator.get_cores())
+        self._interfaces = generator.get_interfaces() + self._interfaces
+        self._available_cores = generator.get_cores() + self._available_cores
         generator.invalidate()
 
 
