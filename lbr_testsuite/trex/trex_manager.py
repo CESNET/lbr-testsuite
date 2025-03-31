@@ -50,6 +50,7 @@ class TRexManager:
         request,
         interface_count=1,
         core_count=6,
+        specific_cores=[],
     ):
         """Request stateless TRex generator.
 
@@ -72,6 +73,11 @@ class TRexManager:
             Some tolerance (e.g. 1 packet) could be useful
             in such situation.
 
+            This parameter is ignored if "specific_cores" is provided.
+        specific_cores : list, optional
+            Ignore "core_count" and instead use cores specified
+            in this list.
+
         Returns
         -------
         TRexStateless
@@ -82,6 +88,7 @@ class TRexManager:
             request,
             interface_count,
             core_count,
+            specific_cores,
             TRexStateless,
         )
 
@@ -90,6 +97,7 @@ class TRexManager:
         request,
         role,
         core_count=6,
+        specific_cores=[],
     ):
         """Request advanced stateful TRex generator.
 
@@ -102,6 +110,10 @@ class TRexManager:
         core_count : int, optional
             Count of CPU cores to use (minimum is 3).
             More cores will generally increase performance.
+            This parameter is ignored if "specific_cores" is provided.
+        specific_cores : list, optional
+            Ignore "core_count" and instead use cores specified
+            in this list.
 
         Returns
         -------
@@ -115,6 +127,7 @@ class TRexManager:
             request,
             1,
             core_count,
+            specific_cores,
             TRexAdvancedStateful,
             role,
         )
@@ -156,6 +169,7 @@ class TRexManager:
             request,
             interface_count,
             core_count,
+            [],
             TRexEmulation,
         )
 
@@ -164,6 +178,7 @@ class TRexManager:
         request,
         interface_count,
         core_count,
+        specific_cores,
         trex_class,
         role=None,
     ):
@@ -175,6 +190,7 @@ class TRexManager:
             request,
             interface_count,
             core_count,
+            specific_cores,
         )
 
         cfg = setup_cfg_file(
@@ -209,13 +225,14 @@ class TRexManager:
         request,
         interface_count,
         core_count,
+        specific_cores,
     ):
         """Find suitable generator in a pool of generators.
         Register finalizer to free a generator.
         """
 
         for machine in self._pool.get_machines():
-            generator = machine.get_generator(interface_count, core_count)
+            generator = machine.get_generator(interface_count, core_count, specific_cores)
             if generator is not None:
 
                 def cleanup():
@@ -224,7 +241,9 @@ class TRexManager:
                 request.addfinalizer(cleanup)
                 return generator
 
+        cores = specific_cores if specific_cores else core_count
+
         raise RuntimeError(
             f"TRex generator with {interface_count} interfaces and "
-            f"{core_count} CPU cores is not available."
+            f"{cores} CPU cores is not available."
         )
