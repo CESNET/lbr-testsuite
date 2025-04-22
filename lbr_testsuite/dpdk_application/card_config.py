@@ -48,8 +48,16 @@ def get_interfaces_by_device(device: Device) -> list:
     else:
         dev_addrs = [str(device.get_address())]
 
-    ifname_paths = [Path(base_path / dev_addr / "net").glob("*") for dev_addr in dev_addrs]
-    ifnames = [next(ifname_list).name for ifname_list in ifname_paths]
+    ifnames = []
+    for dev_addr in dev_addrs:
+        net_path = Path(base_path / dev_addr / "net")
+        assert net_path.exists(), f"Unable to use card with address {dev_addr}"
+
+        try:
+            for ifname_list in net_path.glob("*"):
+                ifnames.append(next(ifname_list).name)
+        except StopIteration:
+            global_logger.error(f"Unexpected empty directory {net_path}")
 
     return ifnames
 
