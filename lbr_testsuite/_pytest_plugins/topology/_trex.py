@@ -62,6 +62,25 @@ def _init():
     )
     _options.add_option(
         (
+            ["--trex-machine-options"],
+            dict(
+                type=str,
+                action="append",
+                default=[],
+                help=(
+                    "Specify special option(s) for TRex machine. "
+                    "TRex machine is represented by hostname. "
+                    "Option is set in option=value format."
+                    "Supported options are: \n"
+                    " - cores: list of available cores\n"
+                    "Examples: \n"
+                    """    --trex-machine-options='trex;cores="0,1,2,3,4,5,12,13,14,15,16,17,24,25,26,27,28,29"'\n"""
+                ),
+            ),
+        )
+    )
+    _options.add_option(
+        (
             ["--trex-force-use"],
             dict(
                 default=False,
@@ -76,6 +95,51 @@ def _init():
     )
 
     registration.topology_option_register("wired_trex")
+
+
+@pytest_cases.fixture(scope="session")
+def trex_machine_options(request):
+    """Fixture for processing --trex-machine-options option.
+
+    Parameters
+    ----------
+    request : fixture
+        Special pytest fixture used here to access
+        command line arguments.
+
+    Returns
+    -------
+    dict(str, dict)
+        Dict with hostnames as keys and
+        dict of values.
+        Example:
+        {
+            "trex": {"cores": [0,1,2,3,4,5,12,13,14,15,16,17,24,25,26,27,28,29]},
+            "trex2": {"cores": [48,49,50,51,52,53,54,55,56,57,58,59,60]},
+
+        }
+    """
+
+    machines = request.config.getoption("trex_machine_options")
+    machine_options = {}
+
+    for m in machines:
+        host, options = m.split(";")
+        if host not in machine_options:
+            machine_options[host] = {}
+
+        opts = options.split("=")
+        assert len(opts) == 2, "Wrong format for --trex-machine-options option"
+
+        k = opts[0]
+        v = opts[1]
+
+        if k == "cores":
+            machine_options[host][k] = [int(c) for c in v.strip("'").strip('"').split(",")]
+        else:
+            machine_options[host][k] = v
+
+    return machine_options
 
 
 @pytest_cases.fixture(scope="session")
@@ -116,7 +180,7 @@ def trex_generators(request):
 
 
 @pytest_cases.fixture(scope="session")
-def topology_wired_trex(devices_args, option_wired_trex, trex_generators):
+def topology_wired_trex(devices_args, option_wired_trex, trex_generators, trex_machine_options):
     """Fixture creating TRex topology. It uses real NIC
     interface to build Device. TRex is used as a traffic
     generator.
@@ -134,6 +198,8 @@ def topology_wired_trex(devices_args, option_wired_trex, trex_generators):
         argument values.
     trex_generators: dict
         Parsed values from --trex-generator options.
+    trex_machine_options: dict
+        Parsed values from --trex-machine-options options.
 
     Returns
     -------
@@ -153,8 +219,9 @@ def topology_wired_trex(devices_args, option_wired_trex, trex_generators):
     device_args = devices_args[device_address]
     topology_device = PciDevice(device_address, device_args)
     trex_machines = {k: v for k, v in trex_generators.items() if k in machines}
+    trex_machine_options = {k: v for k, v in trex_machine_options.items() if k in machines}
 
-    topology_generator = TRexMachinesPool(trex_machines)
+    topology_generator = TRexMachinesPool(trex_machines, trex_machine_options)
 
     return Topology(topology_device, topology_generator)
 

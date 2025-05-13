@@ -126,17 +126,23 @@ class TRexMachine:
         Each interface is set as tuple, where
         first item is PCI address and second
         item is NUMA node.
+    cores : list(int), optional
+        CPU cores available on machine.
+        If not set, predefined cores will be used.
     """
 
     # This will be replaced by connecting to the
     # machine and retrieving actual CPU core count
     _CPU_CORES = 20
 
-    def __init__(self, host, interfaces):
+    def __init__(self, host, interfaces, cores=None):
         self._host = host
         self._interfaces = interfaces
         self._daemons = list()
-        self._available_cores = list(range(self._CPU_CORES))
+        if cores:
+            self._available_cores = cores
+        else:
+            self._available_cores = list(range(self._CPU_CORES))
 
         # ports configured by ansible playbook
         for port in [8090, 8091, 8092, 8093]:
@@ -240,16 +246,29 @@ class TRexMachinesPool(Generator):
             "trex.liberouter.org": [("0000:65:00.0",0), ("0000:65:00.1",0)],
             "trex2.liberouter.org": [("0000:65:00.0",0), ("0000:b3:00.0",0)],
         }
+    host_options : dict(str, list), optional
+        Dict contaning host as key and dict of additional parameters.
+        Example:
+        {
+            "trex.liberouter.org": {"cores": [0,1,2,3,4,5,12,13,14,15,16,17,24]},
+            "trex2.liberouter.org": {"cores": [0,1,2,3,4,5,6,7,8,9,10,11]},
+        }
     """
 
-    def __init__(self, host_data):
+    def __init__(self, host_data, host_options=None):
         self._trex_machines = []
 
         for host, interfaces in host_data.items():
             for ifc, numa in interfaces:
                 assert PciAddress.is_valid(ifc)
 
-            self._trex_machines.append(TRexMachine(host, interfaces))
+            cores = None
+
+            if host_options:
+                if host in host_options:
+                    cores = host_options[host].get("cores")
+
+            self._trex_machines.append(TRexMachine(host, interfaces, cores))
 
     def get_machines(self):
         """Return list of TRex machines.
