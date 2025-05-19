@@ -9,12 +9,16 @@ parameters that cannot be changed during runtime - such as physical
 ports of network card to be used.
 """
 
+import logging
 import random
 import tempfile
 
 import yaml
 
 from ..common.common import compose_output_path
+
+
+global_logger = logging.getLogger(__name__)
 
 
 # Number of preallocated TRex flow objects.
@@ -66,10 +70,11 @@ def _setup_interfaces(interfaces, interface_count, stateful_type):
     return ifcs
 
 
-def _setup_cpu_cores(interface_count, cores):
+def _setup_cpu_cores(interfaces, cores):
     """Setup CPU cores and ``dual_if`` parameter.
 
     Set correct amount of CPU cores per interface pair.
+    Also take NUMA node information in mind.
     Two cores are always dedicated to 1) "master" and 2) "latency" thread.
 
     ``dual_if`` parameter defines list of CPU cores pinned to one interface pair.
@@ -84,6 +89,7 @@ def _setup_cpu_cores(interface_count, cores):
         Second element is list of CPU cores pinned to interface pairs.
     """
 
+    interface_count = len(interfaces)
     assert len(cores) >= 3, "Minimum amount of CPU cores is 3"
     assert interface_count < 5, "Only 4 interfaces are currently supported"
     assert (
@@ -93,14 +99,42 @@ def _setup_cpu_cores(interface_count, cores):
     core_count = len(cores) - 2
     main_cores = cores[2:]
 
-    if interface_count <= 2:
-        dual_if = [{"socket": 0, "threads": main_cores}]
+    def _create_dual_if_section(interfaces, if1, if2, main_cores):
+        """Create "dual_if" section based on NUMA/socket of
+        provided interfaces.
+        """
+
+        if1_numa = interfaces[if1][1]
+        if2_numa = interfaces[if2][1]
+
+        if if1_numa == if2_numa:
+            dual_if = [{"socket": if1_numa, "threads": main_cores}]
+        else:
+            global_logger.warning(
+                "Combination of interfaces from different NUMA nodes "
+                "in one 'dual_if' section. Defaulting to NUMA 0."
+            )
+            dual_if = [{"socket": 0, "threads": main_cores}]
+
+        return dual_if
+
+    if interface_count == 1:
+        numa = interfaces[0][1]
+        dual_if = [{"socket": numa, "threads": main_cores}]
+    elif interface_count == 2:
+        dual_if = _create_dual_if_section(interfaces, 0, 1, main_cores)
     else:
         core_count = core_count // 2
-        dual_if = [
-            {"socket": 0, "threads": main_cores[:core_count]},
-            {"socket": 0, "threads": main_cores[core_count:]},
-        ]
+        main_cores1 = main_cores[:core_count]
+        main_cores2 = main_cores[core_count:]
+        dual_if = _create_dual_if_section(interfaces, 0, 1, main_cores1)
+
+        if interface_count == 3:
+            numa = interfaces[2][1]
+            dual_if.append({"socket": numa, "threads": main_cores2})
+        elif interface_count == 4:
+            dual_if2 = _create_dual_if_section(interfaces, 2, 3, main_cores2)
+            dual_if.append(dual_if2[0])
 
     return (core_count, dual_if)
 
@@ -165,8 +199,11 @@ def _create_yaml_configuration(
     assert len(cores) >= 3, "Minimum amount of CPU cores is 3"
 
     host = generator.get_host()
-    interfaces = generator.get_interfaces()
+    interfaces_with_numa = generator.get_interfaces()
+    interfaces = [i[0] for i in interfaces_with_numa]
+    numas = [i[1] for i in interfaces_with_numa]
     interface_count = len(interfaces)
+    numa1_exists = 1 in numas
 
     # Unique prefix is required if 2+ TRexes run on same machine.
     prefix = f"{host}-{interfaces}"
@@ -189,8 +226,10 @@ def _create_yaml_configuration(
     zmq_rpc_port = zmq_pub_port + 1
 
     ifcs = _setup_interfaces(interfaces, interface_count, stateful_type)
-    core_count, dual_if = _setup_cpu_cores(interface_count, cores)
+    core_count, dual_if = _setup_cpu_cores(interfaces_with_numa, cores)
     port_limit, port_info = _setup_port_info(interface_count)
+
+    memory_per_dual_if = 2048 * interface_count
 
     cfg = [
         {
@@ -201,7 +240,7 @@ def _create_yaml_configuration(
             "zmq_rpc_port": zmq_rpc_port,
             "interfaces": ifcs,
             "c": core_count,
-            "limit_memory": 2048 * interface_count,
+            "limit_memory": memory_per_dual_if,
             "platform": {
                 "master_thread_id": cores[0],
                 "latency_thread_id": cores[1],
@@ -213,6 +252,10 @@ def _create_yaml_configuration(
             },
         }
     ]
+
+    # See https://github.com/cisco-system-traffic-generator/trex-core/issues/1138#issuecomment-2696789782
+    if numa1_exists:
+        cfg[0]["ext_dpdk_opt"] = [f"--socket-mem={memory_per_dual_if},{memory_per_dual_if}"]
 
     return cfg
 
@@ -262,8 +305,6 @@ def setup_cfg_file(
         Special pytest fixture.
     generator: TRexGenerator
         TRex generator.
-    first_core : int
-        ID of first CPU core.
     cores : list
         List of CPU cores (minimum is 3).
         If ``generator`` uses more than 2 interfaces, then it's

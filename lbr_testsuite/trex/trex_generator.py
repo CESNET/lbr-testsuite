@@ -37,8 +37,11 @@ class TRexGenerator(Generator):
     ----------
     host : str
         Host where TRex is installed. Can be hostname or IP address.
-    interfaces : list(str)
-        PCI addresses of network interfaces.
+    interfaces : list(tuple(str,int))
+        List of network interfaces.
+        Each interface is set as tuple, where
+        first item is PCI address and second
+        item is NUMA node.
     cores : list(int)
         CPU cores to use.
     daemon : CTRexClient
@@ -68,8 +71,11 @@ class TRexGenerator(Generator):
 
         Returns
         -------
-        list(str)
-            PCI addresses of an interfaces.
+        list(tuple(str,int))
+            List of network interfaces.
+            Each interface is set as tuple, where
+            first item is PCI address and second
+            item is NUMA node.
         """
 
         return self._interfaces
@@ -115,8 +121,11 @@ class TRexMachine:
     ----------
     host : str
         TRex host. Can be hostname or IP address.
-    interfaces : list(str)
-        PCI addresses of network interfaces.
+    interfaces : list(tuple(str,int))
+        List of network interfaces.
+        Each interface is set as tuple, where
+        first item is PCI address and second
+        item is NUMA node.
     """
 
     # This will be replaced by connecting to the
@@ -151,7 +160,7 @@ class TRexMachine:
 
         return self._host
 
-    def get_generator(self, ifc_count=1, core_count=6):
+    def get_generator(self, ifc_count=1, core_count=6, specific_cores=[]):
         """Get TRex generator.
 
         Parameters
@@ -160,6 +169,9 @@ class TRexMachine:
             Number of interfaces.
         core_count : int, optional
             Number of CPU cores.
+            Ignored if "specific_cores" is provided.
+        specific_cores : list, optional
+            List of specific cores to use instead of "core_count".
 
         Returns
         -------
@@ -172,15 +184,26 @@ class TRexMachine:
         if ifc_count > len(self._interfaces):
             return None
 
-        if core_count > len(self._available_cores):
-            return None
+        if not specific_cores:
+            if core_count > len(self._available_cores):
+                return None
+        else:
+            if len(specific_cores) > len(self._available_cores):
+                return None
+            if set(specific_cores) & set(self._available_cores) != set(specific_cores):
+                return None
 
         if len(self._daemons) < 1:
             return None
 
         daemon = self._daemons.pop()
         interfaces = [self._interfaces.pop(0) for _ in range(ifc_count)]
-        cores = [self._available_cores.pop(0) for _ in range(core_count)]
+        if not specific_cores:
+            cores = [self._available_cores.pop(0) for _ in range(core_count)]
+        else:
+            cores = specific_cores
+            for c in cores:
+                self._available_cores.remove(c)
 
         return TRexGenerator(self._host, interfaces, cores, daemon)
 
@@ -198,6 +221,7 @@ class TRexMachine:
         self._daemons.append(generator.get_daemon())
         self._interfaces = generator.get_interfaces() + self._interfaces
         self._available_cores = generator.get_cores() + self._available_cores
+        self._available_cores.sort()
         generator.invalidate()
 
 
@@ -210,11 +234,11 @@ class TRexMachinesPool(Generator):
     Parameters
     ----------
     host_data : dict(str, list)
-        Dict contaning host as key and list of PCI addresses as value.
+        Dict contaning host as key and list of tuples (PCI address, numa) as value.
         Example:
         {
-            "trex.liberouter.org": ["0000:65:00.0", "0000:65:00.1"],
-            "trex2.liberouter.org": ["0000:65:00.0", "0000:b3:00.0"],
+            "trex.liberouter.org": [("0000:65:00.0",0), ("0000:65:00.1",0)],
+            "trex2.liberouter.org": [("0000:65:00.0",0), ("0000:b3:00.0",0)],
         }
     """
 
@@ -222,7 +246,7 @@ class TRexMachinesPool(Generator):
         self._trex_machines = []
 
         for host, interfaces in host_data.items():
-            for ifc in interfaces:
+            for ifc, numa in interfaces:
                 assert PciAddress.is_valid(ifc)
 
             self._trex_machines.append(TRexMachine(host, interfaces))

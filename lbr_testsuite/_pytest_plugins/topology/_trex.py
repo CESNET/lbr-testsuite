@@ -49,10 +49,13 @@ def _init():
                 help=(
                     "Specify one TRex generator. "
                     "TRex generator is represented by hostname "
-                    "and PCI address (separated by comma). "
+                    "and PCI address. Optionally, NUMA node of "
+                    "interface (PCI address) can also specified."
+                    "If left unspecified, the default NUMA node is 0."
+                    "All values are separated by comma. "
                     "Examples: \n"
                     "    --trex-generator='trex,0000:b3:00.0'\n"
-                    "    --trex-generator='trex2,0000:65:00.1'\n"
+                    "    --trex-generator='trex2,0000:65:00.1,1'\n"
                 ),
             ),
         )
@@ -89,11 +92,11 @@ def trex_generators(request):
     -------
     dict
         Dict with hostnames as keys and
-        list of PCI addresses as values.
+        list of tuples (PCI address, numa) as values.
         Example:
         {
-            "trex": ["0000:65:00.0", "0000:65:00.1"],
-            "trex2": ["0000:65:00.0", "0000:b3:00.0"],
+            "trex": [("0000:65:00.0",0), ("0000:65:00.1",0)],
+            "trex2": [("0000:65:00.0",0), ("0000:b3:00.0",0)],
         }
     """
 
@@ -101,8 +104,13 @@ def trex_generators(request):
     trex_machines = defaultdict(list)
 
     for g in generators:
-        host, pci = g.split(",")
-        trex_machines[host].append(pci)
+        host, pci, numa, *ignored = g.split(",") + [None]
+        if numa is None:
+            numa = 0
+        else:
+            numa = int(numa)
+
+        trex_machines[host].append((pci, numa))
 
     return trex_machines
 
