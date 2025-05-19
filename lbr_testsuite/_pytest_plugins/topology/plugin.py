@@ -15,7 +15,12 @@ from ...topology.devices_args import DevicesArgs
 from ...topology.topology import Topology, select_topologies
 from . import _options
 from ._spirent import topology_wired_spirent  # noqa
-from ._trex import topology_wired_trex, trex_generators, trex_manager  # noqa
+from ._trex import (  # noqa
+    topology_wired_trex,
+    trex_generators,
+    trex_machine_options,
+    trex_manager,
+)
 from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
 from ._wired_loopback import topology_wired_loopback  # noqa
 
