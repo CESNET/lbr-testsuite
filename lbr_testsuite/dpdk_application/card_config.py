@@ -53,9 +53,9 @@ def get_interfaces_by_device(device: Device) -> list:
         net_path = Path(base_path / dev_addr / "net")
         assert net_path.exists(), f"Unable to use card with address {dev_addr}"
 
+        ifname_list = net_path.glob("*")
         try:
-            for ifname_list in net_path.glob("*"):
-                ifnames.append(next(ifname_list).name)
+            ifnames.append(next(ifname_list).name)
         except StopIteration:
             global_logger.error(f"Unexpected empty directory {net_path}")
 
