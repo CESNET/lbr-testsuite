@@ -112,6 +112,23 @@ class Topology:
             return None
         return generators[index]
 
+    def get_generator_count(self, gen_type=Generator):
+        """Get count of generators of given type.
+
+        Parameters
+        ----------
+        gen_type: type, optional
+            Type of generator class. By default, a Generator type is
+            used as every generator has to be inherited from this class.
+
+        Returns
+        -------
+        int
+            Count of generators of `gen_type` type.
+        """
+
+        return len([g for g in self._generators if isinstance(g, gen_type)])
+
     def get_device(self):
         """Get topology device component.
 
