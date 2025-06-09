@@ -595,6 +595,70 @@ class StcHandler:
 
         return self.stc_object_xpath(xpaths)
 
+    def stc_capture(self):
+        hport = self._stc.get("project1", "children-port")
+        return self._stc.get(hport, "children-capture")
+
+    def stc_capture_configure(self, capture_filter=None, call_apply=True):
+        hcapture = self.stc_capture()
+        self._stc.config(hcapture, mode="REGULAR_MODE", srcmode="RX_MODE")
+
+        if capture_filter:
+            hcapfilter = self._stc.get(hcapture, "children-CaptureFilter")
+            self._stc.config(hcapfilter, QualifyEvents=True)
+
+            hcap_analyzer_filter = self._stc.create(
+                "CaptureAnalyzerFilter",
+                under=hcapfilter,
+                FrameConfig="",
+                IsSelected=True,
+            )
+            self._stc.config(hcap_analyzer_filter, FrameConfig=capture_filter)
+
+        if call_apply:
+            self._stc.apply()
+
+    def stc_capture_start(self):
+        hcapture = self.stc_capture()
+        self._stc.perform("CaptureStart", captureProxyId=hcapture)
+
+    def stc_capture_stop(self):
+        hcapture = self.stc_capture()
+        self._stc.perform("CaptureStop", captureProxyId=hcapture)
+
+        return self.stc_capture_pkt_count()
+
+    def stc_capture_pkt_count(self):
+        hcapture = self.stc_capture()
+
+        return int(self._stc.get(hcapture, "PktCount"))
+
+    def stc_capture_save(self, destination: str):
+        self._stc.perform(
+            "CaptureDataSave",
+            startframeindex="0",
+            endframeindex=self.stc_capture_pkt_count(),
+            filename=destination,
+            filenameformat="PCAP",
+            isscap="FALSE",
+        )
+
+    def stc_capture_get_captured_packets(self) -> list:
+        hcapture = self.stc_capture()
+
+        pkts = []
+        cap_pkt_cnt = self.stc_capture_pkt_count()
+        for i in range(cap_pkt_cnt):
+            pkts.append(
+                self._stc.perform(
+                    "CaptureGetFrameCommand",
+                    captureProxyId=hcapture,
+                    frameindex=str(i),
+                )
+            )
+
+        return pkts
+
     def stc_get_stream_block_load_unit(self, sb_name):
         xpath = ["StcSystem/Project/Port/StreamBlock[@Name={}]".format(sb_name)]
         sb_handler = self.stc_object_xpath(xpath)
