@@ -34,14 +34,14 @@ class Topology:
         Topology analyzer.
     """
 
-    def __init__(self, device, generator=None, analyzer=None):
+    def __init__(self, device, generators=None, analyzer=None):
         """Creates a topology from its components.
 
         Parameters
         ----------
         device : device.Device
             building device object
-        generator : generator.Generator, optional
+        generators : generator.Generator | tuple(generator.Generator), optional
             building generator object
         analyzer : analyzer.Analyzer, optional
             building analyzer object
@@ -60,11 +60,18 @@ class Topology:
 
         self._device = device
 
-        if generator is not None and not isinstance(generator, Generator):
-            classname = type(generator).__name__
-            raise RuntimeError(f"expected instance of Generator, but got {classname}")
+        if not generators:
+            self._generators = None
+        else:
+            if isinstance(generators, Generator):
+                self._generators = (generators,)
+            else:
+                self._generators = tuple(g for g in generators)
 
-        self._generator = generator
+            for g in self._generators:
+                if not isinstance(g, Generator):
+                    classname = type(g).__name__
+                    raise RuntimeError(f"expected instance of Generator, but got {classname}")
 
         if analyzer is not None and not isinstance(analyzer, Analyzer):
             classname = type(analyzer).__name__
@@ -72,16 +79,55 @@ class Topology:
 
         self._analyzer = analyzer
 
-    def get_generator(self):
+    def _generators_by_type(self, gen_type):
+        return [g for g in self._generators if isinstance(g, gen_type)]
+
+    def get_generator(self, gen_type=Generator, index=0):
         """Get topology generator component.
+
+        Parameters
+        ----------
+        gen_type: type, optional
+            Type of requested class. By default, a Generator type is
+            used as every generator has to be inherited from this class.
+            Effectively, first generator from generators tuple is
+            returned by default.
+        index: int, optional
+            Index of a class of requested type.
 
         Returns
         -------
         generator.Generator
             topology generator
+
+        Raises
+        ------
+        IndexError
+            If index is greater than count of generators of requested
+            type ('count - 1' as we are indexing from 0).
         """
 
-        return self._generator
+        generators = self._generators_by_type(gen_type)
+        if not generators:
+            return None
+        return generators[index]
+
+    def get_generator_count(self, gen_type=Generator):
+        """Get count of generators of given type.
+
+        Parameters
+        ----------
+        gen_type: type, optional
+            Type of generator class. By default, a Generator type is
+            used as every generator has to be inherited from this class.
+
+        Returns
+        -------
+        int
+            Count of generators of `gen_type` type.
+        """
+
+        return len([g for g in self._generators if isinstance(g, gen_type)])
 
     def get_device(self):
         """Get topology device component.
@@ -116,7 +162,7 @@ class Topology:
 
         return (
             self._device,
-            self._generator,
+            self.get_generator(),
             self._analyzer,
         )
 
