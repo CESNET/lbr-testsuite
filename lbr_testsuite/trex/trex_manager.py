@@ -211,6 +211,8 @@ class TRexManager:
             except TRexZMQPortsUsedError:
                 if cnt >= self.STARTUP_ATTEMPTS - 1:
                     raise
+                elif generator.get_zmq_pub_port() or generator.get_zmq_rpc_port():
+                    raise
                 else:
                     global_logger.info(
                         f"TRex startup failed due to ZMQ port being used by another "
