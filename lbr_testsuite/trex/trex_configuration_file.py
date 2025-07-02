@@ -220,10 +220,14 @@ def _create_yaml_configuration(
     if stateful_type == "server":
         memory_dp_flows = INCREASED_MEMORY_DP_FLOWS
 
-    # Use random private port for ZMQ communication.
-    # ZMQ is universal network messaging library.
-    zmq_pub_port = random.randint(49152, 65534)
-    zmq_rpc_port = zmq_pub_port + 1
+    if generator.get_zmq_pub_port() and generator.get_zmq_rpc_port():
+        zmq_pub_port = generator.get_zmq_pub_port()
+        zmq_rpc_port = generator.get_zmq_rpc_port()
+    else:
+        # If not set, use random private port for ZMQ communication.
+        # ZMQ is universal network messaging library.
+        zmq_pub_port = random.randint(49152, 65534)
+        zmq_rpc_port = zmq_pub_port + 1
 
     ifcs = _setup_interfaces(interfaces, interface_count, stateful_type)
     core_count, dual_if = _setup_cpu_cores(interfaces_with_numa, cores)
