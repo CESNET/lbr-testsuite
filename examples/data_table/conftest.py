@@ -15,13 +15,6 @@ from pytest_cases import fixture
 from lbr_testsuite import data_table
 
 
-def mbps_to_mpps(thrpt_mbps, pkt_len):
-    # Add 24B to packet lenth: 7B preamble + 1B SoF + 4B CRC + 12B minimal IFG
-    pps = thrpt_mbps / ((pkt_len + 24) * 8)
-    pps = math.ceil(pps)  # just here for testing, to have "whole" packets
-    return pps
-
-
 @fixture(scope="module")
 def results_filenames(request, tmp_path_factory):
     """Create a dictionary with filenames for results (csv, png) and
