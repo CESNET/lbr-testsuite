@@ -23,6 +23,8 @@ If Topology allows multiple ``Generator`` objects in the future, then this class
 it's purpose and can be removed.
 """
 
+import copy
+
 import lbr_trex_client  # noqa: F401
 from trex_client import CTRexClient
 
@@ -257,6 +259,7 @@ class TRexMachinesPool(Generator):
 
     def __init__(self, host_data, host_options=None):
         self._trex_machines = []
+        host_data = copy.deepcopy(host_data)
 
         for host, interfaces in host_data.items():
             for ifc, numa in interfaces:
@@ -265,6 +268,7 @@ class TRexMachinesPool(Generator):
             cores = None
 
             if host_options:
+                host_options = copy.deepcopy(host_options)
                 if host in host_options:
                     cores = host_options[host].get("cores")
 
