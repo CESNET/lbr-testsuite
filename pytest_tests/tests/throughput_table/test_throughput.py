@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 from pytest_cases import fixture, parametrize
 
+from lbr_testsuite.common.conv import mbps_to_mpps, mpps_to_mbps
 from lbr_testsuite.data_table import throughput_table
 from lbr_testsuite.data_table.benchmark_charts import BenchmarkCharts
 from lbr_testsuite.data_table.charts import DataTableCharts
@@ -105,16 +106,6 @@ def measurements(request):
 
         print()
         print(csv_file_name)
-
-
-def mbps_to_mpps(thrpt_mbps, pkt_len):
-    # Add 24B to packet lenth: 7B preamble + 1B SoF + 4B CRC + 12B minimal IFG
-    return thrpt_mbps / ((pkt_len + 24) * 8)
-
-
-def mpps_to_mbps(thrpt_mpps, pkt_len):
-    # Add 24B to packet lenth: 7B preamble + 1B SoF + 4B CRC + 12B minimal IFG
-    return thrpt_mpps * ((pkt_len + 24) * 8)
 
 
 def test_throughput(

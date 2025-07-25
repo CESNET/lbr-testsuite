@@ -14,8 +14,7 @@ import pytest
 from pytest_cases import fixture, parametrize
 
 from lbr_testsuite import data_table
-
-from .conftest import mbps_to_mpps
+from lbr_testsuite.common.conv import mbps_to_mpps
 
 
 global_logger = logging.getLogger(__name__)
