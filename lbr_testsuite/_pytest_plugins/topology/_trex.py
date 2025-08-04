@@ -72,9 +72,14 @@ def _init():
                     "TRex machine is represented by hostname. "
                     "Option is set in option=value format."
                     "Supported options are: \n"
-                    " - cores: list of available cores\n"
+                    " - cores: list of available cores.\n"
+                    "By default, cores 0-19 are used.\n"
+                    " - zmq_ports: list of zmq ports used to communicate with TRex. "
+                    "Use randomly generated ports if not set or if there is more instances than zmq ports. "
+                    "Note that each TRex instance uses 2 zmq ports.\n"
                     "Examples: \n"
                     """    --trex-machine-options='trex;cores="0,1,2,3,4,5,12,13,14,15,16,17,24,25,26,27,28,29"'\n"""
+                    """    --trex-machine-options='trex;zmq_ports="4500,4501"'\n"""
                 ),
             ),
         )
@@ -114,9 +119,14 @@ def trex_machine_options(request):
         dict of values.
         Example:
         {
-            "trex": {"cores": [0,1,2,3,4,5,12,13,14,15,16,17,24,25,26,27,28,29]},
-            "trex2": {"cores": [48,49,50,51,52,53,54,55,56,57,58,59,60]},
-
+            "trex": {
+                "cores": [0,1,2,3,4,5,12,13,14,15,16,17,24,25,26,27,28,29],
+                "zmq_ports": [4500,4501],
+            },
+            "trex2": {
+                "cores": [48,49,50,51,52,53,54,55,56,57,58,59,60],
+                "zmq_ports": [4502,4503],
+            },
         }
     """
 
@@ -136,6 +146,9 @@ def trex_machine_options(request):
 
         if k == "cores":
             machine_options[host][k] = [int(c) for c in v.strip("'").strip('"').split(",")]
+        elif k == "zmq_ports":
+            machine_options[host][k] = [int(c) for c in v.strip("'").strip('"').split(",")]
+            assert len(machine_options[host][k]) % 2 == 0, "Even number of ZMQ ports is required."
         else:
             machine_options[host][k] = v
 

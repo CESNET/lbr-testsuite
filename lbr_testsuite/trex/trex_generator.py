@@ -49,13 +49,27 @@ class TRexGenerator(Generator):
     daemon : CTRexClient
         TRex daemon running on ``host``.
         Daemon controls start and termination of one TRex instance.
+    zmq_pub_port : int, optional
+        ZMQ Publisher port.
+    zmq_rpc_port : int, optional
+        ZMQ Remote Procedure Call port.
     """
 
-    def __init__(self, host, interfaces, cores, daemon):
+    def __init__(
+        self,
+        host,
+        interfaces,
+        cores,
+        daemon,
+        zmq_pub_port=None,
+        zmq_rpc_port=None,
+    ):
         self._host = host
         self._interfaces = interfaces
         self._cores = cores
         self._daemon = daemon
+        self._zmq_pub_port = zmq_pub_port
+        self._zmq_rpc_port = zmq_rpc_port
 
     def get_host(self):
         """Return TRex host.
@@ -107,6 +121,26 @@ class TRexGenerator(Generator):
 
         return self._daemon
 
+    def get_zmq_pub_port(self):
+        """
+        Returns
+        -------
+        int or None
+            ZMQ Publisher port.
+        """
+
+        return self._zmq_pub_port
+
+    def get_zmq_rpc_port(self):
+        """
+        Returns
+        -------
+        int or None
+            ZMQ Remote Procedure Call port.
+        """
+
+        return self._zmq_rpc_port
+
     def invalidate(self):
         """Invalidate this generator."""
 
@@ -114,6 +148,8 @@ class TRexGenerator(Generator):
         self._interfaces = None
         self._cores = None
         self._daemon = None
+        self._zmq_pub_port = None
+        self._zmq_rpc_port = None
 
 
 class TRexMachine:
@@ -131,13 +167,16 @@ class TRexMachine:
     cores : list(int), optional
         CPU cores available on machine.
         If not set, predefined cores will be used.
+    zmq_ports : list(int), optional
+        List of ZMQ ports to use.
+        If not set, random ZMQ ports will be used.
     """
 
     # This will be replaced by connecting to the
     # machine and retrieving actual CPU core count
     _CPU_CORES = 20
 
-    def __init__(self, host, interfaces, cores=None):
+    def __init__(self, host, interfaces, cores=None, zmq_ports=None):
         self._host = host
         self._interfaces = interfaces
         self._daemons = list()
@@ -145,6 +184,7 @@ class TRexMachine:
             self._available_cores = cores
         else:
             self._available_cores = list(range(self._CPU_CORES))
+        self._zmq_ports = zmq_ports
 
         # ports configured by ansible playbook
         for port in [8090, 8091, 8092, 8093]:
@@ -213,7 +253,14 @@ class TRexMachine:
             for c in cores:
                 self._available_cores.remove(c)
 
-        return TRexGenerator(self._host, interfaces, cores, daemon)
+        if self._zmq_ports:
+            zmq_pub_port = self._zmq_ports.pop(0)
+            zmq_rpc_port = self._zmq_ports.pop(0)
+        else:
+            zmq_pub_port = None
+            zmq_rpc_port = None
+
+        return TRexGenerator(self._host, interfaces, cores, daemon, zmq_pub_port, zmq_rpc_port)
 
     def free_generator(self, generator):
         """Free TRex generator.
@@ -230,6 +277,13 @@ class TRexMachine:
         self._interfaces = generator.get_interfaces() + self._interfaces
         self._available_cores = generator.get_cores() + self._available_cores
         self._available_cores.sort()
+
+        if generator.get_zmq_rpc_port():
+            self._zmq_ports.insert(0, generator.get_zmq_rpc_port())
+
+        if generator.get_zmq_pub_port():
+            self._zmq_ports.insert(0, generator.get_zmq_pub_port())
+
         generator.invalidate()
 
 
@@ -252,8 +306,14 @@ class TRexMachinesPool(Generator):
         Dict contaning host as key and dict of additional parameters.
         Example:
         {
-            "trex.liberouter.org": {"cores": [0,1,2,3,4,5,12,13,14,15,16,17,24]},
-            "trex2.liberouter.org": {"cores": [0,1,2,3,4,5,6,7,8,9,10,11]},
+            "trex.liberouter.org": {
+                "cores": [0,1,2,3,4,5,12,13,14,15,16,17,24],
+                "zmq_ports": [4500,4501],
+            },
+            "trex2.liberouter.org": {
+                "cores": [0,1,2,3,4,5,6,7,8,9,10,11],
+                "zmq_ports": [4502,4503],
+            },
         }
     """
 
@@ -266,13 +326,15 @@ class TRexMachinesPool(Generator):
                 assert PciAddress.is_valid(ifc)
 
             cores = None
+            zmq_ports = None
 
             if host_options:
                 host_options = copy.deepcopy(host_options)
                 if host in host_options:
                     cores = host_options[host].get("cores")
+                    zmq_ports = host_options[host].get("zmq_ports")
 
-            self._trex_machines.append(TRexMachine(host, interfaces, cores))
+            self._trex_machines.append(TRexMachine(host, interfaces, cores, zmq_ports))
 
     def get_machines(self):
         """Return list of TRex machines.
