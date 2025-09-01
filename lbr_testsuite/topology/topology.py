@@ -61,7 +61,7 @@ class Topology:
         self._device = device
 
         if not generators:
-            self._generators = None
+            self._generators = tuple()
         else:
             if isinstance(generators, Generator):
                 self._generators = (generators,)
