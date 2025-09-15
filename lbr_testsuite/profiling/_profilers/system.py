@@ -11,8 +11,8 @@ import time
 
 import pandas
 
-from . import _charts as charts
-from .profiler import ThreadedProfiler
+from .._base import charts
+from .._base.threaded_profiler import ThreadedProfiler
 
 
 class IrqMonProfiler(ThreadedProfiler):

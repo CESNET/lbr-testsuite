@@ -17,8 +17,8 @@ import pandas
 from pypapi import papi_low as papi
 from pypapi.exceptions import PapiNoEventError
 
-from . import _charts as charts
-from .profiler import ThreadedProfiler
+from .._base import charts
+from .._base.threaded_profiler import ThreadedProfiler
 
 
 class ThreadInfo(NamedTuple):

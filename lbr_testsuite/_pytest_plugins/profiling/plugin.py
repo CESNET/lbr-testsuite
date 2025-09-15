@@ -11,8 +11,7 @@ import functools
 from pytest_cases import fixture
 
 from ...common.common import compose_output_path
-from ...profiling import application
-from ...profiling.profiler import MultiProfiler
+from ...profiling import MultiProfiler, application
 
 
 def pytest_addoption(parser):

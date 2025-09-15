@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-from lbr_testsuite.profiling.profiler import PackedProfiler
+from lbr_testsuite.profiling import PackedProfiler
 from lbr_testsuite.spirent.spirent import Spirent
 from lbr_testsuite.spirent.stream_block import StreamBlock
 
