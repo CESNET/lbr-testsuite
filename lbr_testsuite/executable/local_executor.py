@@ -259,11 +259,11 @@ class LocalExecutor(Executor):
 
         try:
             """Note from subprocess documentation:
-            This will deadlock when using stdout=PIPE or stderr=PIPE
-            and the child process generates enough output to a pipe
-            such that it blocks waiting for the OS pipe buffer to accept
-            more data. Use Popen.communicate() when using pipes to
-            avoid that.
+            This (Popen.wait()) will deadlock when using stdout=PIPE or
+            stderr=PIPE and the child process generates enough output to
+            a pipe such that it blocks waiting for the OS pipe buffer to
+            accept more data. Use Popen.communicate() when using pipes
+            to avoid that.
             """
             stdout, stderr = self._process.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
