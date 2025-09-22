@@ -421,10 +421,13 @@ class Executable:
 
     def _finalize(self):
         self._close_io_files()
-        if self._executor.get_process() is not None:
-            self._executor.wait()
-            if self._post_exec_fn is not None:
-                self._post_exec_fn(self._executor.get_process())
+
+        if self._executor.get_process() is None:
+            return
+
+        self._executor.wait()
+        if self._post_exec_fn is not None:
+            self._post_exec_fn(self._executor.get_process())
 
     def _start(self):
         try:
