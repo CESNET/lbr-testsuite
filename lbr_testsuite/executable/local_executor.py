@@ -140,43 +140,6 @@ class LocalExecutor(Executor):
 
         return self._process.poll() is None
 
-    def terminate(self):
-        """Terminate process. Process is interupted, method
-        does not wait for the process to complete.
-
-        Raises
-        ------
-        RuntimeError
-            If process doesn't exist yet (command was not run).
-        """
-
-        if not self._process:
-            raise RuntimeError("Process was not started yet")
-
-        if self._used_sudo:
-            # In case process was started with explicit sudo prefix
-            subprocess.run(
-                f"sudo kill -s SIGTERM {self._process.pid}",
-                shell=True,
-                check=True,
-            )
-        else:
-            self._process.terminate()
-
-    def wait(self):
-        """Wait/block until process finishes.
-
-        Raises
-        ------
-        RuntimeError
-            If process doesn't exist yet (command was not run).
-        """
-
-        if not self._process:
-            raise RuntimeError("Process was not started yet")
-
-        self._process.wait()
-
     @staticmethod
     def _prepend_to_command(prepend, cmd):
         if isinstance(cmd, str):
@@ -225,6 +188,43 @@ class LocalExecutor(Executor):
             cmd = self._prepend_netns_to_command(cmd, netns)
 
         self._process = subprocess.Popen(cmd, **options)
+
+    def terminate(self):
+        """Terminate process. Process is interupted, method
+        does not wait for the process to complete.
+
+        Raises
+        ------
+        RuntimeError
+            If process doesn't exist yet (command was not run).
+        """
+
+        if not self._process:
+            raise RuntimeError("Process was not started yet")
+
+        if self._used_sudo:
+            # In case process was started with explicit sudo prefix
+            subprocess.run(
+                f"sudo kill -s SIGTERM {self._process.pid}",
+                shell=True,
+                check=True,
+            )
+        else:
+            self._process.terminate()
+
+    def wait(self):
+        """Wait/block until process finishes.
+
+        Raises
+        ------
+        RuntimeError
+            If process doesn't exist yet (command was not run).
+        """
+
+        if not self._process:
+            raise RuntimeError("Process was not started yet")
+
+        self._process.wait()
 
     def wait_or_kill(self, timeout=None):
         """Wait for process to finish within given timeout.

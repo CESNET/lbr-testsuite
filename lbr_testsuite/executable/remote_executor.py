@@ -269,48 +269,6 @@ class RemoteExecutor(Executor):
         # Probably not needed here.
         return not self._process.runner.process_is_finished
 
-    def terminate(self):
-        """Terminate process. Process is interupted, method
-        does not wait for the process to complete.
-
-        Note that this sends SIGINT (CTRL+C) to process.
-
-        Raises
-        ------
-        RuntimeError
-            If process doesn't exist yet (command was not run).
-        """
-
-        if self._process is None:
-            raise RuntimeError("Process was not started yet")
-
-        try:
-            # Works only if run() has pty=True, otherwise it does nothing
-            # See https://github.com/fabric/fabric/blob/3.0.0/fabric/runners.py#L93
-            self._process.runner.send_interrupt(KeyboardInterrupt)
-        except OSError as err:
-            # If process already finished, "Socket is closed"
-            # error is raised as system can't send signal to
-            # already finished process.
-            if err.args[0] == "Socket is closed":
-                pass
-            else:
-                raise
-
-    def wait(self):
-        """Wait/block until process finishes.
-
-        Raises
-        ------
-        RuntimeError
-            If process doesn't exist yet (command was not run).
-        """
-
-        if self._process is None:
-            raise RuntimeError("Process was not started yet")
-
-        self._process.runner.wait()
-
     def run(self, cmd, netns=None, sudo=False, **options):
         """Run command.
 
@@ -403,6 +361,48 @@ class RemoteExecutor(Executor):
             # terminated (see terminate()).
             pty=True,
         )
+
+    def terminate(self):
+        """Terminate process. Process is interupted, method
+        does not wait for the process to complete.
+
+        Note that this sends SIGINT (CTRL+C) to process.
+
+        Raises
+        ------
+        RuntimeError
+            If process doesn't exist yet (command was not run).
+        """
+
+        if self._process is None:
+            raise RuntimeError("Process was not started yet")
+
+        try:
+            # Works only if run() has pty=True, otherwise it does nothing
+            # See https://github.com/fabric/fabric/blob/3.0.0/fabric/runners.py#L93
+            self._process.runner.send_interrupt(KeyboardInterrupt)
+        except OSError as err:
+            # If process already finished, "Socket is closed"
+            # error is raised as system can't send signal to
+            # already finished process.
+            if err.args[0] == "Socket is closed":
+                pass
+            else:
+                raise
+
+    def wait(self):
+        """Wait/block until process finishes.
+
+        Raises
+        ------
+        RuntimeError
+            If process doesn't exist yet (command was not run).
+        """
+
+        if self._process is None:
+            raise RuntimeError("Process was not started yet")
+
+        self._process.runner.wait()
 
     def wait_or_kill(self, timeout=1e9):
         """Wait for process to finish within given timeout.
