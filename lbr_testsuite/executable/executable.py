@@ -148,6 +148,7 @@ class Executable:
         self._post_exec_fn = None
         self._netns = netns
         self._sudo = sudo
+        self._finalized = None
 
         if isinstance(command, str):
             self._options["shell"] = True
@@ -420,14 +421,19 @@ class Executable:
             self._cmd.extend(args)
 
     def _finalize(self):
+        if self._finalized:
+            return
+
         self._close_io_files()
 
         if self._executor.get_process() is None:
+            self._finalized = True
             return
 
         self._executor.wait()
         if self._post_exec_fn is not None:
             self._post_exec_fn(self._executor.get_process())
+        self._finalized = True
 
     def _start(self):
         try:
@@ -538,7 +544,6 @@ class AsyncTool(Executable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._stdout, self._stderr = None, None
-        self._finalized = None
 
     def run(self):
         """Run the command. Start and don't wait for completion."""
@@ -654,10 +659,6 @@ class AsyncTool(Executable):
 
         return self._stderr
 
-    def _finalize(self):
-        super()._finalize()
-        self._finalized = True
-
 
 class Daemon(Executable):
     """Class for execution of a command as a daemon.
@@ -667,14 +668,9 @@ class Daemon(Executable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._finalized = None
 
     def _terminate(self):
         self._executor.terminate()
-
-    def _finalize(self):
-        super()._finalize()
-        self._finalized = True
 
     def start(self):
         """Start the command on background.
