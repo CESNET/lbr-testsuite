@@ -535,18 +535,18 @@ class AsyncTool(Executable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._stdout, self._stderr = None, None
-        self._terminated = None
+        self._finalized = None
 
     def run(self):
         """Run the command. Start and don't wait for completion."""
 
-        if self._executor.get_process() is not None and not self._terminated:
+        if self._executor.get_process() is not None and not self._finalized:
             raise RuntimeError("start called on a started process")
 
         self._executor.reset_process()
         self._start()
         self._stdout, self._stderr = self._executor.get_output_iterators()
-        self._terminated = False
+        self._finalized = False
 
     def is_running(self, after=None):
         """Check whether process is running.
@@ -592,7 +592,7 @@ class AsyncTool(Executable):
         if self._executor.get_process() is None:
             return ("", "")
 
-        if self._terminated:
+        if self._finalized:
             stdout, stderr = self._executor.wait_or_kill(1)
             stdout, stderr = self._standardize_outputs(stdout, stderr)
             return (stdout, stderr)
@@ -653,7 +653,7 @@ class AsyncTool(Executable):
 
     def _finalize(self):
         super()._finalize()
-        self._terminated = True
+        self._finalized = True
 
 
 class Daemon(Executable):
@@ -664,14 +664,14 @@ class Daemon(Executable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._terminated = None
+        self._finalized = None
 
     def _terminate(self):
         self._executor.terminate()
 
     def _finalize(self):
         super()._finalize()
-        self._terminated = True
+        self._finalized = True
 
     def start(self):
         """Start the command on background.
@@ -683,7 +683,7 @@ class Daemon(Executable):
             if start fails. Implicit None otherwise.
         """
 
-        if self._executor.get_process() is not None and not self._terminated:
+        if self._executor.get_process() is not None and not self._finalized:
             raise RuntimeError("start called on a started process")
 
         self._executor.reset_process()
@@ -692,7 +692,7 @@ class Daemon(Executable):
         if not self.is_running():
             return self.stop()
 
-        self._terminated = False
+        self._finalized = False
 
     def stop(self, timeout=30):
         """Stop previously started command and retrieve its
@@ -714,7 +714,7 @@ class Daemon(Executable):
         if self._executor.get_process() is None:
             return
 
-        if self._terminated:
+        if self._finalized:
             stdout, stderr = self._executor.wait_or_kill(1)
             stdout, stderr = self._standardize_outputs(stdout, stderr)
             return (stdout, stderr)
@@ -735,7 +735,7 @@ class Daemon(Executable):
             True if the process is running, False otherwise.
         """
 
-        if self._executor.get_process() is None or self._terminated:
+        if self._executor.get_process() is None or self._finalized:
             return False
 
         if after:
