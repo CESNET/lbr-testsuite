@@ -433,12 +433,12 @@ class RemoteExecutor(Executor):
         if self._process is None:
             raise RuntimeError("Process was not started yet")
 
-        def _process_finished():
-            return self._process.runner.process_is_finished
-
         # As local executor accepts None, convert None to number
         if timeout is None:
             timeout = 1e9
+
+        def _process_finished():
+            return self._process.runner.process_is_finished
 
         if not common.wait_until_condition(_process_finished, timeout=timeout):
             self.terminate()

@@ -251,11 +251,11 @@ class LocalExecutor(Executor):
             If process doesn't exist yet (command was not run).
         """
 
-        if timeout is None:
-            timeout = 1e6
-
         if not self._process:
             raise RuntimeError("Process was not started yet")
+
+        if timeout is None:
+            timeout = 1e6
 
         try:
             """Note from subprocess documentation:
