@@ -426,14 +426,14 @@ class Executable:
 
         self._close_io_files()
 
-        if self._executor.get_process() is None:
+        try:
+            self._executor.wait()
+            if self._post_exec_fn is not None:
+                self._post_exec_fn(self._executor.get_process())
+        except RuntimeError:
+            pass  # process has not been started yet
+        finally:
             self._finalized = True
-            return
-
-        self._executor.wait()
-        if self._post_exec_fn is not None:
-            self._post_exec_fn(self._executor.get_process())
-        self._finalized = True
 
     def _start(self):
         try:
