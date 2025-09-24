@@ -597,14 +597,6 @@ class AsyncTool(Executable):
             A pair composed from stdout and stderr.
         """
 
-        if self._executor.get_process() is None:
-            return ("", "")
-
-        if self._finalized:
-            stdout, stderr = self._executor.wait_or_kill(1)
-            stdout, stderr = self._standardize_outputs(stdout, stderr)
-            return (stdout, stderr)
-
         return self._wait_or_kill(timeout)
 
     @property
