@@ -475,7 +475,26 @@ class Executable:
 
         return (stdout, stderr)
 
-    def _wait_or_kill(self, timeout):
+    def wait_or_kill(self, timeout=30):
+        """Wait for executable to finish within given timeout.
+
+        When timeout is not None, executable is killed if it does not
+        terminate after timeout in seconds.
+
+        Parameters
+        ----------
+        timeout : int, optional
+            Timeout in seconds after which the process is killed.
+            Note: depending on the implementation of the executor,
+            None value may not mean an infinite wait for the process
+            to complete, but a very long timeout (hundreds of hours).
+
+        Returns
+        -------
+        tuple
+            A pair composed from stdout and stderr.
+        """
+
         stdout, stderr = self._executor.wait_or_kill(timeout)
         stdout, stderr = self._standardize_outputs(stdout, stderr)
         self._finalize()
@@ -530,7 +549,7 @@ class Tool(Executable):
 
         self._executor.reset_process()
         self._start()
-        return self._wait_or_kill(timeout)
+        return self.wait_or_kill(timeout)
 
 
 class AsyncTool(Executable):
@@ -576,28 +595,6 @@ class AsyncTool(Executable):
             time.sleep(after)
 
         return self._executor.is_running()
-
-    def wait_or_kill(self, timeout=None):
-        """Wait for command to terminate.
-
-        When timeout is not None, process is killed if it does not
-        terminate after timeout in seconds.
-
-        Parameters
-        ----------
-        timeout : int, optional
-            Timeout in seconds after that is process killed.
-            Note: depending on the implementation of the executor,
-            None value may not mean an infinite wait for the process
-            to complete, but a very long timeout (hundreds of hours).
-
-        Returns
-        -------
-        tuple
-            A pair composed from stdout and stderr.
-        """
-
-        return self._wait_or_kill(timeout)
 
     @property
     def stdout(self):
@@ -709,7 +706,7 @@ class Daemon(Executable):
         if not self._finalized:
             self.terminate()
 
-        return self._wait_or_kill(timeout)
+        return self.wait_or_kill(timeout)
 
     def stop(self, timeout=30):
         """Deprecated - only for backwards compatibility.
