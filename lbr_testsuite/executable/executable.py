@@ -710,15 +710,9 @@ class Daemon(Executable):
             A pair composed from stdout and stderr.
         """
 
-        if self._executor.get_process() is None:
-            return
+        if not self._finalized:
+            self._terminate()
 
-        if self._finalized:
-            stdout, stderr = self._executor.wait_or_kill(1)
-            stdout, stderr = self._standardize_outputs(stdout, stderr)
-            return (stdout, stderr)
-
-        self._terminate()
         return self._wait_or_kill(timeout)
 
     def is_running(self, after=None):
