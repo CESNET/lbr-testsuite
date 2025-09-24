@@ -693,7 +693,7 @@ class Daemon(Executable):
 
         self._finalized = False
 
-    def stop(self, timeout=30):
+    def terminate_and_wait_or_kill(self, timeout=30):
         """Stop previously started command and retrieve its
         outputs (stdout and stderr). If the command has been terminated
         retrieve outputs only.
@@ -714,6 +714,15 @@ class Daemon(Executable):
             self._terminate()
 
         return self._wait_or_kill(timeout)
+
+    def stop(self, timeout=30):
+        """Deprecated - only for backwards compatibility.
+
+        See self.wait_or_kill. This method will be removed in next
+        major version.
+        """
+
+        return self.terminate_and_wait_or_kill(timeout)
 
     def is_running(self, after=None):
         """Check whether a daemon process is running.
