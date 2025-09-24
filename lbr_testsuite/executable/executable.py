@@ -661,7 +661,11 @@ class Daemon(Executable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def _terminate(self):
+    def terminate(self):
+        """Terminate the command. Do not wait nor check the termination
+        result.
+        """
+
         self._executor.terminate()
 
     def start(self):
@@ -703,7 +707,7 @@ class Daemon(Executable):
         """
 
         if not self._finalized:
-            self._terminate()
+            self.terminate()
 
         return self._wait_or_kill(timeout)
 
