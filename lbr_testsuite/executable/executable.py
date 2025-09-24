@@ -658,13 +658,6 @@ class Daemon(Executable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def terminate(self):
-        """Terminate the command. Do not wait nor check the termination
-        result.
-        """
-
-        self._executor.terminate()
-
     def start(self):
         """Start the command on background.
 
@@ -685,6 +678,13 @@ class Daemon(Executable):
             return self.stop()
 
         self._finalized = False
+
+    def terminate(self):
+        """Terminate the command. Do not wait nor check the termination
+        result.
+        """
+
+        self._executor.terminate()
 
     def terminate_and_wait_or_kill(self, timeout=30):
         """Stop previously started command and retrieve its
