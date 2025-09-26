@@ -10,14 +10,11 @@ import logging
 import pickle
 import threading
 from pathlib import Path
-from typing import TypeAlias
 
 import pandas
 
+from .concurrent_profiler import CollectedData
 from .profiler import ProfiledSubject, Profiler, ProfilerMarker
-
-
-CollectedData: TypeAlias = tuple[pandas.DataFrame, any] | tuple[any]
 
 
 class ThreadedProfiler(Profiler):

@@ -13,13 +13,16 @@ import logging
 import pickle
 import string
 from pathlib import Path
+from typing import TypeAlias
 
 import pandas
 
 from .concurrent_engine import ConcurrentEngine
 from .profiler import ProfiledSubject, Profiler, ProfilerMarker
 from .thread_engine import ThreadEngine
-from .threaded_profiler import CollectedData
+
+
+CollectedData: TypeAlias = tuple[pandas.DataFrame, any] | tuple[any]
 
 
 class ConcurrentProfiler(Profiler):
