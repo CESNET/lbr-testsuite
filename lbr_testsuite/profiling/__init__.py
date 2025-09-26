@@ -5,7 +5,6 @@ from ._base.profiler import ProfiledSubject, Profiler, ProfilerMarker
 from ._base.packed_profiler import PackedProfiler
 from ._base.pid_profiler import PidProfiler
 from ._base.concurrent_profiler import CollectedData, ConcurrentProfiler
-from ._base.threaded_profiler import ThreadedProfiler
 from ._base.multi_profiler import MultiProfiler
 from ._base.concurrent_engine import ConcurrentEngine
 from ._base.thread_engine import ThreadEngine
@@ -46,7 +45,6 @@ __all__ = [
     "Profiler",
     "PackedProfiler",
     "ConcurrentProfiler",
-    "ThreadedProfiler",
     "PidProfiler",
     "MultiProfiler",
     "ConcurrentEngine",
