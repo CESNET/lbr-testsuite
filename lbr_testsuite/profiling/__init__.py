@@ -7,6 +7,7 @@ from ._base.pid_profiler import PidProfiler
 from ._base.concurrent_profiler import CollectedData, ConcurrentProfiler
 from ._base.multi_profiler import MultiProfiler
 from ._base.concurrent_engine import ConcurrentEngine
+from ._base.process_engine import ProcessEngine
 from ._base.thread_engine import ThreadEngine
 
 from ._profilers.cache import (
@@ -48,6 +49,7 @@ __all__ = [
     "PidProfiler",
     "MultiProfiler",
     "ConcurrentEngine",
+    "ProcessEngine",
     "ThreadEngine",
     "ThreadInfo",
     "PapiThreadContext",
