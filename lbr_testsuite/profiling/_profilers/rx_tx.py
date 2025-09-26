@@ -31,7 +31,7 @@ from lbr_testsuite.dpdk_application.pipeline_runtime import PipelineRuntime
 
 from ...common import common
 from .._base import charts
-from .._base.threaded_profiler import ThreadedProfiler
+from .._base.concurrent_profiler import ConcurrentProfiler
 from .pipeline import ProfiledPipelineSubject
 
 
@@ -338,7 +338,7 @@ class ProfiledPipelineWithStatsSubject(ProfiledPipelineSubject):
         return self._stats
 
 
-class RxTxMonProfiler(ThreadedProfiler):
+class RxTxMonProfiler(ConcurrentProfiler):
     """Profiler that is running a thread that continuously collects data
     about Rx/Tx bytes and packets.
 
@@ -358,7 +358,7 @@ class RxTxMonProfiler(ThreadedProfiler):
         time_step : float, optional
             Measurements step as fraction of seconds.
         kwargs
-            Options to pass to ThreadedProfiler initializer.
+            Options to pass to ConcurrentProfiler initializer.
         """
 
         super().__init__(**kwargs)

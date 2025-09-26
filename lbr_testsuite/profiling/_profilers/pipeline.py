@@ -11,8 +11,8 @@ import time
 import pandas
 
 from .._base import charts
+from .._base.concurrent_profiler import ConcurrentProfiler
 from .._base.profiler import ProfiledSubject
-from .._base.threaded_profiler import ThreadedProfiler
 
 
 class ProfiledPipelineSubject(ProfiledSubject):
@@ -166,7 +166,7 @@ class PipelineMonContext:
         return pandas.DataFrame(self._data)
 
 
-class PipelineMonProfiler(ThreadedProfiler):
+class PipelineMonProfiler(ConcurrentProfiler):
     def __init__(self, time_step=0.1, **kwargs):
         super().__init__(**kwargs)
 

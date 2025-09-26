@@ -14,13 +14,13 @@ import pandas
 import psutil
 
 from .._base import charts
-from .._base.threaded_profiler import ThreadedProfiler
+from .._base.concurrent_profiler import ConcurrentProfiler
 
 
 global_logger = logging.getLogger(__name__)
 
 
-class CPUMonProfiler(ThreadedProfiler):
+class CPUMonProfiler(ConcurrentProfiler):
     """Profiler that is running a thread that continuously collects data
     about CPU frequencies. It plots two charts:
 

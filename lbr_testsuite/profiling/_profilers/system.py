@@ -12,10 +12,10 @@ import time
 import pandas
 
 from .._base import charts
-from .._base.threaded_profiler import ThreadedProfiler
+from .._base.concurrent_profiler import ConcurrentProfiler
 
 
-class IrqMonProfiler(ThreadedProfiler):
+class IrqMonProfiler(ConcurrentProfiler):
     """Monitor of system interrupts. It samples counters of all interrupts in the system.
     All such statistics are stored into CSV file and interesting parts are plotted into
     charts file. It plots summary timeline of all interrupts in the system, summary of each
@@ -36,7 +36,7 @@ class IrqMonProfiler(ThreadedProfiler):
         time_step : float, optional
             Sampling period (seconds).
         kwargs
-            Options to pass to ThreadedProfiler initializer.
+            Options to pass to ConcurrentProfiler initializer.
         """
 
         super().__init__(**kwargs)

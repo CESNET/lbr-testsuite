@@ -18,7 +18,7 @@ from pypapi import papi_low as papi
 from pypapi.exceptions import PapiNoEventError
 
 from .._base import charts
-from .._base.threaded_profiler import ThreadedProfiler
+from .._base.concurrent_profiler import ConcurrentProfiler
 
 
 class ThreadInfo(NamedTuple):
@@ -214,7 +214,7 @@ def papi_multi_context_manager(event_list: List[int], threads: List[ThreadInfo])
         yield PapiMultiThreadContext(contexts)
 
 
-class PAPIProfiler(ThreadedProfiler):
+class PAPIProfiler(ConcurrentProfiler):
     """Profiler for cache events using PAPI events."""
 
     def __init__(
@@ -232,7 +232,7 @@ class PAPIProfiler(ThreadedProfiler):
         time_step : float
             Time step between two consecutive measurements.
         kwargs
-            Options to pass to ThreadedProfiler initializer.
+            Options to pass to ConcurrentProfiler initializer.
         """
 
         super().__init__(**kwargs)
