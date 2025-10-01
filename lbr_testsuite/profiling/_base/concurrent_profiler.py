@@ -263,4 +263,8 @@ class ConcurrentProfiler(Profiler):
         """Stop the profiler."""
 
         self._engine.stop()
+
+    def join(self):
+        """Wait for the profiler to finish."""
+
         self._engine.join()

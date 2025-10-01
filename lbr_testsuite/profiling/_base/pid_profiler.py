@@ -107,5 +107,11 @@ class PidProfiler(Profiler):
         """Stop the underlying daemon if any."""
 
         if self._daemon:
-            self._daemon.stop()
+            self._daemon.terminate()
+
+    def join(self):
+        """Wait for the underlying daemon to finish if any."""
+
+        if self._daemon:
+            self._daemon.wait_or_kill()
             self._daemon = None

@@ -62,3 +62,4 @@ def profiler(request, profilers_output_dir, concurrent_profiler_engine):
     yield prof
 
     prof.stop()
+    prof.join()
