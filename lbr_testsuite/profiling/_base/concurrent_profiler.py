@@ -18,8 +18,8 @@ from typing import TypeAlias
 import pandas
 
 from .concurrent_engine import ConcurrentEngine
+from .process_engine import ProcessEngine
 from .profiler import ProfiledSubject, Profiler, ProfilerMarker
-from .thread_engine import ThreadEngine
 
 
 CollectedData: TypeAlias = tuple[pandas.DataFrame, any] | tuple[any]
@@ -35,7 +35,7 @@ class ConcurrentProfiler(Profiler):
         self,
         logger: logging.Logger = None,
         output_file_base: str = "./",
-        concurrent_engine_cls: type[ConcurrentEngine] = ThreadEngine,
+        concurrent_engine_cls: type[ConcurrentEngine] = ProcessEngine,
     ):
         """
         Parameters

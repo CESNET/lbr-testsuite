@@ -11,7 +11,7 @@ import functools
 from pytest_cases import fixture
 
 from ...common.common import compose_output_path
-from ...profiling import MultiProfiler, ThreadEngine, application
+from ...profiling import MultiProfiler, ProcessEngine, application
 
 
 def pytest_addoption(parser):
@@ -45,7 +45,7 @@ def concurrent_profiler_engine():
         Class implementing concurrent engine.
     """
 
-    return ThreadEngine
+    return ProcessEngine
 
 
 @fixture(scope="function")
