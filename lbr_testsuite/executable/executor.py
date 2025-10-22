@@ -112,6 +112,25 @@ class Executor(ABC):
         pass
 
     @abstractmethod
+    def run(self, cmd, **options):
+        """Run command.
+
+        Parameters
+        ----------
+        cmd : str, list or tuple
+            Command to run.
+        options : dict, optional
+            Optional arguments for run command.
+
+        Returns
+        -------
+        any
+            Launched process.
+        """
+
+        pass
+
+    @abstractmethod
     def terminate(self):
         """Terminate process. Process is interupted, method
         does not wait for the process to complete.
@@ -132,25 +151,6 @@ class Executor(ABC):
         ------
         RuntimeError
             If process doesn't exist yet (command was not run).
-        """
-
-        pass
-
-    @abstractmethod
-    def run(self, cmd, **options):
-        """Run command.
-
-        Parameters
-        ----------
-        cmd : str, list or tuple
-            Command to run.
-        options : dict, optional
-            Optional arguments for run command.
-
-        Returns
-        -------
-        any
-            Launched process.
         """
 
         pass

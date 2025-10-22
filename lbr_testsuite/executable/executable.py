@@ -148,6 +148,7 @@ class Executable:
         self._post_exec_fn = None
         self._netns = netns
         self._sudo = sudo
+        self._finalized = None
 
         if isinstance(command, str):
             self._options["shell"] = True
@@ -420,11 +421,19 @@ class Executable:
             self._cmd.extend(args)
 
     def _finalize(self):
+        if self._finalized:
+            return
+
         self._close_io_files()
-        if self._executor.get_process() is not None:
+
+        try:
             self._executor.wait()
             if self._post_exec_fn is not None:
                 self._post_exec_fn(self._executor.get_process())
+        except RuntimeError:
+            pass  # process has not been started yet
+        finally:
+            self._finalized = True
 
     def _start(self):
         try:
@@ -466,7 +475,26 @@ class Executable:
 
         return (stdout, stderr)
 
-    def _wait_or_kill(self, timeout):
+    def wait_or_kill(self, timeout=30):
+        """Wait for executable to finish within given timeout.
+
+        When timeout is not None, executable is killed if it does not
+        terminate after timeout in seconds.
+
+        Parameters
+        ----------
+        timeout : int, optional
+            Timeout in seconds after which the process is killed.
+            Note: depending on the implementation of the executor,
+            None value may not mean an infinite wait for the process
+            to complete, but a very long timeout (hundreds of hours).
+
+        Returns
+        -------
+        tuple
+            A pair composed from stdout and stderr.
+        """
+
         stdout, stderr = self._executor.wait_or_kill(timeout)
         stdout, stderr = self._standardize_outputs(stdout, stderr)
         self._finalize()
@@ -521,7 +549,7 @@ class Tool(Executable):
 
         self._executor.reset_process()
         self._start()
-        return self._wait_or_kill(timeout)
+        return self.wait_or_kill(timeout)
 
 
 class AsyncTool(Executable):
@@ -535,18 +563,17 @@ class AsyncTool(Executable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._stdout, self._stderr = None, None
-        self._terminated = None
 
     def run(self):
         """Run the command. Start and don't wait for completion."""
 
-        if self._executor.get_process() is not None and not self._terminated:
+        if self._executor.get_process() is not None and not self._finalized:
             raise RuntimeError("start called on a started process")
 
         self._executor.reset_process()
         self._start()
         self._stdout, self._stderr = self._executor.get_output_iterators()
-        self._terminated = False
+        self._finalized = False
 
     def is_running(self, after=None):
         """Check whether process is running.
@@ -568,36 +595,6 @@ class AsyncTool(Executable):
             time.sleep(after)
 
         return self._executor.is_running()
-
-    def wait_or_kill(self, timeout=None):
-        """Wait for command to terminate.
-
-        When timeout is not None, process is killed if it does not
-        terminate after timeout in seconds.
-
-        Parameters
-        ----------
-        timeout : int, optional
-            Timeout in seconds after that is process killed.
-            Note: depending on the implementation of the executor,
-            None value may not mean an infinite wait for the process
-            to complete, but a very long timeout (hundreds of hours).
-
-        Returns
-        -------
-        tuple
-            A pair composed from stdout and stderr.
-        """
-
-        if self._executor.get_process() is None:
-            return ("", "")
-
-        if self._terminated:
-            stdout, stderr = self._executor.wait_or_kill(1)
-            stdout, stderr = self._standardize_outputs(stdout, stderr)
-            return (stdout, stderr)
-
-        return self._wait_or_kill(timeout)
 
     @property
     def stdout(self):
@@ -651,10 +648,6 @@ class AsyncTool(Executable):
 
         return self._stderr
 
-    def _finalize(self):
-        super()._finalize()
-        self._terminated = True
-
 
 class Daemon(Executable):
     """Class for execution of a command as a daemon.
@@ -664,14 +657,6 @@ class Daemon(Executable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._terminated = None
-
-    def _terminate(self):
-        self._executor.terminate()
-
-    def _finalize(self):
-        super()._finalize()
-        self._terminated = True
 
     def start(self):
         """Start the command on background.
@@ -683,7 +668,7 @@ class Daemon(Executable):
             if start fails. Implicit None otherwise.
         """
 
-        if self._executor.get_process() is not None and not self._terminated:
+        if self._executor.get_process() is not None and not self._finalized:
             raise RuntimeError("start called on a started process")
 
         self._executor.reset_process()
@@ -692,9 +677,16 @@ class Daemon(Executable):
         if not self.is_running():
             return self.stop()
 
-        self._terminated = False
+        self._finalized = False
 
-    def stop(self, timeout=30):
+    def terminate(self):
+        """Terminate the command. Do not wait nor check the termination
+        result.
+        """
+
+        self._executor.terminate()
+
+    def terminate_and_wait_or_kill(self, timeout=30):
         """Stop previously started command and retrieve its
         outputs (stdout and stderr). If the command has been terminated
         retrieve outputs only.
@@ -711,16 +703,19 @@ class Daemon(Executable):
             A pair composed from stdout and stderr.
         """
 
-        if self._executor.get_process() is None:
-            return
+        if not self._finalized:
+            self.terminate()
 
-        if self._terminated:
-            stdout, stderr = self._executor.wait_or_kill(1)
-            stdout, stderr = self._standardize_outputs(stdout, stderr)
-            return (stdout, stderr)
+        return self.wait_or_kill(timeout)
 
-        self._terminate()
-        return self._wait_or_kill(timeout)
+    def stop(self, timeout=30):
+        """Deprecated - only for backwards compatibility.
+
+        See self.wait_or_kill. This method will be removed in next
+        major version.
+        """
+
+        return self.terminate_and_wait_or_kill(timeout)
 
     def is_running(self, after=None):
         """Check whether a daemon process is running.
@@ -735,7 +730,7 @@ class Daemon(Executable):
             True if the process is running, False otherwise.
         """
 
-        if self._executor.get_process() is None or self._terminated:
+        if self._executor.get_process() is None or self._finalized:
             return False
 
         if after:
