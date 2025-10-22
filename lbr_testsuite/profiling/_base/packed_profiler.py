@@ -40,6 +40,10 @@ class PackedProfiler:
         if self._profiler is not None:
             self._profiler.stop()
 
+    def join(self):
+        if self._profiler is not None:
+            self._profiler.join()
+
     def mark(self, desc=None):
         if self._profiler is not None:
             self._profiler.mark(desc)

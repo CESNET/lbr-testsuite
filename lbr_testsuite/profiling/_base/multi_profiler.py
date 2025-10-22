@@ -44,6 +44,25 @@ class MultiProfiler(Profiler):
             except BaseException:
                 self._logger.exception(f"failed to stop {prof}")
 
+    def _join_all(self, profilers):
+        """Wait on profilers in reverse order.
+
+        Note: Profilers are passed explicitly as one does not to always
+        want to join all profilers in self._profilers.
+
+        Parameters
+        ----------
+        profilers : list
+            List of profiler instances to be stopped.
+        """
+
+        for prof in reversed(profilers):
+            try:
+                self._logger.info(f"waiting on profiler {prof}")
+                prof.join()
+            except BaseException:
+                self._logger.exception(f"failed to join {prof}")
+
     def start(self, subject: ProfiledSubject):
         """Start all underlying profilers. If any of them fails to start,
         stop them all and fail.
@@ -59,12 +78,18 @@ class MultiProfiler(Profiler):
                 started.append(prof)
             except BaseException:
                 self._stop_all(started)
+                self._join_all(started)
                 raise
 
     def stop(self):
         """Stop all underlying profilers."""
 
         self._stop_all(self._profilers)
+
+    def join(self):
+        """Wait until all underlying profilers finalize its work."""
+
+        self._join_all()
 
     def mark(self, desc=None):
         """Call mark() on all underlying profilers."""

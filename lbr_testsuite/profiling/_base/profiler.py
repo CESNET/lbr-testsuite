@@ -132,8 +132,12 @@ class Profiler:
         pass
 
     def stop(self):
-        """Stop profiling and report profiling results in
-        profiler-dependent way.
+        """Stop profiling. Do not wait for profiler termination."""
+        pass
+
+    def join(self):
+        """Wait for profiler to finalize its work. Report profiling
+        results in profiler-dependent way.
         """
         pass
 
