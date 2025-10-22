@@ -15,13 +15,13 @@ from pyJoules.energy_meter import EnergyMeter
 from pyJoules.handler.pandas_handler import PandasHandler
 
 from .._base import charts
-from .._base.threaded_profiler import ThreadedProfiler
+from .._base.concurrent_profiler import ConcurrentProfiler
 
 
 global_logger = logging.getLogger(__name__)
 
 
-class pyJoulesProfiler(ThreadedProfiler):
+class pyJoulesProfiler(ConcurrentProfiler):
     """Profiler that is running a thread that continuously collects data
     about power consumption of the system by using pyJoules framework.
     """
@@ -35,7 +35,7 @@ class pyJoulesProfiler(ThreadedProfiler):
         time_step : double
             Data collection frequency (time period) in seconds.
         kwargs
-            Options to pass to ThreadedProfiler initializer.
+            Options to pass to ConcurrentProfiler initializer.
         """
 
         super().__init__(**kwargs)
@@ -68,13 +68,13 @@ class pyJoulesProfiler(ThreadedProfiler):
         """
 
         domains_repr = [repr(domain) for domain in self._domains]
-        self._meter.start(self.get_thread().name)
+        self._meter.start(self.get_name())
         global_logger.info(f"measuring power consumption (domains: {domains_repr})...")
 
         try:
             while not self.wait_stoppable(self._time_step):
                 global_logger.debug("record power consumption status")
-                self._meter.record(self.get_thread().name)
+                self._meter.record(self.get_name())
         finally:
             self._meter.stop()
 

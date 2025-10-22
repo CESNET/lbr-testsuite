@@ -23,7 +23,9 @@ from .._profilers.pipeline import PipelineMonProfiler
 from .._profilers.power_consumption import pyJoulesProfiler
 from .._profilers.rx_tx import RxTxMonProfiler
 from .._profilers.system import IrqMonProfiler
+from .concurrent_engine import ConcurrentEngine
 from .profiler import Profiler
+from .thread_engine import ThreadEngine
 
 
 def add_cli_arguments(add_argument_cbk: Callable):
@@ -182,6 +184,7 @@ def collect_profilers(
     path_compose_cbk: Callable[[str, str | None, str | None], str] | None = None,
     profilers_output_dir: str = "./",
     parsed_args: argparse.Namespace | None = None,
+    concurrent_engine: type[ConcurrentEngine] = ThreadEngine,
 ) -> list[Profiler]:
     """Collect profilers based on parsed CLI arguments.
 
@@ -202,6 +205,8 @@ def collect_profilers(
     parsed_args: argparse.Namespace | None = None
         Parsed arguments.use this parameter only when `get_option_cbk`
         is not used.
+    concurrent_engine: type[ConcurrentEngine], optional
+        Engine used for concurrent execution of profilers.
 
     Returns
     -------
@@ -270,6 +275,7 @@ def collect_profilers(
             pyJoulesProfiler(
                 numa_sockets=numa_sockets,
                 output_file_base=out_file_base,
+                concurrent_engine_cls=concurrent_engine,
             )
         )
 
@@ -284,6 +290,7 @@ def collect_profilers(
             CPUMonProfiler(
                 time_step=time_step,
                 output_file_base=out_file_base_pattern,
+                concurrent_engine_cls=concurrent_engine,
             )
         )
 
@@ -298,6 +305,7 @@ def collect_profilers(
             PipelineMonProfiler(
                 time_step=time_step,
                 output_file_base=out_file_base_pattern,
+                concurrent_engine_cls=concurrent_engine,
             )
         )
 
@@ -311,6 +319,7 @@ def collect_profilers(
             RxTxMonProfiler(
                 time_step=use_rxtxmon,
                 output_file_base=out_file_base,
+                concurrent_engine_cls=concurrent_engine,
             )
         )
 
@@ -325,6 +334,7 @@ def collect_profilers(
             IrqMonProfiler(
                 time_step=time_step,
                 output_file_base=out_file_base,
+                concurrent_engine_cls=concurrent_engine,
             )
         )
 
@@ -358,6 +368,7 @@ def collect_profilers(
                 papi_evs,
                 time_step=time_step,
                 output_file_base=out_file_base,
+                concurrent_engine_cls=concurrent_engine,
             ),
         )
 

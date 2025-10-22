@@ -4,8 +4,11 @@ from ._base import application
 from ._base.profiler import ProfiledSubject, Profiler, ProfilerMarker
 from ._base.packed_profiler import PackedProfiler
 from ._base.pid_profiler import PidProfiler
-from ._base.threaded_profiler import CollectedData, ThreadedProfiler
+from ._base.concurrent_profiler import CollectedData, ConcurrentProfiler
 from ._base.multi_profiler import MultiProfiler
+from ._base.concurrent_engine import ConcurrentEngine
+from ._base.process_engine import ProcessEngine
+from ._base.thread_engine import ThreadEngine
 
 from ._profilers.cache import (
     PapiMultiThreadContext,
@@ -42,9 +45,12 @@ __all__ = [
     "CollectedData",
     "Profiler",
     "PackedProfiler",
-    "ThreadedProfiler",
+    "ConcurrentProfiler",
     "PidProfiler",
     "MultiProfiler",
+    "ConcurrentEngine",
+    "ProcessEngine",
+    "ThreadEngine",
     "ThreadInfo",
     "PapiThreadContext",
     "PapiMultiThreadContext",

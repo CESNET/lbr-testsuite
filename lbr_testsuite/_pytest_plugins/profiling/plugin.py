@@ -11,7 +11,7 @@ import functools
 from pytest_cases import fixture
 
 from ...common.common import compose_output_path
-from ...profiling import MultiProfiler, application
+from ...profiling import MultiProfiler, ProcessEngine, application
 
 
 def pytest_addoption(parser):
@@ -35,12 +35,27 @@ def profilers_output_dir():
 
 
 @fixture(scope="function")
-def profiler(request, profilers_output_dir):
+def concurrent_profiler_engine():
+    """This fixture defines which concurrent engine will be used for
+    profilers provided by `profiler` fixture.
+
+    Returns
+    -------
+    type[ConcurrentEngine]
+        Class implementing concurrent engine.
+    """
+
+    return ProcessEngine
+
+
+@fixture(scope="function")
+def profiler(request, profilers_output_dir, concurrent_profiler_engine):
     prof = MultiProfiler(
         application.collect_profilers(
             get_option_cbk=request.config.getoption,
             path_compose_cbk=functools.partial(compose_output_path, request),
             profilers_output_dir=profilers_output_dir,
+            concurrent_engine=concurrent_profiler_engine,
         )
     )
 
