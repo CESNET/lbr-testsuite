@@ -14,8 +14,8 @@ from pyJoules.device.rapl_device import RaplDevice
 from pyJoules.energy_meter import EnergyMeter
 from pyJoules.handler.pandas_handler import PandasHandler
 
-from . import _charts as charts
-from .profiler import ThreadedProfiler
+from .._base import charts
+from .._base.threaded_profiler import ThreadedProfiler
 
 
 global_logger = logging.getLogger(__name__)

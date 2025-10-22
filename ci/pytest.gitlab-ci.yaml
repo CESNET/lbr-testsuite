@@ -10,7 +10,7 @@ pytest:
         - mkdir -p pytest_tests/output
         - |
             cd pytest_tests && sudo -E pdm run coverage run -m pytest \
-            --color=yes --basetemp=output --log-level=debug --junitxml=report.xml \
+            -ra --color=yes --basetemp=output --log-level=debug --junitxml=report.xml \
             --remote-host $CI_REMOTE_HOST -s --tb=short -k 'not topology' | tee report.log
         - pdm run coverage html
         - pdm run coverage xml

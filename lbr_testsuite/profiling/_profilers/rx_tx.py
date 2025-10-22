@@ -29,10 +29,10 @@ import pandas
 
 from lbr_testsuite.dpdk_application.pipeline_runtime import PipelineRuntime
 
-from ..common import common
-from . import _charts as charts
+from ...common import common
+from .._base import charts
+from .._base.threaded_profiler import ThreadedProfiler
 from .pipeline import ProfiledPipelineSubject
-from .profiler import ThreadedProfiler
 
 
 class CounterUnit(StrEnum):

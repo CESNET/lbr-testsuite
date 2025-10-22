@@ -16,14 +16,14 @@ from typing import Callable
 
 from pypapi import events
 
-from .cache import PAPIProfiler
-from .cpumon import CPUMonProfiler
-from .perf import Perf, PerfC2C, PerfMem, PerfStat
-from .pipeline import PipelineMonProfiler
-from .power_consumption import pyJoulesProfiler
+from .._profilers.cache import PAPIProfiler
+from .._profilers.cpumon import CPUMonProfiler
+from .._profilers.perf import Perf, PerfC2C, PerfMem, PerfStat
+from .._profilers.pipeline import PipelineMonProfiler
+from .._profilers.power_consumption import pyJoulesProfiler
+from .._profilers.rx_tx import RxTxMonProfiler
+from .._profilers.system import IrqMonProfiler
 from .profiler import Profiler
-from .rx_tx import RxTxMonProfiler
-from .system import IrqMonProfiler
 
 
 def add_cli_arguments(add_argument_cbk: Callable):

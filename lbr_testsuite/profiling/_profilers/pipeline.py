@@ -10,8 +10,9 @@ import time
 
 import pandas
 
-from . import _charts as charts
-from .profiler import ProfiledSubject, ThreadedProfiler
+from .._base import charts
+from .._base.profiler import ProfiledSubject
+from .._base.threaded_profiler import ThreadedProfiler
 
 
 class ProfiledPipelineSubject(ProfiledSubject):

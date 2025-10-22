@@ -10,7 +10,7 @@ traffic load using predefined steps.
 
 import logging
 
-from lbr_testsuite.profiling.rx_tx import ProfiledPipelineWithStatsSubject
+from lbr_testsuite.profiling import ProfiledPipelineWithStatsSubject
 
 
 global_logger = logging.getLogger(__name__)

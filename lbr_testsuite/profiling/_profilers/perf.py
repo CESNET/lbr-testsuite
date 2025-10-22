@@ -6,8 +6,8 @@ Copyright: (C) 2021-2024 CESNET, z.s.p.o.
 Implementation of perf profiler.
 """
 
-from ..executable import executable
-from .profiler import PidProfiler
+from ...executable import executable
+from .._base.pid_profiler import PidProfiler
 
 
 class PerfDaemon(executable.Daemon):
