@@ -89,7 +89,7 @@ class MultiProfiler(Profiler):
     def join(self):
         """Wait until all underlying profilers finalize its work."""
 
-        self._join_all()
+        self._join_all(self._profilers)
 
     def mark(self, desc=None):
         """Call mark() on all underlying profilers."""
