@@ -40,6 +40,7 @@ class SpirentThroughputRunner:
         spirent: Spirent,
         stream_blocks: List[StreamBlock],
         profiler: Optional[PackedProfiler] = None,
+        warm_up: Optional[bool] = True,
     ):
         """
         Parameters
@@ -50,11 +51,15 @@ class SpirentThroughputRunner:
             List of stream blocks used to generate traffic.
         profiler : PackedProfiler, default None
             Instance of profiler. Can be None.
+        warm_up: bool, default True
+            Flag indicating whether to generate a short burst of frames before
+            the actual test to warm-up caches.
         """
 
         self._spirent = spirent
         self._stream_blocks = stream_blocks
         self._logger = logging.getLogger(self.__class__.__name__)
+        self._use_warm_up = warm_up
 
         if profiler is None:
             self._profiler = PackedProfiler()
@@ -150,7 +155,8 @@ class SpirentThroughputRunner:
         for block in self._stream_blocks:
             block.apply()
 
-        self._warm_up()
+        if self._use_warm_up:
+            self._warm_up()
 
         self._profiler.start()
         self._pre_test_traffic_gen()
