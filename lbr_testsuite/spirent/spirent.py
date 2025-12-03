@@ -484,6 +484,83 @@ class Spirent(Generator):
             if fill_type == "PRBS":
                 self._stc_handler.stc_attribute(handle, "InsertSig", "TRUE")
 
+    def set_stream_blocks_attrs(self, stream_blocks_names, attrs, apply=True):
+        """Set attribute(s) of stream blocks to provided values.
+
+        Parameters
+        ----------
+        stream_blocks_names : str or list(str)
+            Stream block names to be configured.
+        attrs : dict(str, str)
+            Dictionary with attribute names as keys and attribute values as values to be set to the
+            stream block.
+            Example: {"FrameLengthMode": "FIXED", "FixedFrameLength": "1000"} sets the length mode
+            to FIXED and the frame length to 1000 bytes.
+        apply: bool, optional
+            If True, stc.apply() will be called at the end of the method (default: True).
+        """
+
+        if isinstance(stream_blocks_names, str):
+            stream_blocks_names = [stream_blocks_names]
+
+        for block in stream_blocks_names:
+            handle = self._stc_handler.stc_stream_block(block)
+            for attr_name, val in attrs.items():
+                self._stc_handler.stc_attribute(handle, attr_name, val, call_apply=False)
+            if apply:
+                self._stc_handler._stc.apply()
+
+    def get_stream_blocks_attrs(self, stream_blocks_names, attrs):
+        """Get attribute(s) value(s) of stream blocks
+        Multiple attributes can be read at once from multiple stream blocks.
+
+        Parameters
+        ----------
+        stream_blocks_names : str or list(str)
+            Stream block names to be configured.
+        attrs : str or list(str)
+            Attribute name or list of attribute name strings.
+
+        Returns
+        -------
+        list(str) or list(list(str))
+            List of values in the form of `[block0_attr_val, block1_attr_val, ...]` when single
+            attribute is read, i.e when `attrs` is a string.
+            When reading multiple attributes (i.e when `type(attrs) == list`), the result is in the
+            form of list of lists:
+            `[
+            [block0_attr0_val, block0_attr1_val, block0_attr2_val, ...],
+            [block1_attr0_val, block1_attr1_val, block1_attr2_val, ...],
+            ...
+            ]`
+        """
+
+        result = []
+
+        if isinstance(stream_blocks_names, str):
+            stream_blocks_names = [stream_blocks_names]
+
+        if isinstance(attrs, str):
+            attrs = [attrs]
+
+        for block in stream_blocks_names:
+            handle = self._stc_handler.stc_stream_block(block) * len(attrs)
+            attr_vals = self._stc_handler.stc_attribute(handle, attrs)
+            # Values are in form [[attr0_val],[attr1_val]].
+            if not attr_vals:
+                # no value read
+                result.append(None)
+                continue
+
+            if len(attr_vals) == 1:
+                # read single attribute only
+                result.append(attr_vals[0][0])
+            else:
+                # read multiple attributes
+                result.append([val[0] for val in attr_vals])
+
+        return result
+
     def set_port_load(self, port_load_type, port_load_value):
         """Set port load on spirent port.
 
