@@ -275,6 +275,58 @@ class AbstractStreamBlock(ABC):
 
         self._spirent.set_stream_blocks_fill_type(self._name, fill_type)
 
+    def _apply_length_mode(
+        self,
+        length_mode: str,
+        length: Optional[int],
+        length_min: int,
+        length_max: int,
+        length_step: int,
+    ):
+        """Configures stream block's frame length mode. See Spirent TestCenter Automation
+        Object Reference section "StreamBlock" for more details.
+
+        Note: The allowed minimal packet length is affected by the signature inserting setting
+        ("InsertSig" attribute of the streamblock). When TRUE, the minimal packet length must be
+        70 bytes at least. However this affects stream recognition at analyzer. See the Spirent
+        docs for more details.
+
+        When the IMIX mode is set, the frame signature inserting is disabled, because very small
+        frames are containded.
+
+        This method is considered "protected" and should only be
+        used in inherited classes.
+
+        Parameters
+        ----------
+        length_mode : str
+            Requested streamblock's frame length mode ("FrameLengthMode" attribute).
+        length: str, optional
+            Requested streamblock's "FixedFrameLength" attribute.
+        length_min : int
+            Requested streamblock's "MinFrameLength" attribute.
+        length_max : int
+            Requested streamblock's "MaxFrameLength" attribute.
+        length_step: int
+            Requested streamblock's "StepFrameLength" attribute.
+        """
+
+        mode = length_mode.upper()
+        config = {
+            "FrameLengthMode": mode,
+            "MinFrameLength": str(length_min),
+            "MaxFrameLength": str(length_max),
+            "StepFrameLength": str(length_step),
+        }
+        if length:
+            config["FixedFrameLength"] = str(length)
+
+        if mode == "IMIX":
+            # disable signature inserting, because (some) frames in IMIX are too small
+            config["InsertSig"] = "FALSE"
+
+        self._spirent.set_stream_blocks_attrs(self._name, config)
+
 
 class StreamBlock(AbstractStreamBlock):
     """Stream block class that can be dynamically configured through the
@@ -297,6 +349,10 @@ class StreamBlock(AbstractStreamBlock):
         dst_mac: Optional[str] = None
         vlan: int = None
         fill_type = None
+        length_mode: str = ""
+        length_min: int = 70
+        length_max: int = 1500
+        length_step: int = 1
 
     def __init__(
         self,
@@ -325,6 +381,7 @@ class StreamBlock(AbstractStreamBlock):
         super().__init__(spirent, name)
         self._applied_config = self.Config()  # Applied config is empyty
         self._working_config = self.Config(**kwargs)
+        self._dirty_length_mode = False
 
     def set_active(self, active: bool):
         """Set stream block's active state."""
@@ -387,6 +444,50 @@ class StreamBlock(AbstractStreamBlock):
 
         self._working_config.fill_type = fill_type
 
+    def set_length_mode(
+        self,
+        length_mode: str,
+        length_fixed: Optional[int] = None,
+        length_min: Optional[int] = None,
+        length_max: Optional[int] = None,
+        length_step: Optional[int] = None,
+    ):
+        """Set stream block's frame length mode, one of {"FIXED", "INCR", "DECR", "IMIX",
+        "RANDOM", "AUTO"} and associated control attributes.
+
+        Note: The allowed minimal packet length is affected by the signature inserting setting
+        ("InsertSig" attribute of the streamblock). When TRUE (default), the minimal packet length
+        must be 70 bytes at least. However this can affect stream recognition at the Analyzer. See
+        Spirent docs for more details.
+
+        When the IMIX mode is set, the frame signature inserting is disabled automatically, because
+        very small frames are containded.
+
+        Parameters
+        ----------
+        length_mode : str
+            Requested streamblock's frame length mode ("FrameLengthMode" attribute).
+        length_fixed : int, optional
+            Fixed frame size in bytes ("FixedFrameLength" attribute).
+        length_min : int, optional
+            Minimum frame size in bytes ("MinFrameLength" attribute).
+        length_max : int, optional
+            Maximum frame size in bytes ("MaxFrameLength" attribute).
+        length_step : int, optional
+            Length step in bytes ("StepFrameLength" attribute).
+        """
+
+        self._dirty_length_mode = True
+        self._working_config.length_mode = length_mode
+        if length_fixed:
+            self._working_config.packet_len = length_fixed
+        if length_min:
+            self._working_config.length_min = length_min
+        if length_max:
+            self._working_config.length_max = length_max
+        if length_step:
+            self._working_config.length_step = length_step
+
     def apply(self):
         """Apply the working configuration.
 
@@ -413,5 +514,15 @@ class StreamBlock(AbstractStreamBlock):
 
         if self._working_config.fill_type != self._applied_config.fill_type:
             self._apply_fill_type(self._working_config.fill_type)
+
+        if self._dirty_length_mode:
+            self._apply_length_mode(
+                length_mode=self._working_config.length_mode,
+                length=self._working_config.packet_len,
+                length_min=self._working_config.length_min,
+                length_max=self._working_config.length_max,
+                length_step=self._working_config.length_step,
+            )
+            self._dirty_length_mode = False
 
         self._applied_config = replace(self._working_config)
