@@ -126,7 +126,11 @@ class SpirentThroughputRunner:
     def generate_traffic(
         self,
         load_mbps: int,
-        packet_len: int,
+        packet_len: Optional[int] = None,
+        length_mode: Optional[str] = None,
+        length_min: Optional[int] = None,
+        length_max: Optional[int] = None,
+        length_step: Optional[int] = None,
         duration: Optional[int] = 5,
     ):
         """Generate traffic from a spirent instance for a given
@@ -138,10 +142,20 @@ class SpirentThroughputRunner:
             Total requested spirent load. If not set, it is
             assumed that the stream block load is configured.
         packet_len : int, optional
-            Requested packet length. If not set, it is assumed
+            Requested fixed packet length. If not set, it is assumed
             that the packet length is configured in each stream
             block.
-        duration : int
+        length_mode : str, optional
+            Streamblock's frame generator length mode. One of one of {"FIXED", "INCR", "DECR",
+            "IMIX", "RANDOM", "AUTO"}. See Spirent TestCenter Automation Programmer's Reference for
+            more details.
+        length_min : int, optional
+            When the RANDOM mode is set, specifies the minimum frame size in bytes
+        length_max : int, optional
+            When the RANDOM mode is set, specifies the maximum frame size in bytes
+        length_step : int, optional
+            When the INCR or DECR mode is set, specifies the length step in bytes
+        duration : int, optional
             Duration of generated traffic in seconds.
         """
 
@@ -151,6 +165,10 @@ class SpirentThroughputRunner:
         if packet_len is not None:
             for block in self._stream_blocks:
                 block.set_packet_len(packet_len)
+
+        if length_mode is not None:
+            for block in self._stream_blocks:
+                block.set_length_mode(length_mode, packet_len, length_min, length_max, length_step)
 
         for block in self._stream_blocks:
             block.apply()
