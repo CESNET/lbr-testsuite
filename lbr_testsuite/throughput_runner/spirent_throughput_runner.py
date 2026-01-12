@@ -127,11 +127,11 @@ class SpirentThroughputRunner:
         self,
         load_mbps: int,
         packet_len: Optional[int] = None,
+        duration: Optional[int] = 5,
         length_mode: Optional[str] = None,
         length_min: Optional[int] = None,
         length_max: Optional[int] = None,
         length_step: Optional[int] = None,
-        duration: Optional[int] = 5,
     ):
         """Generate traffic from a spirent instance for a given
         number of seconds.
@@ -145,6 +145,8 @@ class SpirentThroughputRunner:
             Requested fixed packet length. If not set, it is assumed
             that the packet length is configured in each stream
             block.
+        duration : int, optional
+            Duration of generated traffic in seconds.
         length_mode : str, optional
             Streamblock's frame generator length mode. One of one of {"FIXED", "INCR", "DECR",
             "IMIX", "RANDOM", "AUTO"}. See Spirent TestCenter Automation Programmer's Reference for
@@ -155,8 +157,6 @@ class SpirentThroughputRunner:
             When the RANDOM mode is set, specifies the maximum frame size in bytes
         length_step : int, optional
             When the INCR or DECR mode is set, specifies the length step in bytes
-        duration : int, optional
-            Duration of generated traffic in seconds.
         """
 
         self._spirent._stc_handler.stc_set_port_scheduling_mode("port")
