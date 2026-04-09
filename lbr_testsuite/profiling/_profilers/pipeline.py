@@ -81,6 +81,35 @@ class PipelineMonContext:
 
         return self._stages
 
+    def _collect_worker_statistics(self, worker_status, ids):
+        """Collect general worker statistics from worker status.
+
+        Parameters
+        ----------
+        worker_status : dict
+            Worker status dictionary containing latency and packet metrics.
+        ids : str
+            Worker identifier string (e.g., "lcore_id(phy cpu_id)").
+        """
+
+        max_latency, unit = worker_status["max_latency"].split(" ", 2)
+        assert unit == "us"
+
+        latency, unit = worker_status["cur_latency"].split(" ", 2)
+        assert unit == "us"
+
+        chain_calls = int(worker_status["chain_calls"])
+        nombuf_calls = int(worker_status["nombuf_calls"])
+        seen_pkts = int(worker_status["seen_pkts"])
+        drop_pkts = int(worker_status["drop_pkts"])
+
+        self._data[f"max_latency_{ids}"].append(float(max_latency))
+        self._data[f"latency_{ids}"].append(float(latency))
+        self._data[f"chain_calls_{ids}"].append(chain_calls)
+        self._data[f"nombuf_calls_{ids}"].append(nombuf_calls)
+        self._data[f"seen_pkts_{ids}"].append(seen_pkts)
+        self._data[f"drop_pkts_{ids}"].append(drop_pkts)
+
     def _collect_stage_latencies(self, chain_status_entry, ids):
         """Collect stage latency samples from chain status.
 
@@ -135,26 +164,12 @@ class PipelineMonContext:
         self._data["timestamp"].append(now)
 
         for i, s in enumerate(status):
-            max_latency, unit = s["max_latency"].split(" ", 2)
-            assert unit == "us"
 
-            latency, unit = s["cur_latency"].split(" ", 2)
-            assert unit == "us"
-
-            chain_calls = int(s["chain_calls"])
-            nombuf_calls = int(s["nombuf_calls"])
-            seen_pkts = int(s["seen_pkts"])
-            drop_pkts = int(s["drop_pkts"])
 
             ids = f"{s['lcore_id']}(phy{s['cpu_id']})"
-            self._data[f"max_latency_{ids}"].append(float(max_latency))
-            self._data[f"latency_{ids}"].append(float(latency))
-            self._data[f"chain_calls_{ids}"].append(chain_calls)
-            self._data[f"nombuf_calls_{ids}"].append(nombuf_calls)
-            self._data[f"seen_pkts_{ids}"].append(seen_pkts)
-            self._data[f"drop_pkts_{ids}"].append(drop_pkts)
 
             self._collect_stage_latencies(chain_status[i], ids)
+            self._collect_worker_statistics(s, ids)
 
     def get_samples(self):
         """Obtain all stored samples.
