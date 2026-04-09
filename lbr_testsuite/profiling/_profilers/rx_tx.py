@@ -332,7 +332,7 @@ class ProfiledPipelineWithStatsSubject(ProfiledPipelineSubject):
         stats_req: StatsRequest = RxTxStats.DEFAULT_STATS,
     ):
         super().__init__(pipeline)
-        self._stats = RxTxStats(stats_req, pipeline.get_workers_count())
+        self._stats = RxTxStats(stats_req, pipeline.get_replicas_count())
 
     def stats(self) -> RxTxStats:
         return self._stats

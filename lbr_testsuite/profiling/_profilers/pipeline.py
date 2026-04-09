@@ -35,24 +35,31 @@ class PipelineMonContext:
 
     def __init__(self, runtime, name=None):
         self._name = name
-        self._workers = runtime.get_workers_count(name=self._name)
+        self._replicas = runtime.get_replicas_count(name=self._name)
         self._stages = list(runtime.get_pipeline_stage_names(name=self._name))
         self._data = {"timestamp": []}
         self._runtime = runtime
 
-        for i in range(self._workers):
-            s = runtime.get_worker_status(i, name=self._name)
-            ids = f"{s['lcore_id']}(phy{s['cpu_id']})"
+        # Track workers per replica for stage offset calculation
+        self._replica_worker_counts = []
 
-            self._data[f"max_latency_{ids}"] = []
-            self._data[f"latency_{ids}"] = []
-            self._data[f"chain_calls_{ids}"] = []
-            self._data[f"nombuf_calls_{ids}"] = []
-            self._data[f"seen_pkts_{ids}"] = []
-            self._data[f"drop_pkts_{ids}"] = []
-            for name in self._stages:
-                self._data[f"stage_max_latency_{name}_{ids}"] = []
-                self._data[f"stage_cur_latency_{name}_{ids}"] = []
+        for replica_id in range(self._replicas):
+            workers_count = runtime.get_replica_workers_count(replica_id, name=self._name)
+            self._replica_worker_counts.append(workers_count)
+
+            for worker_idx in range(workers_count):
+                s = runtime.get_replica_worker_status(replica_id, worker_idx, name=self._name)
+                ids = f"r{replica_id}w{worker_idx}_{s['lcore_id']}(phy{s['cpu_id']})"
+
+                self._data[f"max_latency_{ids}"] = []
+                self._data[f"latency_{ids}"] = []
+                self._data[f"chain_calls_{ids}"] = []
+                self._data[f"nombuf_calls_{ids}"] = []
+                self._data[f"seen_pkts_{ids}"] = []
+                self._data[f"drop_pkts_{ids}"] = []
+                for stage_name in self._stages:
+                    self._data[f"stage_max_latency_{stage_name}_{ids}"] = []
+                    self._data[f"stage_cur_latency_{stage_name}_{ids}"] = []
 
     def terminate(self):
         """Terminate data collection and prepare context for storage."""
@@ -81,6 +88,30 @@ class PipelineMonContext:
 
         return self._stages
 
+    def _count_stages_in_worker(self, chain_status_entry):
+        """Count the number of stages in a worker's chain status.
+
+        Stages are identified by strings like 'max_latency[0]', 'max_latency[1]', etc.
+        This method counts how many such entries exist.
+
+        Parameters
+        ----------
+        chain_status_entry : dict
+            Chain status dictionary for a single worker.
+
+        Returns
+        -------
+        int
+            Number of stages handled by this worker.
+        """
+
+        stage_count = 0
+
+        while f"max_latency[{stage_count}]" in chain_status_entry:
+            stage_count += 1
+
+        return stage_count
+
     def _collect_worker_statistics(self, worker_status, ids):
         """Collect general worker statistics from worker status.
 
@@ -89,7 +120,7 @@ class PipelineMonContext:
         worker_status : dict
             Worker status dictionary containing latency and packet metrics.
         ids : str
-            Worker identifier string (e.g., "lcore_id(phy cpu_id)").
+            Worker identifier string (e.g., "r0w0_lcore_id(phy cpu_id)").
         """
 
         max_latency, unit = worker_status["max_latency"].split(" ", 2)
@@ -110,7 +141,7 @@ class PipelineMonContext:
         self._data[f"seen_pkts_{ids}"].append(seen_pkts)
         self._data[f"drop_pkts_{ids}"].append(drop_pkts)
 
-    def _collect_stage_latencies(self, chain_status_entry, ids):
+    def _collect_stage_latencies(self, chain_status_entry, ids, stage_offset=0):
         """Collect stage latency samples from chain status.
 
         Parameters
@@ -118,17 +149,35 @@ class PipelineMonContext:
         chain_status_entry : dict
             Chain status dictionary for a single worker.
         ids : str
-            Worker identifier string (e.g., "lcore_id(phy cpu_id)").
+            Worker identifier string (e.g., "r0w0_lcore_id(phy cpu_id)").
+        stage_offset : int, optional
+            Offset to map local stage indices to global stage names.
+            Default is 0 (no offset).
+
+        Returns
+        -------
+        int
+            Number of stages processed from this worker's chain status.
         """
 
-        for j, name in enumerate(self._stages):
-            stage_max, unit = chain_status_entry[f"max_latency[{j}]"].split(" ", 2)
+        num_stages = self._count_stages_in_worker(chain_status_entry)
+
+        for local_stage_idx in range(num_stages):
+            global_stage_idx = stage_offset + local_stage_idx
+
+            stage_name = self._stages[global_stage_idx]
+            max_key = f"max_latency[{local_stage_idx}]"
+            cur_key = f"cur_latency[{local_stage_idx}]"
+
+            stage_max, unit = chain_status_entry[max_key].split(" ", 2)
             assert unit == "us"
-            stage_cur, unit = chain_status_entry[f"cur_latency[{j}]"].split(" ", 2)
+            stage_cur, unit = chain_status_entry[cur_key].split(" ", 2)
             assert unit == "us"
 
-            self._data[f"stage_max_latency_{name}_{ids}"].append(float(stage_max))
-            self._data[f"stage_cur_latency_{name}_{ids}"].append(float(stage_cur))
+            self._data[f"stage_max_latency_{stage_name}_{ids}"].append(float(stage_max))
+            self._data[f"stage_cur_latency_{stage_name}_{ids}"].append(float(stage_cur))
+
+        return num_stages
 
     def sample(self, now=None):
         """Sample data from the contextual pipeline.
@@ -137,13 +186,13 @@ class PipelineMonContext:
         a single line:
 
         - timestamp - monotonic timestamp of each row
-        - cur_latency_{W} - immediate latency of whole pipeline (per worker)
-        - max_latency_{W} - maximal latency of whole pipeline in the last period
-        - chain_calls_{W} - number of pipeline chain calls so far
-        - seen_pkts_{W} - number of packets seen by the pipeline so for
-        - drop_pkts_{W} - number of dropped packets by the pipeline so far
-        - stage_cur_latency_{stage}_{W} - immediate latency of a particular pipeline stage
-        - stage_max_latency_{stage}_{W} - max latency of a particular pipeline stage
+        - cur_latency_{R}_{W} - immediate latency of whole pipeline (per replica worker)
+        - max_latency_{R}_{W} - maximal latency of whole pipeline in the last period
+        - chain_calls_{R}_{W} - number of pipeline chain calls so far
+        - seen_pkts_{R}_{W} - number of packets seen by the pipeline so for
+        - drop_pkts_{R}_{W} - number of dropped packets by the pipeline so far
+        - stage_cur_latency_{stage}_{R}_{W} - immediate latency of a particular pipeline stage
+        - stage_max_latency_{stage}_{R}_{W} - max latency of a particular pipeline stage
 
         Parameters
         ----------
@@ -154,22 +203,23 @@ class PipelineMonContext:
         if now is None:
             now = time.monotonic()
 
-        status = []
-        chain_status = []
-
-        for i in range(self._workers):
-            status.append(self._runtime.get_worker_status(i, name=self._name))
-            chain_status.append(self._runtime.get_worker_chain_status(i, name=self._name))
-
         self._data["timestamp"].append(now)
 
-        for i, s in enumerate(status):
+        for replica_id in range(self._replicas):
+            workers_count = self._replica_worker_counts[replica_id]
+            stage_offset = 0
 
+            for worker_idx in range(workers_count):
+                s = self._runtime.get_replica_worker_status(replica_id, worker_idx, name=self._name)
+                chain_status = self._runtime.get_replica_worker_chain_status(
+                    replica_id, worker_idx, name=self._name
+                )
 
-            ids = f"{s['lcore_id']}(phy{s['cpu_id']})"
+                ids = f"r{replica_id}w{worker_idx}_{s['lcore_id']}(phy{s['cpu_id']})"
+                self._collect_worker_statistics(s, ids)
 
-            self._collect_stage_latencies(chain_status[i], ids)
-            self._collect_worker_statistics(s, ids)
+                num_stages = self._collect_stage_latencies(chain_status, ids, stage_offset)
+                stage_offset += num_stages
 
     def get_samples(self):
         """Obtain all stored samples.
