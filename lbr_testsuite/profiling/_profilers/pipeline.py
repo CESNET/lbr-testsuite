@@ -81,6 +81,26 @@ class PipelineMonContext:
 
         return self._stages
 
+    def _collect_stage_latencies(self, chain_status_entry, ids):
+        """Collect stage latency samples from chain status.
+
+        Parameters
+        ----------
+        chain_status_entry : dict
+            Chain status dictionary for a single worker.
+        ids : str
+            Worker identifier string (e.g., "lcore_id(phy cpu_id)").
+        """
+
+        for j, name in enumerate(self._stages):
+            stage_max, unit = chain_status_entry[f"max_latency[{j}]"].split(" ", 2)
+            assert unit == "us"
+            stage_cur, unit = chain_status_entry[f"cur_latency[{j}]"].split(" ", 2)
+            assert unit == "us"
+
+            self._data[f"stage_max_latency_{name}_{ids}"].append(float(stage_max))
+            self._data[f"stage_cur_latency_{name}_{ids}"].append(float(stage_cur))
+
     def sample(self, now=None):
         """Sample data from the contextual pipeline.
 
@@ -134,14 +154,7 @@ class PipelineMonContext:
             self._data[f"seen_pkts_{ids}"].append(seen_pkts)
             self._data[f"drop_pkts_{ids}"].append(drop_pkts)
 
-            for j, name in enumerate(self._stages):
-                stage_max, unit = chain_status[i][f"max_latency[{j}]"].split(" ", 2)
-                assert unit == "us"
-                stage_cur, unit = chain_status[i][f"cur_latency[{j}]"].split(" ", 2)
-                assert unit == "us"
-
-                self._data[f"stage_max_latency_{name}_{ids}"].append(float(stage_max))
-                self._data[f"stage_cur_latency_{name}_{ids}"].append(float(stage_cur))
+            self._collect_stage_latencies(chain_status[i], ids)
 
     def get_samples(self):
         """Obtain all stored samples.
