@@ -191,6 +191,10 @@ class RxTxStats:
             "tx_phy_discard_packets",
             "tx_phy_packets",
             "tx_phy_errors",
+            "outbound_pci_stalled_rd",
+            "outbound_pci_stalled_rd_events",
+            "outbound_pci_stalled_wr",
+            "outbound_pci_stalled_wr_events",
         ),
         xstats_per_q=(
             "rx_q_packets",
@@ -483,6 +487,13 @@ class RxTxMonProfiler(ConcurrentProfiler):
 
             for i in range(len(stats[col])):
                 val = stats[col].iloc[i]
+                if "pci_stalled" in col:
+                    # outbound_pci_stalled_wr/rd counters reset every second and
+                    # are measured in percentages (0..100) over previous second.
+                    # Default postprocessing doesn't work, so just append values as they are.
+                    new_col.append(val)
+                    continue
+
                 if val == 0:  # no measurement available (start or outage )
                     new_col.append(0)
                     prev = None
