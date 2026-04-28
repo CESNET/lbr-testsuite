@@ -141,3 +141,16 @@ class PipelineRuntime(ABC):
         """
 
         pass
+
+    def get_sys_if(self) -> str:
+        """Obtain the system interface name for the given pipeline.
+        For pipelines that do not define their own system interfaces,
+        this method provides a default value "<unknown>".
+
+        Returns
+        -------
+        str
+            System interface name
+        """
+
+        return "<unknown>"
