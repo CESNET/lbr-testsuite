@@ -195,6 +195,7 @@ class RxTxStats:
             "outbound_pci_stalled_rd_events",
             "outbound_pci_stalled_wr",
             "outbound_pci_stalled_wr_events",
+            "rx_prio0_buf_discard_packets",
         ),
         xstats_per_q=(
             "rx_q_packets",
