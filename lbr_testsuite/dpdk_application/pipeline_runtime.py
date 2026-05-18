@@ -23,13 +23,16 @@ class PipelineRuntime(ABC):
         pass
 
     @abstractmethod
-    def get_worker_status(self, worker_id: int, name: str = None):
-        """Obtain worker's status in the selected pipeline.
+    def get_replica_worker_status(self, replica_id: int, worker_idx: int = 0, name: str = None):
+        """Obtain the status of a worker within the specified replica.
 
         Parameters
         ----------
-        worker_id: int
-            Numerical ID (starting from 0) of a worker in the selected pipeline.
+        replica_id: int
+            Numerical ID (starting from 0) of a replica in the selected pipeline.
+        worker_idx: int, optional, default=0
+            Index of the worker in the specified replica. If not specified, the default
+            is the first worker - this corresponds to pipelines with no vertical scaling.
         name : str, optional
             Name of the pipeline (default is the first pipeline).
         """
@@ -37,11 +40,25 @@ class PipelineRuntime(ABC):
         pass
 
     @abstractmethod
-    def get_workers_count(self, name: str = None):
-        """Obtain count of workers of the selected pipeline.
+    def get_replicas_count(self, name: str = None):
+        """Obtain the count of replicas in the selected pipeline.
 
         Parameters
         ----------
+        name : str, optional
+            Name of the pipeline (default is the first pipeline).
+        """
+
+        pass
+
+    @abstractmethod
+    def get_replica_workers_count(self, replica_id: int, name: str = None):
+        """Obtain count of workers of the given replica in the selected pipeline.
+
+        Parameters
+        ----------
+        replica_id: int
+            ID of the selected replica.
         name : str, optional
             Name of the pipeline (default is the first pipeline).
         """
@@ -65,13 +82,21 @@ class PipelineRuntime(ABC):
         pass
 
     @abstractmethod
-    def get_worker_chain_status(self, worker_id: int, name: str = None) -> dict:
-        """Obtain worker's chain status in the selected pipeline.
+    def get_replica_worker_chain_status(
+        self,
+        replica_id: int,
+        worker_idx: int = 0,
+        name: str = None,
+    ) -> dict:
+        """Obtain the chain status of a worker within the specified replica.
 
         Parameters
         ----------
-        worker_id: int
-            Numerical ID (starting from 0) of a worker in the selected pipeline.
+        replica_id: int
+            Numerical ID (starting from 0) of a replica in the selected pipeline.
+        worker_idx: int, optional, default=0
+            Index of the worker in the specified replica. If not specified, the default
+            is the first worker - this corresponds to pipelines with no vertical scaling.
         name : str, optional
             Name of the pipeline (default is the first pipeline).
         """
@@ -116,3 +141,16 @@ class PipelineRuntime(ABC):
         """
 
         pass
+
+    def get_sys_if(self) -> str:
+        """Obtain the system interface name for the given pipeline.
+        For pipelines that do not define their own system interfaces,
+        this method provides a default value "<unknown>".
+
+        Returns
+        -------
+        str
+            System interface name
+        """
+
+        return "<unknown>"
