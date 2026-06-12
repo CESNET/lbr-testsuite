@@ -127,7 +127,6 @@ Helper class for VLAN configuration management.
 ## Repository Maintainers
 
 - Jan Sobol, Jan.Sobol@cesnet.cz
-- Pavel Krobot, Pavel.Krobot@cesnet.cz
 - Dominik Tran, Dominik.Tran@cesnet.cz
 
 

@@ -16,7 +16,6 @@ authors = [
 ]
 maintainers = [
     { name = "Jan Sobol", email = "Jan.Sobol@cesnet.cz" },
-    { name = "Pavel Krobot", email = "Pavel.Krobot@cesnet.cz" },
     { name = "Dominik Tran", email = "Dominik.Tran@cesnet.cz" }
 ]
 classifiers = [
