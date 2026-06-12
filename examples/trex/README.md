@@ -21,4 +21,4 @@ Test uses [topology](../../lbr_testsuite/_pytest_plugins/topology/_trex.py) mech
 installation from repository just use this from repository root:
 
     $ python3.11 -m ensurepip
-    $ python3.11 -m pip install .
+    $ python3.11 -m pip install .[trex]
