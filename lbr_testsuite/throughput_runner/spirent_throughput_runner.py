@@ -209,16 +209,17 @@ class SpirentThroughputRunner:
         self._last_measurement.rx = total_rx
         return self._last_measurement.tx, self._last_measurement.rx
 
-    def _no_packet_missed(self) -> bool:
-        return self._last_measurement.tx == self._last_measurement.rx
+    def _packet_loss_within_tolerance(self, tolerance: int = 0) -> bool:
+        return (self._last_measurement.tx - self._last_measurement.rx) <= tolerance
 
     def measure_max(
         self,
         max_load_mbps: int,
         packet_len: int,
         precision_mbps: Optional[int] = 100,
+        tolerance: int = 0,
     ) -> Tuple[int, int]:
-        """Measure maximum zero packet loss throughput using binary search.
+        """Measure maximum throughput using binary search.
 
         Parameters
         ----------
@@ -226,6 +227,9 @@ class SpirentThroughputRunner:
             Maximum measured load in megabits per second.
         precision_mbps : int
             Minimum difference between two consecutive binary search attempts.
+        tolerance : int
+            Maximum number of packets lost that are tolerated - counted as success.
+
 
         Returns
         -------
@@ -242,7 +246,7 @@ class SpirentThroughputRunner:
         while upper_bound - lower_bound > precision_mbps:
             self.generate_traffic(test_load, packet_len, duration)
             self.evaluate()
-            if self._no_packet_missed():
+            if self._packet_loss_within_tolerance(tolerance):
                 lower_bound = test_load
             else:
                 upper_bound = test_load
