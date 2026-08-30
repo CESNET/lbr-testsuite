@@ -51,6 +51,7 @@ class TRexManager:
         interface_count=1,
         core_count=6,
         specific_cores=[],
+        memory_mb=None,
     ):
         """Request stateless TRex generator.
 
@@ -77,6 +78,13 @@ class TRexManager:
         specific_cores : list, optional
             Ignore "core_count" and instead use cores specified
             in this list.
+        memory_mb: int | None, optional
+            Amount of hugepage memory (in MB) for TRex to use. Increase if TRex fails with
+            "ERROR there is not enough huge-pages memory in your system" error.
+            TRex generator with 3+ interfaces will split memory evenly between each interface pair.
+            Note that if you set memory_mb to be more than amount of hugepages in system, then
+            error message will be different and will look like this:
+            "EAL: Not enough memory available on socket 0! Requested: 10000MB, available: 4096MB"
 
         Returns
         -------
@@ -90,6 +98,7 @@ class TRexManager:
             core_count,
             specific_cores,
             TRexStateless,
+            memory_mb=memory_mb,
         )
 
     def request_stateful(
@@ -98,6 +107,7 @@ class TRexManager:
         role,
         core_count=6,
         specific_cores=[],
+        memory_mb=None,
     ):
         """Request advanced stateful TRex generator.
 
@@ -114,6 +124,13 @@ class TRexManager:
         specific_cores : list, optional
             Ignore "core_count" and instead use cores specified
             in this list.
+        memory_mb: int | None, optional
+            Amount of hugepage memory (in MB) for TRex to use. Increase if TRex fails with
+            "ERROR there is not enough huge-pages memory in your system" error.
+            TRex generator with 3+ interfaces will split memory evenly between each interface pair.
+            Note that if you set memory_mb to be more than amount of hugepages in system, then
+            error message will be different and will look like this:
+            "EAL: Not enough memory available on socket 0! Requested: 10000MB, available: 4096MB"
 
         Returns
         -------
@@ -130,6 +147,7 @@ class TRexManager:
             specific_cores,
             TRexAdvancedStateful,
             role,
+            memory_mb,
         )
 
     def request_emulation(
@@ -137,6 +155,7 @@ class TRexManager:
         request,
         interface_count=1,
         core_count=3,
+        memory_mb=None,
     ):
         """Request emulation TRex generator.
 
@@ -158,6 +177,13 @@ class TRexManager:
         core_count : int, optional
             Count of CPU cores to use (minimum is 3).
             More cores will generally increase performance.
+        memory_mb: int | None, optional
+            Amount of hugepage memory (in MB) for TRex to use. Increase if TRex fails with
+            "ERROR there is not enough huge-pages memory in your system" error.
+            TRex generator with 3+ interfaces will split memory evenly between each interface pair.
+            Note that if you set memory_mb to be more than amount of hugepages in system, then
+            error message will be different and will look like this:
+            "EAL: Not enough memory available on socket 0! Requested: 10000MB, available: 4096MB"
 
         Returns
         -------
@@ -171,6 +197,7 @@ class TRexManager:
             core_count,
             [],
             TRexEmulation,
+            memory_mb=memory_mb,
         )
 
     def _request_generator(
@@ -181,6 +208,7 @@ class TRexManager:
         specific_cores,
         trex_class,
         role=None,
+        memory_mb=None,
     ):
         """Setup generator and return connected instance."""
 
@@ -198,6 +226,7 @@ class TRexManager:
             generator,
             generator.get_cores(),
             role,
+            memory_mb,
         )
 
         for cnt in range(self.STARTUP_ATTEMPTS):
