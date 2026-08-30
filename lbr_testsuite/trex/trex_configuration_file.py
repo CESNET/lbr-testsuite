@@ -175,6 +175,7 @@ def _create_yaml_configuration(
     cores,
     stateful_type=None,
     memory_mb=None,
+    memory_concurrent_flows=None,
 ):
     """Create YAML configuration for TRex configuration file.
 
@@ -197,6 +198,16 @@ def _create_yaml_configuration(
         Note that if you set memory_mb to be more than amount of hugepages in system, then
         error message will be different and will look like this:
             "EAL: Not enough memory available on socket 0! Requested: 10000MB, available: 4096MB"
+    memory_concurrent_flows : int | None, optional
+        Number of TRex flow objects allocated.
+        Some configurations require higher number of preallocated flow objects.
+        For example: when stateful server is overwhelmed with new connection requests,
+        it needs to keep more objects in memory in order to not drop active
+        or new connections.
+        If set too high and system has enough hugepages, TRex will fail with following error:
+            "ERROR something went wrong here, more than 20M flows per core does not make sense"
+        For details see parameter "dp_flows" on link
+        https://trex-tgn.cisco.com/trex/doc/trex_manual.html#_memory_section_configuration
 
     Returns
     -------
@@ -228,10 +239,12 @@ def _create_yaml_configuration(
     # trex-[0000:65:00.0,0000:65:00.1]
     prefix = prefix.replace("'", "").replace(" ", "")
 
-    memory_dp_flows = DEFAULT_MEMORY_DP_FLOWS
-
-    if stateful_type == "server":
-        memory_dp_flows = INCREASED_MEMORY_DP_FLOWS
+    if memory_concurrent_flows is None:
+        memory_dp_flows = DEFAULT_MEMORY_DP_FLOWS
+        if stateful_type == "server":
+            memory_dp_flows = INCREASED_MEMORY_DP_FLOWS
+    else:
+        memory_dp_flows = memory_concurrent_flows
 
     if generator.get_zmq_pub_port() and generator.get_zmq_rpc_port():
         zmq_pub_port = generator.get_zmq_pub_port()
@@ -313,6 +326,7 @@ def setup_cfg_file(
     cores,
     stateful_type=None,
     memory_mb=None,
+    memory_concurrent_flows=None,
 ):
     """Setup TRex configuration file.
 
@@ -339,6 +353,16 @@ def setup_cfg_file(
         Note that if you set memory_mb to be more than amount of hugepages in system, then
         error message will be different and will look like this:
             "EAL: Not enough memory available on socket 0! Requested: 10000MB, available: 4096MB"
+    memory_concurrent_flows : int | None, optional
+        Number of TRex flow objects allocated.
+        Some configurations require higher number of preallocated flow objects.
+        For example: when stateful server is overwhelmed with new connection requests,
+        it needs to keep more objects in memory in order to not drop active
+        or new connections.
+        If set too high and system has enough hugepages, TRex will fail with following error:
+            "ERROR something went wrong here, more than 20M flows per core does not make sense"
+        For details see parameter "dp_flows" on link
+        https://trex-tgn.cisco.com/trex/doc/trex_manual.html#_memory_section_configuration
 
     Returns
     -------
@@ -348,7 +372,13 @@ def setup_cfg_file(
 
     assert len(cores) >= 3, "Minimum amount of CPU cores is 3"
 
-    cfg = _create_yaml_configuration(generator, cores, stateful_type, memory_mb)
+    cfg = _create_yaml_configuration(
+        generator,
+        cores,
+        stateful_type,
+        memory_mb,
+        memory_concurrent_flows,
+    )
     cfg_file = _save_conf_to_file(request, cfg)
 
     daemon = generator.get_daemon()
