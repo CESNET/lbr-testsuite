@@ -1,7 +1,7 @@
 editorconfig:
     stage: check
     needs: []
-    image: mstruebing/editorconfig-checker
+    image: mstruebing/editorconfig-checker:4
     script: [editorconfig-checker]
 
 pycodestyle:
