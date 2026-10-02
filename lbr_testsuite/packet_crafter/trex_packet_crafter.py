@@ -10,7 +10,14 @@ import ipaddress
 import logging
 import uuid
 
-import lbr_trex_client  # noqa: F401
+
+try:
+    import lbr_trex_client  # noqa: F401
+except ImportError:
+    raise ImportError(
+        "Missing dependencies for TRex client, please install using lbr-testsuite[trex]."
+    )
+
 import scapy.all as scapy
 import trex.stl.trex_stl_packet_builder_scapy as trex_packet_builder
 

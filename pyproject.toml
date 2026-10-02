@@ -16,7 +16,6 @@ authors = [
 ]
 maintainers = [
     { name = "Jan Sobol", email = "Jan.Sobol@cesnet.cz" },
-    { name = "Pavel Krobot", email = "Pavel.Krobot@cesnet.cz" },
     { name = "Dominik Tran", email = "Dominik.Tran@cesnet.cz" }
 ]
 classifiers = [
@@ -25,7 +24,6 @@ classifiers = [
 ]
 dependencies = [
     "pyroute2>=0.6.2,<0.9.0",
-    "lbr-trex-client == 3.4.0.dev311",
     "stcrestclient",
     "pytest>=7.0",
     "pytest-cases>=3.6.11",
@@ -41,6 +39,11 @@ dependencies = [
     "plotly>=5.24.1",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+trex = [
+    "lbr-trex-client == 3.4.0.dev311",
+]
 
 [project.urls]
 repository = "https://github.com/CESNET/lbr-testsuite/"

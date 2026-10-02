@@ -2,10 +2,10 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "dev"]
+groups = ["default", "dev", "trex"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:49d3df68a39396d41d9fa5b409dfcd75ff60453f46f67ac7791d09633312f103"
+content_hash = "sha256:70652e1cc08d1e7428c431dcf0a771bec506c21cbad0b1aece20f13d6132d693"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -1012,7 +1012,7 @@ name = "lbr-trex-client"
 version = "3.4.0.dev311"
 requires_python = ">=3.8"
 summary = "Lbr-trex-client package contains TRex traffic generator client API as Python package."
-groups = ["default"]
+groups = ["trex"]
 files = [
     {file = "lbr_trex_client-3.4.0.dev311-py3-none-any.whl", hash = "sha256:9ae58724c619116d2c84ee491cdf9d2974317b7eae30bb53c7e662a152ee03f3"},
 ]

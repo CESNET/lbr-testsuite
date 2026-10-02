@@ -1,8 +1,25 @@
-from .trex_common import parse_bandwidth
-from .trex_generator import TRexMachinesPool
-from .trex_manager import TRexManager
-from .trex_stateful import TRexAdvancedStateful, TRexProfile, TRexProfilePcap
-from .trex_stateless import TRexStateless, TRexStream, TRexStreamModeSelector
+from .._trex_imports.__init__ import TREX_CLIENT
+
+
+if not TREX_CLIENT:
+    raise ImportError(
+        "Missing dependencies for TRex client, please install using lbr-testsuite[trex]."
+    )
+
+
+from .trex_common import parse_bandwidth  # noqa: E402
+from .trex_generator import TRexMachinesPool  # noqa: E402
+from .trex_manager import TRexManager  # noqa: E402
+from .trex_stateful import (  # noqa: E402
+    TRexAdvancedStateful,
+    TRexProfile,
+    TRexProfilePcap,
+)
+from .trex_stateless import (  # noqa: E402
+    TRexStateless,
+    TRexStream,
+    TRexStreamModeSelector,
+)
 
 
 __all__ = [

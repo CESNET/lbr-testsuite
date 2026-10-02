@@ -3,7 +3,7 @@
 The purpose of this package is to provide common set of tools
 that can be used in development of tests. Package now contains
 `common`, `data_table`, `executable`, `ipconfigurer`, `packet_crafter`,
-`profiling`, `spirent`, `trex` and `vlan_config`.
+`profiling`, `spirent`, `vlan_config` and optionally `trex`.
 
 The package also includes the `Topology` plugin for pytest. The plugin provides
 a set of fixtures and pre-defined pytest arguments that can be used to prepare
@@ -34,9 +34,17 @@ mirrored to GitHub for the purpose of publishing the code.
 
 ## Installation
 
-Install from PyPI index via command:
+Install from PyPI index via commands:
+- base version without TRex client
+
 ```
 pip install lbr-testsuite
+```
+
+- version with custom API for TRex packet generator
+
+```
+pip install lbr-testsuite[trex]
 ```
 
 The PyPI index contains only **release** versions. The development version of
@@ -106,6 +114,7 @@ from lbr_testsuite import trex
 ```
 Provides our custom API for Cisco TRex traffic generator.
 Official API is provided by required package [lbr_trex_client](https://pypi.org/project/lbr-trex-client/).
+This module won't be accessible if only base version lbr-testsuite is installed.
 
 
 For `vlan_config`:
@@ -118,7 +127,6 @@ Helper class for VLAN configuration management.
 ## Repository Maintainers
 
 - Jan Sobol, Jan.Sobol@cesnet.cz
-- Pavel Krobot, Pavel.Krobot@cesnet.cz
 - Dominik Tran, Dominik.Tran@cesnet.cz
 
 

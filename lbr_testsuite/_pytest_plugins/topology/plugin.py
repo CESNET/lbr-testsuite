@@ -10,18 +10,23 @@ Topology plugin implementation.
 import pytest
 import pytest_cases
 
+from ..._trex_imports.__init__ import TREX_CLIENT
 from ...topology import registration
 from ...topology.devices_args import DevicesArgs
 from ...topology.topology import Topology, select_topologies
 from . import _options
 from ._spirent import topology_wired_spirent  # noqa
 from ._spirent_with_loopback import topology_wired_spirent_loopback  # noqa
-from ._trex import (  # noqa
-    topology_wired_trex,
-    trex_generators,
-    trex_machine_options,
-    trex_manager,
-)
+
+
+if TREX_CLIENT:
+    from ._trex import (  # noqa
+        topology_wired_trex,
+        trex_generators,
+        trex_machine_options,
+        trex_manager,
+    )
+
 from ._virtual_devices import topology_vdev_loopback, topology_vdev_ring  # noqa
 from ._wired_loopback import topology_wired_loopback  # noqa
 
