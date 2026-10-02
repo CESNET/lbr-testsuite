@@ -174,6 +174,8 @@ def _create_yaml_configuration(
     generator,
     cores,
     stateful_type=None,
+    memory_mb=None,
+    memory_concurrent_flows=None,
 ):
     """Create YAML configuration for TRex configuration file.
 
@@ -189,6 +191,23 @@ def _create_yaml_configuration(
         Specify whether TRex will act as a ``client`` or ``server``.
         This option is valid only if TRex is started in advanced stateful (ASTF) mode.
         Otherwise leave this parameter empty.
+    memory_mb: int | None, optional
+        Amount of hugepage memory (in MB) for TRex to use. Increase if TRex fails with
+            "ERROR there is not enough huge-pages memory in your system" error.
+        TRex generator with 3+ interfaces will split memory evenly between each interface pair.
+        Note that if you set memory_mb to be more than amount of hugepages in system, then
+        error message will be different and will look like this:
+            "EAL: Not enough memory available on socket 0! Requested: 10000MB, available: 4096MB"
+    memory_concurrent_flows : int | None, optional
+        Number of TRex flow objects allocated.
+        Some configurations require higher number of preallocated flow objects.
+        For example: when stateful server is overwhelmed with new connection requests,
+        it needs to keep more objects in memory in order to not drop active
+        or new connections.
+        If set too high and system has enough hugepages, TRex will fail with following error:
+            "ERROR something went wrong here, more than 20M flows per core does not make sense"
+        For details see parameter "dp_flows" on link
+        https://trex-tgn.cisco.com/trex/doc/trex_manual.html#_memory_section_configuration
 
     Returns
     -------
@@ -206,6 +225,11 @@ def _create_yaml_configuration(
     numa1_exists = 1 in numas
 
     # Unique prefix is required if 2+ TRexes run on same machine.
+    #
+    # Using prefix also limits memory to only 1024MB by default (probably because without it TRex
+    # will grab all hugepages on system); see link
+    # https://github.com/cisco-system-traffic-generator/trex-core/issues/1138#issuecomment-2696789782
+    # This can be adjusted via memory_mb parameter.
     prefix = f"{host}-{interfaces}"
 
     # Remove special characters, especially space, which can cause
@@ -215,10 +239,12 @@ def _create_yaml_configuration(
     # trex-[0000:65:00.0,0000:65:00.1]
     prefix = prefix.replace("'", "").replace(" ", "")
 
-    memory_dp_flows = DEFAULT_MEMORY_DP_FLOWS
-
-    if stateful_type == "server":
-        memory_dp_flows = INCREASED_MEMORY_DP_FLOWS
+    if memory_concurrent_flows is None:
+        memory_dp_flows = DEFAULT_MEMORY_DP_FLOWS
+        if stateful_type == "server":
+            memory_dp_flows = INCREASED_MEMORY_DP_FLOWS
+    else:
+        memory_dp_flows = memory_concurrent_flows
 
     if generator.get_zmq_pub_port() and generator.get_zmq_rpc_port():
         zmq_pub_port = generator.get_zmq_pub_port()
@@ -233,7 +259,8 @@ def _create_yaml_configuration(
     core_count, dual_if = _setup_cpu_cores(interfaces_with_numa, cores)
     port_limit, port_info = _setup_port_info(interface_count)
 
-    memory_per_dual_if = 2048 * interface_count
+    if memory_mb is None:
+        memory_mb = 2048 * interface_count
 
     cfg = [
         {
@@ -244,7 +271,7 @@ def _create_yaml_configuration(
             "zmq_rpc_port": zmq_rpc_port,
             "interfaces": ifcs,
             "c": core_count,
-            "limit_memory": memory_per_dual_if,
+            "limit_memory": memory_mb,
             "platform": {
                 "master_thread_id": cores[0],
                 "latency_thread_id": cores[1],
@@ -259,7 +286,7 @@ def _create_yaml_configuration(
 
     # See https://github.com/cisco-system-traffic-generator/trex-core/issues/1138#issuecomment-2696789782
     if numa1_exists:
-        cfg[0]["ext_dpdk_opt"] = [f"--socket-mem={memory_per_dual_if},{memory_per_dual_if}"]
+        cfg[0]["ext_dpdk_opt"] = [f"--socket-mem={memory_mb},{memory_mb}"]
 
     return cfg
 
@@ -298,6 +325,8 @@ def setup_cfg_file(
     generator,
     cores,
     stateful_type=None,
+    memory_mb=None,
+    memory_concurrent_flows=None,
 ):
     """Setup TRex configuration file.
 
@@ -317,6 +346,23 @@ def setup_cfg_file(
         Specify whether TRex will act as a ``client`` or ``server``.
         This option is valid only if TRex is started in advanced stateful (ASTF) mode.
         Otherwise leave this parameter empty.
+    memory_mb: int | None, optional
+        Amount of hugepage memory (in MB) for TRex to use. Increase if TRex fails with
+            "ERROR there is not enough huge-pages memory in your system" error.
+        TRex generator with 3+ interfaces will split memory evenly between each interface pair.
+        Note that if you set memory_mb to be more than amount of hugepages in system, then
+        error message will be different and will look like this:
+            "EAL: Not enough memory available on socket 0! Requested: 10000MB, available: 4096MB"
+    memory_concurrent_flows : int | None, optional
+        Number of TRex flow objects allocated.
+        Some configurations require higher number of preallocated flow objects.
+        For example: when stateful server is overwhelmed with new connection requests,
+        it needs to keep more objects in memory in order to not drop active
+        or new connections.
+        If set too high and system has enough hugepages, TRex will fail with following error:
+            "ERROR something went wrong here, more than 20M flows per core does not make sense"
+        For details see parameter "dp_flows" on link
+        https://trex-tgn.cisco.com/trex/doc/trex_manual.html#_memory_section_configuration
 
     Returns
     -------
@@ -326,7 +372,13 @@ def setup_cfg_file(
 
     assert len(cores) >= 3, "Minimum amount of CPU cores is 3"
 
-    cfg = _create_yaml_configuration(generator, cores, stateful_type)
+    cfg = _create_yaml_configuration(
+        generator,
+        cores,
+        stateful_type,
+        memory_mb,
+        memory_concurrent_flows,
+    )
     cfg_file = _save_conf_to_file(request, cfg)
 
     daemon = generator.get_daemon()
