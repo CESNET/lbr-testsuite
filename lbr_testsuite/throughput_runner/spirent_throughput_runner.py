@@ -10,6 +10,7 @@ import logging
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from lbr_testsuite.common.conv import mpps_to_mbps
 from lbr_testsuite.profiling import PackedProfiler
 from lbr_testsuite.spirent.spirent import Spirent
 from lbr_testsuite.spirent.stream_block import StreamBlock
@@ -209,16 +210,17 @@ class SpirentThroughputRunner:
         self._last_measurement.rx = total_rx
         return self._last_measurement.tx, self._last_measurement.rx
 
-    def _no_packet_missed(self) -> bool:
-        return self._last_measurement.tx == self._last_measurement.rx
+    def _packet_loss_within_tolerance(self, tolerance: int = 0) -> bool:
+        return (self._last_measurement.tx - self._last_measurement.rx) <= tolerance
 
     def measure_max(
         self,
         max_load_mbps: int,
         packet_len: int,
         precision_mbps: Optional[int] = 100,
+        tolerance: int = 0,
     ) -> Tuple[int, int]:
-        """Measure maximum zero packet loss throughput using binary search.
+        """Measure maximum throughput using binary search.
 
         Parameters
         ----------
@@ -226,6 +228,9 @@ class SpirentThroughputRunner:
             Maximum measured load in megabits per second.
         precision_mbps : int
             Minimum difference between two consecutive binary search attempts.
+        tolerance : int
+            Maximum number of packets lost that are tolerated - counted as success.
+
 
         Returns
         -------
@@ -242,7 +247,7 @@ class SpirentThroughputRunner:
         while upper_bound - lower_bound > precision_mbps:
             self.generate_traffic(test_load, packet_len, duration)
             self.evaluate()
-            if self._no_packet_missed():
+            if self._packet_loss_within_tolerance(tolerance):
                 lower_bound = test_load
             else:
                 upper_bound = test_load
@@ -252,3 +257,77 @@ class SpirentThroughputRunner:
         throughput_mpps = (self._last_measurement.rx / duration) / 1000000
 
         return lower_bound, throughput_mpps
+
+    def measure_max_linear(
+        self,
+        max_load_mbps: int,
+        start_mpps: int,
+        step_mpps: int,
+        packet_len: int,
+        tolerance: int = 0,
+    ) -> tuple[int, float]:
+        """Measure maximum throughput using linear increment.
+
+        Parameters
+        ----------
+        max_load_mbps : int
+            Maximum measured load in megabits per second.
+        start_mpps : int
+            Starting rate in mpps.
+        step_mpps : int
+            Increment step in mpps.
+        packet_len : int
+            Packet length.
+        tolerance : int
+            Maximum number of packets lost that are tolerated - counted as success.
+
+        Note
+        ----
+        While the start_mpps and step_mpps are in packets per second, the max_load_mbps
+        is in mbps.
+
+        Returns
+        -------
+        tuple
+            Tuple of (mbps, mpps) representing the maximum measured throughput
+            in megabits and megapackets per second.
+        """
+
+        current_mbps = int(mpps_to_mbps(start_mpps, packet_len))
+        step_mbps = int(mpps_to_mbps(step_mpps, packet_len))
+
+        if step_mbps == 0:
+            raise RuntimeError(
+                f"Step {step_mpps} Mpps ({step_mbps} Mbps) is too small "
+                f"for packet length {packet_len} - would not advance."
+            )
+
+        last_good_mbps = None
+        last_good_mpps = None
+
+        duration = 5
+
+        while current_mbps <= max_load_mbps:
+            self.generate_traffic(current_mbps, packet_len, duration)
+            self.evaluate()
+
+            if self._packet_loss_within_tolerance(tolerance):
+                last_good_mbps = current_mbps
+                last_good_mpps = (self._last_measurement.rx / duration) / 1000000
+                current_mbps += step_mbps
+            else:
+                if last_good_mbps is not None:
+                    return last_good_mbps, last_good_mpps
+
+                raise RuntimeError(
+                    f"Start rate {start_mpps} Mpps ({current_mbps} Mbps) "
+                    f"already causes packet loss beyond tolerance {tolerance}."
+                )
+
+        if last_good_mbps is not None:
+            return last_good_mbps, last_good_mpps
+
+        raise RuntimeError(
+            f"Start rate {start_mpps} Mpps ({current_mbps} Mbps) "
+            f"exceeds max load {max_load_mbps} Mbps."
+        )
