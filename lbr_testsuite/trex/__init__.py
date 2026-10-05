@@ -9,6 +9,7 @@ if not TREX_CLIENT:
 
 from .trex_common import parse_bandwidth  # noqa: E402
 from .trex_generator import TRexMachinesPool  # noqa: E402
+from .trex_legacy_stateful import TRexLegacyStateful  # noqa: E402
 from .trex_manager import TRexManager  # noqa: E402
 from .trex_stateful import (  # noqa: E402
     TRexAdvancedStateful,
@@ -32,4 +33,5 @@ __all__ = [
     "TRexManager",
     "TRexProfilePcap",
     "parse_bandwidth",
+    "TRexLegacyStateful",
 ]
